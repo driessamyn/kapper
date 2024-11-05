@@ -1,2 +1,51 @@
-# kapper
-Kapper - A Dapper-like lightweight ORM for Kotlin
+# Kapper ORM
+
+Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library for the Kotlin programming language, targeting the JVM ecosystem.
+
+The main goals of the Kapper ORM are:
+
+1. **Simplicity**: Provide a simple, intuitive API for common database operations, following Kotlin idioms.
+2. **Performance**: Minimize overhead and dependencies to ensure fast execution of queries and updates.
+3. **Flexibility**: Allow integration with various database drivers and connection management strategies.
+
+## Features
+
+- **Simple API**: Kapper provides a familiar set of methods for executing SQL queries, mapping results to Kotlin data classes, and updating/inserting data.
+- **Dynamic Parameters**: The `DynamicParameters` class makes it easy to bind parameters to SQL statements.
+- **Extensibility**: The Kapper API is implemented as extension functions on the `java.sql.Connection` interface, allowing seamless integration with existing JDBC code.
+- **Lightweight**: Kapper has minimal external dependencies, focusing on providing core functionality without bloat.
+
+> Work on Kapper has only recently started and it is not yet functional.
+> Documentation below covers intended API, not final.
+
+## Usage
+
+Here's a simple example of how to use Kapper:
+
+```kotlin
+// Assuming you have a java.sql.Connection instance
+val connection: Connection = ...
+
+// Execute a SQL query and map the results to a list of User objects
+val users: List<User> = connection.query("SELECT * FROM users", DynamicParameters())
+
+// Execute a SQL statement with parameters
+val updatedRows = connection.execute(
+    "UPDATE users SET name = ? WHERE id = ?",
+    DynamicParameters("John Doe" to "name", 123 to "id")
+)
+
+// Query a single result and map it to a User object
+val user: User = connection.querySingle(
+    "SELECT * FROM users WHERE id = ?",
+    DynamicParameters(1 to "id")
+)
+```
+
+## Contributing
+
+We welcome contributions to the Kapper ORM project! If you find any issues or have ideas for improvements, please feel free to open an issue or submit a pull request.
+
+## License
+
+Kapper is released under the [Apache 2.0 License](./LICENSE).
