@@ -32,14 +32,14 @@ jobs:
       run: ./gradlew ktlintCheck
 
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: test-results
         path: build/reports/tests/
 
     - name: Upload ktlint results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: ktlint-results
