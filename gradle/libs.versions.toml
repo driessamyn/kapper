@@ -3,9 +3,17 @@
 
 [versions]
 junit-jupiter = "5.10.3"
+mockito = "5.14.2"
+mockk = "1.13.9"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+# mockito only to be used from Java code (API usability test)
+mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+[bundles]
+test = ["junit-jupiter", "mockk"]
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.0.0" }

@@ -14,8 +14,8 @@ repositories {
 }
 
 dependencies {
-    // Use JUnit Jupiter for testing.
-    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito)
+    testImplementation(libs.bundles.test)
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

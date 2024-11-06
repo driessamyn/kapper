@@ -27,7 +27,7 @@ fun Connection.execute(
  */
 inline fun <reified T : Any> Connection.query(
     sql: String,
-    vararg args: Any?,
+    vararg args: Pair<String, Any?>,
 ): List<T> {
     return query(T::class, sql, *args)
 }
@@ -43,7 +43,7 @@ inline fun <reified T : Any> Connection.query(
 fun <T : Any> Connection.query(
     clazz: KClass<T>,
     sql: String,
-    vararg args: Any?,
+    vararg args: Pair<String, Any?>,
 ): List<T> {
     // Implementation to execute the SQL query and map the results to a list of Kotlin data class instances
     TODO()
@@ -59,7 +59,7 @@ fun <T : Any> Connection.query(
  */
 inline fun <reified T : Any> Connection.querySingle(
     sql: String,
-    vararg args: Any?,
+    vararg args: Pair<String, Any?>,
 ): T {
     return querySingle(T::class, sql, *args)
 }
@@ -75,8 +75,43 @@ inline fun <reified T : Any> Connection.querySingle(
 fun <T : Any> Connection.querySingle(
     clazz: KClass<T>,
     sql: String,
-    vararg args: Any?,
+    vararg args: Pair<String, Any?>,
 ): T {
     // Implementation to execute the SQL query and map the single result to a Kotlin data class instance
     TODO()
+}
+
+/**
+ * Kapper API interface for executing SQL statements and queries.
+ * Used in cases where the extension methods cannot be used or ar not preferred.
+ */
+interface Kapper {
+    /**
+     * Execute a SQL query and map the results to a list of instances of the specified class.
+     *
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL query to execute.
+     * @param args Optional parameters to be substituted in the SQL query.
+     * @return A list of Kotlin data class instances.
+     */
+    fun <T : Any> query(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: java.util.Map<String, Any?>,
+    ): List<T>
+
+    fun <T : Any> querySingle(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: java.util.Map<String, Any?>,
+    ): T
+
+    fun execute(
+        connection: Connection,
+        sql: String,
+        args: java.util.Map<String, Any?>,
+    ): Int
 }

@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # Enable version updates for Gradle
+  - package-ecosystem: "gradle"
+    # Look for `gradle/libs.versions.toml` file in the `root` directory
+    directory: "/"
+    # Check for updates once a week
+    schedule:
+      interval: "daily"
+    # Specify labels for pull requests
+    labels:
+      - "dependencies"
+      - "automerge"
+    # Set a limit for open pull requests
+    open-pull-requests-limit: 10
+    # Configure to use version catalog
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+    # Increase the version only when it's not a library declaration
+    versioning-strategy: increase-if-necessary
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    # Look for `.github/workflows` in the `root` directory
+    directory: "/"
+    # Check for updates once a week
+    schedule:
+      interval: "weekly"
+    # Specify labels for pull requests
+    labels:
+      - "dependencies"
+      - "automerge"
+    # Set a limit for open pull requests
+    open-pull-requests-limit: 10
