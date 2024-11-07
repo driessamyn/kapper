@@ -34,5 +34,5 @@ jobs:
       if: always()
       with:
         files: |
-          **/build/test-results/test/TEST-*.xml'
+#          **/build/test-results/test/TEST-*.xml'
           **/build/test-results/integrationTest/TEST-*.xml'
