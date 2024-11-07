@@ -32,13 +32,13 @@ val users: List<User> = connection.query<User>("SELECT * FROM users")
 // Execute a SQL statement with parameters
 val updatedRows = connection.execute(
     "UPDATE users SET name = :name WHERE id = :id",
-    mapOf("name" to "John Doe", "id" to 123)
+    name" to "John Doe", "id" to 123
 )
 
 // Query a single result and map it to a User object
 val user: User? = connection.querySingle<User>(
     "SELECT * FROM users WHERE id = :id",
-    mapOf("id" to 1)
+    "id" to 1
 )
 ```
 
