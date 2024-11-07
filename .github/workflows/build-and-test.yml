@@ -37,7 +37,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: build/reports/kover
+        path: lib/build/reports/kover
         retention-days: 1
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
@@ -50,6 +50,6 @@ jobs:
       uses: mi-kas/kover-report@v1
       with:
         path: |
-          ${{ github.workspace }}/lib/build/reports/kover/report.xml
+          lib/build/reports/kover/report.xml
         title: Code Coverage
         update-comment: true
