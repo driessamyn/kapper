@@ -1,5 +1,4 @@
 name: Build and Test
-
 on:
   push:
     branches: [ main ]
@@ -8,26 +7,21 @@ on:
 
 jobs:
   build:
+    name: Build and run tests
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'zulu'
-
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-
     - name: Build with Gradle
       run: ./gradlew build
-
     - name: Run tests
       run: ./gradlew check
-
     - name: Upload Test Report
       uses: actions/upload-artifact@v3
       if: always() # always run even if the previous step fails
@@ -35,6 +29,7 @@ jobs:
         name: junit-test-results
         path: '**/build/test-results/*/TEST-*.xml'
         retention-days: 1
+
 ---
 name: report
 on:
@@ -60,4 +55,3 @@ jobs:
         with:
           commit: ${{github.event.workflow_run.head_sha}}
           report_paths: '**/build/test-results/*/TEST-*.xml'
-
