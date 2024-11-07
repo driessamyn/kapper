@@ -7,6 +7,7 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
 
+    alias(libs.plugins.kover)
     alias(libs.plugins.ktlint)
 }
 
@@ -56,6 +57,44 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 
 val integrationTestImplementation by configurations.getting {
     extendsFrom(configurations.implementation.get())
+}
+
+koverReport {
+    defaults {
+        xml {
+            onCheck = true
+        }
+        html {
+            onCheck = true
+        }
+    }
+    filters {
+        excludes {
+            // Add any exclusions if needed
+            // classes("com.example.excluded.*")
+        }
+    }
+//    verify {
+//        rule {
+//            isEnabled = true
+//            bound {
+//                minValue = 80 // Set your desired coverage threshold
+//                valueType = kotlinx.kover.api.VerificationValueType.COVERED_LINES_PERCENTAGE
+//            }
+//        }
+//    }
+}
+
+tasks.register("koverFullReport") {
+    dependsOn(tasks.test, tasks["integrationTest"], tasks.koverXmlReport, tasks.koverHtmlReport)
+}
+
+tasks.test {
+    finalizedBy(tasks.koverXmlReport, tasks.koverHtmlReport)
+}
+
+tasks.check {
+    dependsOn(tasks.koverVerify)
 }
 
 dependencies {
