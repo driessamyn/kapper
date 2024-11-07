@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.test
+
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     alias(libs.plugins.kotlin.jvm)
@@ -13,18 +15,29 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    testImplementation(libs.mockito)
-    testImplementation(libs.bundles.test)
-
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+sourceSets {
+    create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
+}
+
+tasks.register<Test>("integrationTest") {
+    description = "Runs integration tests."
+    group = "verification"
+
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
+    shouldRunAfter("test")
+
+    useJUnitPlatform()
 }
 
 tasks.named<Test>("test") {
@@ -34,8 +47,24 @@ tasks.named<Test>("test") {
 
 tasks.check {
     dependsOn(tasks.ktlintCheck)
+    dependsOn("integrationTest")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     dependsOn(tasks.ktlintFormat)
+}
+
+val integrationTestImplementation by configurations.getting {
+    extendsFrom(configurations.implementation.get())
+}
+
+dependencies {
+    testImplementation(libs.mockito)
+    testImplementation(libs.bundles.test)
+
+    integrationTestImplementation(libs.bundles.test)
+    integrationTestImplementation(libs.bundles.test.containers)
+    integrationTestImplementation(libs.bundles.test.dbs)
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

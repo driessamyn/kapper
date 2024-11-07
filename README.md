@@ -27,18 +27,18 @@ Here's a simple example of how to use Kapper:
 val connection: Connection = ...
 
 // Execute a SQL query and map the results to a list of User objects
-val users: List<User> = connection.query("SELECT * FROM users", DynamicParameters())
+val users: List<User> = connection.query<User>("SELECT * FROM users")
 
 // Execute a SQL statement with parameters
 val updatedRows = connection.execute(
-    "UPDATE users SET name = ? WHERE id = ?",
-    DynamicParameters("John Doe" to "name", 123 to "id")
+    "UPDATE users SET name = :name WHERE id = :id",
+    mapOf("name" to "John Doe", "id" to 123)
 )
 
 // Query a single result and map it to a User object
-val user: User = connection.querySingle(
-    "SELECT * FROM users WHERE id = ?",
-    DynamicParameters(1 to "id")
+val user: User? = connection.querySingle<User>(
+    "SELECT * FROM users WHERE id = :id",
+    mapOf("id" to 1)
 )
 ```
 
