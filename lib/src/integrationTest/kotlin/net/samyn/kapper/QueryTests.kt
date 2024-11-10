@@ -4,7 +4,6 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Named.named
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.TestInstance
@@ -91,8 +90,7 @@ class QueryTests {
 
     @ParameterizedTest()
     @MethodSource("databaseContainers")
-    @Disabled("TODO")
-    fun `should query all users`(container: JdbcDatabaseContainer<*>) {
+    fun `should query all heros`(container: JdbcDatabaseContainer<*>) {
         createConnection(container).use { connection ->
             val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes")
             heroes.shouldContainExactlyInAnyOrder(
@@ -105,8 +103,7 @@ class QueryTests {
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    @Disabled("TODO")
-    fun `should query users with condition`(container: JdbcDatabaseContainer<*>) {
+    fun `should query heros with condition`(container: JdbcDatabaseContainer<*>) {
         createConnection(container).use { connection ->
             val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes WHERE age > :age", "age" to 80)
             heroes.shouldContainExactlyInAnyOrder(
@@ -118,13 +115,12 @@ class QueryTests {
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    @Disabled("TODO")
     fun `should query specific columns`(container: JdbcDatabaseContainer<*>) {
         createConnection(container).use { connection ->
             val heroes =
                 connection.query<SuperHero>(
                     "SELECT id, name FROM super_heroes WHERE name = :name",
-                    "name" to superman,
+                    "name" to superman.name,
                 )
             heroes.shouldContainExactlyInAnyOrder(
                 SuperHero(superman.id, superman.name),
@@ -134,7 +130,6 @@ class QueryTests {
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    @Disabled("TODO")
     fun `should handle empty result set`(container: JdbcDatabaseContainer<*>) {
         createConnection(container).use { connection ->
             val heroes =
@@ -148,7 +143,6 @@ class QueryTests {
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    @Disabled("TODO")
     fun `should query with multiple conditions`(container: JdbcDatabaseContainer<*>) {
         createConnection(container).use { connection ->
             val heroes =
