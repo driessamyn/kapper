@@ -7,7 +7,7 @@ kotest = "6.0.0.M1"
 kotlin = "2.0.21"
 mockito = "5.14.2"
 mockk = "1.13.13"
-mysql-driver = "8.0.33"
+mysql-driver = "9.1.0"
 postgresql-driver = "42.7.4"
 test-conatainers = "1.20.3"
 
