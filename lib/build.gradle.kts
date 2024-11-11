@@ -59,30 +59,15 @@ val integrationTestImplementation by configurations.getting {
     extendsFrom(configurations.implementation.get())
 }
 
-koverReport {
-    defaults {
-        xml {
-            onCheck = true
-        }
-        html {
-            onCheck = true
-        }
-    }
-    filters {
-        excludes {
-            // Add any exclusions if needed
-            // classes("com.example.excluded.*")
+kover {
+    reports {
+        verify {
+            // add new verification rule
+            rule {
+                // specify coverage bounds for the rule
+            }
         }
     }
-//    verify {
-//        rule {
-//            isEnabled = true
-//            bound {
-//                minValue = 80 // Set your desired coverage threshold
-//                valueType = kotlinx.kover.api.VerificationValueType.COVERED_LINES_PERCENTAGE
-//            }
-//        }
-//    }
 }
 
 tasks.register("koverFullReport") {
