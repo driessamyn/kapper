@@ -1,21 +1,11 @@
 package net.samyn.kapper
 
+import net.samyn.kapper.internal.KapperImpl
 import java.sql.Connection
 import kotlin.reflect.KClass
 
-/**
- * Execute a SQL statement and return the number of affected rows.
- *
- * @param sql The SQL statement to execute.
- * @param args Optional parameters to be substituted in the SQL statement.
- * @return The number of affected rows.
- */
-fun Connection.execute(
-    sql: String,
-    vararg args: Any?,
-): Int {
-    // Implementation to execute the SQL statement and return the number of affected rows
-    TODO()
+val impl: Kapper by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+    Kapper.getInstance()
 }
 
 /**
@@ -44,10 +34,7 @@ fun <T : Any> Connection.query(
     clazz: KClass<T>,
     sql: String,
     vararg args: Pair<String, Any?>,
-): List<T> {
-    // Implementation to execute the SQL query and map the results to a list of Kotlin data class instances
-    TODO()
-}
+): List<T> = impl.query(clazz.java, this, sql, args.toMap())
 
 /**
  * Execute a SQL query and map the result to a single Kotlin data class instance.
@@ -76,9 +63,20 @@ fun <T : Any> Connection.querySingle(
     clazz: KClass<T>,
     sql: String,
     vararg args: Pair<String, Any?>,
-): T {
-    // Implementation to execute the SQL query and map the single result to a Kotlin data class instance
-    TODO()
+): T = impl.querySingle(clazz.java, this, sql, args.toMap())
+
+/**
+ * Execute a SQL statement and return the number of affected rows.
+ *
+ * @param sql The SQL statement to execute.
+ * @param args Optional parameters to be substituted in the SQL statement.
+ * @return The number of affected rows.
+ */
+fun Connection.execute(
+    sql: String,
+    vararg args: Pair<String, Any?>,
+): Int {
+    return impl.execute(this, sql, args.toMap())
 }
 
 /**
@@ -86,6 +84,11 @@ fun <T : Any> Connection.querySingle(
  * Used in cases where the extension methods cannot be used or ar not preferred.
  */
 interface Kapper {
+    companion object {
+        @JvmStatic
+        fun getInstance(): Kapper = KapperImpl()
+    }
+
     /**
      * Execute a SQL query and map the results to a list of instances of the specified class.
      *
@@ -99,19 +102,80 @@ interface Kapper {
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: java.util.Map<String, Any?>,
+        args: Map<String, Any?>,
     ): List<T>
 
+    /**
+     * Execute a SQL query and map the results to a list of instances of the specified class.
+     *
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL query to execute.
+     * @param args Optional parameters to be substituted in the SQL query.
+     * @return A list of Kotlin data class instances.
+     */
+    fun <T : Any> query(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: java.util.HashMap<String, Any?>,
+    ): List<T>
+
+    /**
+     * Execute a SQL query that returns a signle row and map the result to an instance of the specified class.
+     *
+     * @param clazz The class to map the result to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL query to execute.
+     * @param args Optional parameters to be substituted in the SQL query.
+     */
     fun <T : Any> querySingle(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: java.util.Map<String, Any?>,
+        args: java.util.HashMap<String, Any?>,
     ): T
 
+    /**
+     * Execute a SQL query that returns a signle row and map the result to an instance of the specified class.
+     *
+     * @param clazz The class to map the result to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL query to execute.
+     * @param args Optional parameters to be substituted in the SQL query.
+     */
+    fun <T : Any> querySingle(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: Map<String, Any?>,
+    ): T
+
+    /**
+     * Execute a SQL statement that does not return a result set.
+     *
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute.
+     * @param args Optional parameters to be substituted in the SQL statement.
+     * @return The number of rows affected by the statement.
+     */
     fun execute(
         connection: Connection,
         sql: String,
-        args: java.util.Map<String, Any?>,
+        args: java.util.HashMap<String, Any?>,
+    ): Int
+
+    /**
+     * Execute a SQL statement that does not return a result set.
+     *
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute.
+     * @param args Optional parameters to be substituted in the SQL statement.
+     * @return The number of rows affected by the statement.
+     */
+    fun execute(
+        connection: Connection,
+        sql: String,
+        args: Map<String, Any?>,
     ): Int
 }

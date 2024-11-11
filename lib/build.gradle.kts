@@ -98,6 +98,8 @@ tasks.check {
 }
 
 dependencies {
+    implementation(libs.kotlin.reflect)
+
     testImplementation(libs.mockito)
     testImplementation(libs.bundles.test)
 
