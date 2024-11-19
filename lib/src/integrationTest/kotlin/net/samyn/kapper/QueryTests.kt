@@ -3,6 +3,8 @@ package net.samyn.kapper
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.shouldBe
+import net.samyn.kapper.internal.Mapper.Field
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Named.named
 import org.junit.jupiter.api.Order
@@ -16,6 +18,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.sql.DriverManager
+import java.sql.ResultSet
 import java.util.UUID
 
 @Testcontainers
@@ -158,5 +161,36 @@ class QueryTests {
         }
     }
 
+    @ParameterizedTest
+    @MethodSource("databaseContainers")
+    fun `can use custom mapper`(container: JdbcDatabaseContainer<*>) {
+        createConnection(container).use { connection ->
+            val villain =
+                connection.query<Villain>(
+                    "SELECT id, name FROM super_heroes WHERE name = :name",
+                    ::createVillain,
+                    "name" to superman.name,
+                )
+
+            villain.size.shouldBe(1)
+            villain.first().id.shouldBe(superman.id.toString())
+            villain.first().name.shouldBe(superman.name.toString())
+        }
+    }
+
+    private fun createVillain(
+        resultSet: ResultSet,
+        fields: Map<String, Field>,
+    ): Villain =
+        Villain().also {
+            it.id = resultSet.getString("id")
+            it.name = resultSet.getString("name")
+        }
+
     data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
+
+    class Villain {
+        var id: String? = null
+        var name: String? = null
+    }
 }
