@@ -2,6 +2,7 @@ package net.samyn.kapper.internal
 
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperParseException
+import net.samyn.kapper.KapperResultException
 import net.samyn.kapper.internal.Mapper.Field
 import java.sql.Connection
 import java.sql.ResultSet
@@ -14,32 +15,17 @@ class KapperImpl : Kapper {
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: HashMap<String, Any?>,
-    ): List<T> = query(clazz, connection, sql, args.toMap())
-
-    override fun <T : Any> query(
-        clazz: Class<T>,
-        connection: Connection,
-        sql: String,
-        args: HashMap<String, Any?>,
-        mapper: (ResultSet, Map<String, Field>) -> T,
-    ): List<T> = query(clazz, connection, sql, args.toMap(), mapper)
-
-    override fun <T : Any> query(
-        clazz: Class<T>,
-        connection: Connection,
-        sql: String,
         args: Map<String, Any?>,
     ): List<T> =
         // TODO: cash mapper
-        query(clazz, connection, sql, args.toMap(), Mapper(clazz)::createInstance)
+        query(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
 
     override fun <T : Any> query(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: Map<String, Any?>,
         mapper: (ResultSet, Map<String, Field>) -> T,
+        args: Map<String, Any?>,
     ): List<T> {
         // TODO: cache query
         val query = Query(sql)
@@ -80,16 +66,23 @@ class KapperImpl : Kapper {
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: HashMap<String, Any?>,
-    ): T = querySingle(clazz, connection, sql, args.toMap())
+        args: Map<String, Any?>,
+    ): T? =
+        // TODO: cash mapper
+        querySingle(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
 
     override fun <T : Any> querySingle(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
+        mapper: (ResultSet, Map<String, Field>) -> T,
         args: Map<String, Any?>,
-    ): T {
-        TODO("Not yet implemented")
+    ): T? {
+        val results = query(clazz, connection, sql, mapper, args)
+        if (results.size > 1) {
+            throw KapperResultException("Expected a single result but found ${results.size}")
+        }
+        return results.firstOrNull()
     }
 
     override fun execute(
