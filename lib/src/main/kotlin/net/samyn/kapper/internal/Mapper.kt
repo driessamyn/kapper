@@ -1,6 +1,7 @@
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.KapperMappingException
+import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
@@ -8,6 +9,7 @@ import kotlin.reflect.full.primaryConstructor
 class Mapper<T : Any>(
     val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter::convert,
+    val sqlTypesConverter: (Int, String, ResultSet, String) -> Any = SQLTypesConverter::convert,
 ) {
     // TODO: relax case sensitivity of tokens names?
     private val constructor: KFunction<T> =
@@ -17,7 +19,7 @@ class Mapper<T : Any>(
         constructor.parameters
             .map { it.name to it }.toMap()
 
-    fun createInstance(columns: List<ColumnValue>): T {
+    private fun createInstance(columns: List<ColumnValue>): T {
         if (columns.size > properties.size) {
             throw KapperMappingException(
                 "Too many tokens provided in the template: ${columns.map { it.name }}. " +
@@ -48,5 +50,21 @@ class Mapper<T : Any>(
         return instance
     }
 
+    fun createInstance(
+        resultSet: ResultSet,
+        fields: Map<String, Field>,
+    ): T {
+        return createInstance(
+            fields.map { field ->
+                ColumnValue(
+                    field.key,
+                    sqlTypesConverter(field.value.type, field.value.typeName, resultSet, field.key),
+                )
+            },
+        )
+    }
+
     data class ColumnValue(val name: String, val value: Any?)
+
+    data class Field(val type: Int, val typeName: String)
 }

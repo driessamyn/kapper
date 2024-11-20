@@ -2,15 +2,14 @@ package net.samyn.kapper.internal
 
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperParseException
+import net.samyn.kapper.internal.Mapper.Field
 import java.sql.Connection
 import java.sql.ResultSet
 import java.util.HashMap
 
 // TODO: this is only covered by the TestContainer integration tests.
 //  Break this up further and ensure unit test coverage.
-class KapperImpl(
-    val sqlTypesConverter: (Int, String, ResultSet, String) -> Any = SQLTypesConverter::convert,
-) : Kapper {
+class KapperImpl : Kapper {
     override fun <T : Any> query(
         clazz: Class<T>,
         connection: Connection,
@@ -22,13 +21,28 @@ class KapperImpl(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
+        args: HashMap<String, Any?>,
+        mapper: (ResultSet, Map<String, Field>) -> T,
+    ): List<T> = query(clazz, connection, sql, args.toMap(), mapper)
+
+    override fun <T : Any> query(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
         args: Map<String, Any?>,
+    ): List<T> =
+        // TODO: cash mapper
+        query(clazz, connection, sql, args.toMap(), Mapper(clazz)::createInstance)
+
+    override fun <T : Any> query(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: Map<String, Any?>,
+        mapper: (ResultSet, Map<String, Field>) -> T,
     ): List<T> {
         // TODO: cache query
         val query = Query(sql)
-        // TODO: cash mapper/type reflection
-        // TODO: allow multiple constructors and non-data classes
-        val mapper = Mapper(clazz)
         val results = mutableListOf<T>()
         connection.prepareStatement(query.sql).use { stmt ->
             args.forEach { a ->
@@ -42,25 +56,18 @@ class KapperImpl(
             }
             // TODO: introduce SLF4J
             println(stmt)
-            // TODO: create overload that takes custom conversion function and defaults to this
+            // TODO: refactor
             stmt.executeQuery().use { rs ->
                 // TODO: cache data
-                // TODO: structure nicer
+                // TODO: cash fields (persist in query?)
                 val fields =
                     (1..rs.metaData.columnCount).map {
                         rs.metaData.getColumnName(it) to
-                            Pair(rs.metaData.getColumnType(it), rs.metaData.getColumnTypeName(it))
-                    }
+                            Field(rs.metaData.getColumnType(it), rs.metaData.getColumnTypeName(it))
+                    }.toMap()
                 while (rs.next()) {
                     results.add(
-                        mapper.createInstance(
-                            fields.map { field ->
-                                Mapper.ColumnValue(
-                                    field.first,
-                                    sqlTypesConverter(field.second.first, field.second.second, rs, field.first),
-                                )
-                            },
-                        ),
+                        mapper(rs, fields),
                     )
                 }
             }

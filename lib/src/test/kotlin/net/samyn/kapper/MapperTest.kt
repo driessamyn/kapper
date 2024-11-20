@@ -7,27 +7,38 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import net.samyn.kapper.internal.Mapper
+import net.samyn.kapper.internal.Mapper.Field
 import org.junit.jupiter.api.Test
+import java.sql.ResultSet
 import java.util.UUID
 import kotlin.reflect.KClass
 
 class MapperTest {
     private val autoMapperMock = mockk<(Any, KClass<*>) -> Any>()
-    private val mapper = Mapper<SuperHero>(SuperHero::class.java, autoMapperMock)
+    private val resultSet = mockk<ResultSet>()
+    val sqlTypeConverterMock = mockk<(Int, String, ResultSet, String) -> Any>()
 
     @Test
     fun `should map to super hero`() {
         val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
-
-        val instance =
-            mapper.createInstance(
-                listOf(
-                    Mapper.ColumnValue("id", batman.id),
-                    Mapper.ColumnValue("name", batman.name),
-                    Mapper.ColumnValue("email", batman.email),
-                    Mapper.ColumnValue("age", batman.age),
-                ),
+        val fields =
+            mapOf(
+                "id" to Field(1, "SomeType"),
+                "name" to Field(1, "SomeType"),
+                "email" to Field(1, "SomeType"),
+                "age" to Field(1, "SomeType"),
             )
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("id")) } returns
+            batman.id
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("name")) } returns
+            batman.name
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("email")) } returns
+            batman.email!!
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("age")) } returns
+            batman.age!!
+
+        val mapper = Mapper<SuperHero>(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
 
         instance.shouldBe(batman)
     }
@@ -35,46 +46,71 @@ class MapperTest {
     @Test
     fun `should map to super hero respecting defaults`() {
         val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
-
-        val instance =
-            mapper.createInstance(
-                listOf(
-                    Mapper.ColumnValue("id", batman.id),
-                    Mapper.ColumnValue("name", batman.name),
-                ),
+        val fields =
+            mapOf(
+                "id" to Field(1, "SomeType"),
+                "name" to Field(1, "SomeType"),
             )
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("id")) } returns
+            batman.id
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("name")) } returns
+            batman.name
+
+        val mapper = Mapper<SuperHero>(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
 
         instance.shouldBe(SuperHero(batman.id, "Batman", null, null))
     }
 
     @Test
     fun `should throw when too many columns`() {
+        val fields =
+            mapOf(
+                "id" to Field(1, "SomeType"),
+                "name" to Field(1, "SomeType"),
+                "email" to Field(1, "SomeType"),
+                "age" to Field(1, "SomeType"),
+                "foo" to Field(1, "SomeType"),
+            )
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("id")) } returns
+            UUID.randomUUID()
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("name")) } returns
+            "joker"
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("email")) } returns
+            "joker@dc.com"
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("age")) } returns
+            85
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("foo")) } returns
+            "bar"
+
+        val mapper = Mapper<SuperHero>(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
         val ex =
             shouldThrow<KapperMappingException> {
-                mapper.createInstance(
-                    listOf(
-                        Mapper.ColumnValue("id", UUID.randomUUID()),
-                        Mapper.ColumnValue("name", "joker"),
-                        Mapper.ColumnValue("email", "joker@dc.com"),
-                        Mapper.ColumnValue("age", 85),
-                        Mapper.ColumnValue("foo", "bar"),
-                    ),
-                )
+                mapper.createInstance(resultSet, fields)
             }
         ex.message.shouldContain("foo")
     }
 
     @Test
     fun `should throw when non-optional are missing`() {
+        val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
+        val fields =
+            mapOf(
+                "name" to Field(1, "SomeType"),
+                "email" to Field(1, "SomeType"),
+                "age" to Field(1, "SomeType"),
+            )
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("name")) } returns
+            batman.name
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("email")) } returns
+            batman.email!!
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("age")) } returns
+            batman.age!!
+
+        val mapper = Mapper<SuperHero>(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
         val ex =
             shouldThrow<KapperMappingException> {
-                mapper.createInstance(
-                    listOf(
-                        Mapper.ColumnValue("name", "joker"),
-                        Mapper.ColumnValue("email", "joker@dc.com"),
-                        Mapper.ColumnValue("age", 85),
-                    ),
-                )
+                mapper.createInstance(resultSet, fields)
             }
         ex.message.shouldContain("id")
     }
@@ -82,12 +118,18 @@ class MapperTest {
     @Test
     fun `should convert when type not known`() {
         every { autoMapperMock(any<Int>(), any<KClass<*>>()) } returns "Foo"
-        mapper.createInstance(
-            listOf(
-                Mapper.ColumnValue("id", UUID.randomUUID()),
-                Mapper.ColumnValue("name", 123),
-            ),
-        )
+        val fields =
+            mapOf(
+                "id" to Field(1, "SomeType"),
+                "name" to Field(1, "SomeType"),
+            )
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("id")) } returns
+            UUID.randomUUID()
+        every { sqlTypeConverterMock(any<Int>(), any<String>(), any<ResultSet>(), eq<String>("name")) } returns
+            123
+
+        val mapper = Mapper<SuperHero>(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        mapper.createInstance(resultSet, fields)
         verify { autoMapperMock(123, String::class) }
     }
 

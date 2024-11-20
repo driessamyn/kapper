@@ -1,7 +1,10 @@
 package net.samyn.kapper
 
 import net.samyn.kapper.internal.KapperImpl
+import net.samyn.kapper.internal.Mapper.Field
 import java.sql.Connection
+import java.sql.ResultSet
+import java.util.HashMap
 import kotlin.reflect.KClass
 
 val impl: Kapper by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
@@ -23,6 +26,22 @@ inline fun <reified T : Any> Connection.query(
 }
 
 /**
+ * Execute a SQL query and map the results to a list of Kotlin data class instances.
+ *
+ * @param sql The SQL query to execute.
+ * @param args Optional parameters to be substituted in the SQL query.
+ * @param mapper Optional mapping function to map the [ResultSet] to the target class.
+ * @return A list of Kotlin data class instances.
+ */
+inline fun <reified T : Any> Connection.query(
+    sql: String,
+    noinline mapper: (ResultSet, Map<String, Field>) -> T,
+    vararg args: Pair<String, Any?>,
+): List<T> {
+    return query(T::class, sql, args.toMap(), mapper)
+}
+
+/**
  * Execute a SQL query and map the results to a list of instances of the specified Kotlin data class.
  *
  * @param clazz The Kotlin data class to map the results to.
@@ -35,6 +54,22 @@ fun <T : Any> Connection.query(
     sql: String,
     vararg args: Pair<String, Any?>,
 ): List<T> = impl.query(clazz.java, this, sql, args.toMap())
+
+/**
+ * Execute a SQL query and map the results to a list of instances of the specified Kotlin data class.
+ *
+ * @param clazz The Kotlin data class to map the results to.
+ * @param sql The SQL query to execute.
+ * @param args Optional parameters to be substituted in the SQL query.
+ * @param mapper Optional mapping function to map the [ResultSet] to the target class.
+ * @return A list of Kotlin data class instances.
+ */
+fun <T : Any> Connection.query(
+    clazz: KClass<T>,
+    sql: String,
+    args: Map<String, Any?>,
+    mapper: (ResultSet, Map<String, Field>) -> T,
+): List<T> = impl.query(clazz.java, this, sql, args, mapper)
 
 /**
  * Execute a SQL query and map the result to a single Kotlin data class instance.
@@ -112,13 +147,49 @@ interface Kapper {
      * @param connection The SQL connection to use.
      * @param sql The SQL query to execute.
      * @param args Optional parameters to be substituted in the SQL query.
+     * @param mapper Optional mapping function to map the [ResultSet] to the target class.
      * @return A list of Kotlin data class instances.
      */
     fun <T : Any> query(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: java.util.HashMap<String, Any?>,
+        args: Map<String, Any?>,
+        mapper: (ResultSet, Map<String, Field>) -> T,
+    ): List<T>
+
+    /**
+     * Execute a SQL query and map the results to a list of instances of the specified class.
+     *
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL query to execute.
+     * @param args Optional parameters to be substituted in the SQL query.
+     * @return A list of Kotlin data class instances.
+     */
+    fun <T : Any> query(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: HashMap<String, Any?>,
+    ): List<T>
+
+    /**
+     * Execute a SQL query and map the results to a list of instances of the specified class.
+     *
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL query to execute.
+     * @param args Optional parameters to be substituted in the SQL query.
+     * @param mapper Optional mapping function to map the [ResultSet] to the target class.
+     * @return A list of Kotlin data class instances.
+     */
+    fun <T : Any> query(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: HashMap<String, Any?>,
+        mapper: (ResultSet, Map<String, Field>) -> T,
     ): List<T>
 
     /**
@@ -133,7 +204,7 @@ interface Kapper {
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: java.util.HashMap<String, Any?>,
+        args: HashMap<String, Any?>,
     ): T
 
     /**
