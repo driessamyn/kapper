@@ -8,3 +8,6 @@ class KapperUnsupportedOperationException(message: String, cause: Throwable? = n
 
 class KapperParseException(message: String, cause: Throwable? = null) :
     RuntimeException(message, cause)
+
+class KapperResultException(message: String, cause: Throwable? = null) :
+    RuntimeException(message, cause)
