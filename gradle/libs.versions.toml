@@ -9,7 +9,7 @@ mockito = "5.14.2"
 mockk = "1.13.13"
 mysql-driver = "9.1.0"
 postgresql-driver = "42.7.4"
-test-conatainers = "1.20.3"
+test-conatainers = "1.20.4"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
