@@ -67,5 +67,5 @@ object QueryParser {
 
     private fun Char.isValidTokenChar() = this.isLetterOrDigit() || this == '_' || this == '-'
 
-    private fun Char.isValidTokenSeparator() = this == ' ' || this == ',' || this == ')'
+    private fun Char.isValidTokenSeparator() = this == ' ' || this == ',' || this == ')' || this == ';'
 }
