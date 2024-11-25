@@ -9,7 +9,7 @@ import kotlin.reflect.full.primaryConstructor
 class Mapper<T : Any>(
     val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter::convert,
-    val sqlTypesConverter: (Int, String, ResultSet, String) -> Any = SQLTypesConverter::convert,
+    val sqlTypesConverter: (Int, String, ResultSet, String) -> Any = SQLTypesConverter::convertSQLType,
 ) {
     // TODO: relax case sensitivity of tokens names?
     private val constructor: KFunction<T> =

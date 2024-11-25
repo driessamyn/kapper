@@ -39,11 +39,32 @@ tasks.register<Test>("integrationTest") {
     shouldRunAfter("test")
 
     useJUnitPlatform()
+
+    testLogging {
+        showStandardStreams = true
+    }
+
+    // disable parallel running
+    systemProperties(
+        "junit.jupiter.execution.parallel.enabled" to "false",
+    )
 }
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+
+    testLogging {
+        showStandardStreams = true
+    }
+
+    // enable parallel running
+    systemProperties(
+        // Configuration parameters to execute classes in parallel but methods in same thread
+        "junit.jupiter.execution.parallel.enabled" to "true",
+        "junit.jupiter.execution.parallel.mode.default" to "concurrent",
+        "junit.jupiter.execution.parallel.mode.classes.default" to "concurrent",
+    )
 }
 
 tasks.check {

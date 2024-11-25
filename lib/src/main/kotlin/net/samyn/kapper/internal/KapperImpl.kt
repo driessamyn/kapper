@@ -3,7 +3,9 @@ package net.samyn.kapper.internal
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperResultException
+import net.samyn.kapper.internal.DbConnectionUtils.getDbFlavour
 import net.samyn.kapper.internal.Mapper.Field
+import net.samyn.kapper.internal.SQLTypesConverter.setParameter
 import java.sql.Connection
 import java.sql.ResultSet
 import java.util.HashMap
@@ -96,6 +98,21 @@ class KapperImpl : Kapper {
         sql: String,
         args: Map<String, Any?>,
     ): Int {
-        TODO("Not yet implemented")
+        // TODO: cache query
+        val query = Query(sql)
+        connection.prepareStatement(query.sql).use { stmt ->
+            args.forEach { a ->
+                val indexes =
+                    query.tokens[a.key]
+                        ?: throw KapperParseException("Token with name `${a.key}' not found in template")
+                indexes.forEach { i ->
+                    // TODO: allow custom SQL type conversion?
+                    stmt.setParameter(i, a.value, connection.getDbFlavour())
+                }
+            }
+            // TODO: introduce SLF4J
+            println(stmt)
+            return stmt.executeUpdate()
+        }
     }
 }

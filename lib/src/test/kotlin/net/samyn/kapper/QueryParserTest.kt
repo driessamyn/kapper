@@ -98,6 +98,11 @@ class QueryParserTest {
                     "UPDATE super_hero SET name = ? WHERE id = ?",
                     mapOf("name" to listOf(1), "id" to listOf(2)),
                 ),
+                Arguments.of(
+                    "UPDATE super_hero SET name = :name WHERE id = :id;",
+                    "UPDATE super_hero SET name = ? WHERE id = ?;",
+                    mapOf("name" to listOf(1), "id" to listOf(2)),
+                ),
             )
     }
 }

@@ -1,6 +1,8 @@
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.internal.DbConnectionUtils.DbFlavour
 import java.sql.JDBCType
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Types
 import java.util.UUID
@@ -8,7 +10,7 @@ import java.util.UUID
 // TODO: this could be more sophisticated by allowing type conversion hints.
 // TODO: check what hibernate does for these conversions.
 object SQLTypesConverter {
-    fun convert(
+    fun convertSQLType(
         sqlType: Int,
         sqlTypeName: String,
         resultSet: ResultSet,
@@ -61,5 +63,31 @@ object SQLTypesConverter {
                 }
             }
         return result
+    }
+
+    fun PreparedStatement.setParameter(
+        index: Int,
+        value: Any?,
+        dbFlavour: DbFlavour,
+    ) {
+        when (value) {
+            is Byte -> setByte(index, value)
+            is Short -> setShort(index, value)
+            is Int -> setInt(index, value)
+            is Long -> setLong(index, value)
+            is Float -> setFloat(index, value)
+            is Double -> setDouble(index, value)
+            is String -> setString(index, value)
+            is ByteArray -> setBytes(index, value)
+            is Boolean -> setBoolean(index, value)
+            is UUID -> {
+                if (DbFlavour.MYSQL == dbFlavour) {
+                    setString(index, value.toString())
+                } else {
+                    setObject(index, value)
+                }
+            }
+            else -> setObject(index, value)
+        }
     }
 }
