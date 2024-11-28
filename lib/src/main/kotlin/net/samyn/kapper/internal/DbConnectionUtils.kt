@@ -2,7 +2,7 @@ package net.samyn.kapper.internal
 
 import java.sql.Connection
 
-object DbConnectionUtils {
+internal object DbConnectionUtils {
     fun Connection.getDbFlavour(): DbFlavour {
         return when (this.metaData.databaseProductName.lowercase()) {
             "postgresql" -> DbFlavour.POSTGRESQL

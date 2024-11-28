@@ -9,7 +9,7 @@ import net.samyn.kapper.KapperParseException
  * @property sql the JDBC formatted query string with placeholders
  * @property tokens the tokens and their indexes in the query string
  */
-data class Query(
+internal data class Query(
     val template: String,
     private val queryParser: (String) -> Pair<String, Map<String, List<Int>>> = QueryParser::parseQuery,
 ) {
@@ -23,7 +23,7 @@ data class Query(
     }
 }
 
-object QueryParser {
+internal object QueryParser {
     fun parseQuery(template: String): Pair<String, Map<String, List<Int>>> {
         val sqlBuilder = StringBuilder()
         val tokens = mutableMapOf<String, MutableList<Int>>()

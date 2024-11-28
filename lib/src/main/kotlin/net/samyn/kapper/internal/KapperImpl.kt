@@ -12,7 +12,7 @@ import java.util.HashMap
 
 // TODO: this is only covered by the TestContainer integration tests.
 //  Break this up further and ensure unit test coverage.
-class KapperImpl : Kapper {
+internal class KapperImpl : Kapper {
     override fun <T : Any> query(
         clazz: Class<T>,
         connection: Connection,

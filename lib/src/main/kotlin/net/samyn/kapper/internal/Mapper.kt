@@ -6,7 +6,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
-class Mapper<T : Any>(
+internal class Mapper<T : Any>(
     val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter::convert,
     val sqlTypesConverter: (Int, String, ResultSet, String) -> Any = SQLTypesConverter::convertSQLType,

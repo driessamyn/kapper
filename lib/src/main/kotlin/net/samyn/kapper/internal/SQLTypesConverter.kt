@@ -9,7 +9,7 @@ import java.util.UUID
 
 // TODO: this could be more sophisticated by allowing type conversion hints.
 // TODO: check what hibernate does for these conversions.
-object SQLTypesConverter {
+internal object SQLTypesConverter {
     fun convertSQLType(
         sqlType: Int,
         sqlTypeName: String,
