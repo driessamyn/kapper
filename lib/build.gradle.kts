@@ -1,4 +1,6 @@
 import org.gradle.kotlin.dsl.test
+import org.jetbrains.dokka.DokkaConfiguration.Visibility
+import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -9,6 +11,11 @@ plugins {
 
     alias(libs.plugins.kover)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.git.semver)
+
+    id("maven-publish")
+    id("signing")
 }
 
 repositories {
@@ -21,6 +28,8 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 sourceSets {
@@ -129,4 +138,108 @@ dependencies {
     integrationTestImplementation(libs.bundles.test.dbs)
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets.configureEach {
+        documentedVisibilities.set(
+            setOf(
+                Visibility.PUBLIC,
+                Visibility.PROTECTED,
+            ),
+        )
+
+        perPackageOption {
+            matchingRegex.set(".*internal.*")
+            suppress.set(true)
+        }
+    }
+}
+
+group = "net.samyn"
+version = semver.version
+
+tasks.jar {
+    manifest {
+        attributes(
+            mapOf(
+                "Implementation-Title" to project.name,
+                "Implementation-Version" to project.version,
+            ),
+        )
+    }
+}
+
+tasks.register<Jar>("dokkaJavadocJar") {
+    dependsOn(tasks.dokkaJavadoc)
+    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    archiveClassifier.set("javadoc")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+            from(components["kotlin"])
+            artifact(tasks["sourcesJar"])
+            artifact(tasks["javadocJar"])
+            pom {
+                name.set(project.name)
+                description.set("Kapper - A lightweight ORM for Kotlin and the JVM")
+                url.set("https://github.com/driessamyn/kapper")
+                licenses {
+                    license {
+                        name.set("Apache-2.0")
+                        url.set("https://opensource.org/licenses/Apache-2.0")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("driessamyn")
+                        name.set("Dries Samyn")
+                    }
+                }
+                scm {
+                    url.set(
+                        "https://github.com/driessamyn/kapper.git",
+                    )
+                    connection.set(
+                        "scm:git:git://github.com/driessamyn/kapper.git",
+                    )
+                    developerConnection.set(
+                        "scm:git:git://github.com/driessamyn/kapper.git",
+                    )
+                }
+                issueManagement {
+                    url.set("https://github.com/driessamyn/kapper/issues")
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                setUrl("https://maven.pkg.github.com/driessamyn/kapper")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            val releasesRepoUrl = layout.buildDirectory.dir("repos/releases")
+            val snapshotsRepoUrl = layout.buildDirectory.dir("repos/snapshots")
+            url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(System.getenv("GPG_SIGNING_KEY"), System.getenv("GPG_SIGNING_PASSPHRASE"))
+    sign(publishing.publications["maven"])
 }

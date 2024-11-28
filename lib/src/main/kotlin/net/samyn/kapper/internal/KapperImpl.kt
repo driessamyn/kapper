@@ -1,10 +1,10 @@
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.Kapper
+import net.samyn.kapper.Kapper.Field
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperResultException
 import net.samyn.kapper.internal.DbConnectionUtils.getDbFlavour
-import net.samyn.kapper.internal.Mapper.Field
 import net.samyn.kapper.internal.SQLTypesConverter.setParameter
 import java.sql.Connection
 import java.sql.ResultSet
@@ -12,7 +12,7 @@ import java.util.HashMap
 
 // TODO: this is only covered by the TestContainer integration tests.
 //  Break this up further and ensure unit test coverage.
-class KapperImpl : Kapper {
+internal class KapperImpl : Kapper {
     override fun <T : Any> query(
         clazz: Class<T>,
         connection: Connection,
