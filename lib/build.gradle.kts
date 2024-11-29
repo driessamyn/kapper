@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.git.semver)
 
     id("maven-publish")
+    id("signing")
 }
 
 repositories {
@@ -175,14 +176,6 @@ tasks.register<Jar>("dokkaJavadocJar") {
     archiveClassifier.set("javadoc")
 }
 
-object Meta {
-    const val desc = "Kapper - A Dapper-like lightweight ORM for Kotlin and the JVM"
-    const val license = "Apache-2.0"
-    const val githubRepo = "driessamyn/kapper"
-    const val release = "https://s01.oss.sonatype.org/service/local/"
-    const val snapshot = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-}
-
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -194,11 +187,11 @@ publishing {
             artifact(tasks["javadocJar"])
             pom {
                 name.set(project.name)
-                description.set(Meta.desc)
-                url.set("https://github.com/${Meta.githubRepo}")
+                description.set("Kapper - A lightweight ORM for Kotlin and the JVM")
+                url.set("https://github.com/driessamyn/kapper")
                 licenses {
                     license {
-                        name.set(Meta.license)
+                        name.set("Apache-2.0")
                         url.set("https://opensource.org/licenses/Apache-2.0")
                     }
                 }
@@ -210,19 +203,32 @@ publishing {
                 }
                 scm {
                     url.set(
-                        "https://github.com/${Meta.githubRepo}.git"
+                        "https://github.com/driessamyn/kapper.git",
                     )
                     connection.set(
-                        "scm:git:git://github.com/${Meta.githubRepo}.git"
+                        "scm:git:git://github.com/driessamyn/kapper.git",
                     )
                     developerConnection.set(
-                        "scm:git:git://github.com/${Meta.githubRepo}.git"
+                        "scm:git:git://github.com/driessamyn/kapper.git",
                     )
                 }
                 issueManagement {
-                    url.set("https://github.com/${Meta.githubRepo}/issues")
+                    url.set("https://github.com/driessamyn/kapper/issues")
                 }
             }
         }
     }
+
+    repositories {
+        maven {
+            val releasesRepoUrl = layout.buildDirectory.dir("repos/releases")
+            val snapshotsRepoUrl = layout.buildDirectory.dir("repos/snapshots")
+            url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(System.getenv("GPG_SIGNING_KEY"), System.getenv("GPG_SIGNING_PASSPHRASE"))
+    sign(publishing.publications["maven"])
 }

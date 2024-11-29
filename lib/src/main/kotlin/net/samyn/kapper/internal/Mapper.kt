@@ -1,5 +1,6 @@
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.Kapper.Field
 import net.samyn.kapper.KapperMappingException
 import java.sql.ResultSet
 import kotlin.reflect.KClass
@@ -65,6 +66,4 @@ internal class Mapper<T : Any>(
     }
 
     data class ColumnValue(val name: String, val value: Any?)
-
-    data class Field(val type: Int, val typeName: String)
 }
