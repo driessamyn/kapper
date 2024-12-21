@@ -1,12 +1,13 @@
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.Kapper.Field
 import net.samyn.kapper.KapperMappingException
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
-class Mapper<T : Any>(
+internal class Mapper<T : Any>(
     val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter::convert,
     val sqlTypesConverter: (Int, String, ResultSet, String) -> Any = SQLTypesConverter::convertSQLType,
@@ -65,6 +66,4 @@ class Mapper<T : Any>(
     }
 
     data class ColumnValue(val name: String, val value: Any?)
-
-    data class Field(val type: Int, val typeName: String)
 }

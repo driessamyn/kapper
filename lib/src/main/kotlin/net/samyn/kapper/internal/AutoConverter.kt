@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import java.util.UUID
 import kotlin.reflect.KClass
 
-object AutoConverter {
+internal object AutoConverter {
     fun convert(
         value: Any,
         target: KClass<*>,

@@ -5,3 +5,4 @@ plugins {
 
 rootProject.name = "kapper"
 include("lib")
+project(":lib").name = "kapper"
