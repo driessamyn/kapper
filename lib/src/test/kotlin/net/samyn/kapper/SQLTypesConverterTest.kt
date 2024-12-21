@@ -51,7 +51,7 @@ class SQLTypesConverterTest {
 
     @ParameterizedTest
     @MethodSource("parameterWithConvertTests")
-    fun `should map and convert values correctly`(
+    internal fun `should map and convert values correctly`(
         value: Any?,
         expectedSetter: (Int, Any?) -> Unit,
         expectedValue: Any?,

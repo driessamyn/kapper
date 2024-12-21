@@ -1,3 +1,5 @@
+import kotlinx.kover.gradle.plugin.dsl.AggregationType
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 import org.gradle.kotlin.dsl.test
 import org.jetbrains.dokka.DokkaConfiguration.Visibility
 import org.jetbrains.dokka.gradle.DokkaTask
@@ -89,30 +91,18 @@ val integrationTestImplementation by configurations.getting {
     extendsFrom(configurations.implementation.get())
 }
 
-koverReport {
-    defaults {
-        xml {
-            onCheck = true
-        }
-        html {
-            onCheck = true
-        }
-    }
-    filters {
-        excludes {
-            // Add any exclusions if needed
-            // classes("com.example.excluded.*")
+kover {
+    reports {
+        verify {
+            rule {
+                bound {
+                    aggregationForGroup = AggregationType.COVERED_PERCENTAGE
+                    coverageUnits = CoverageUnit.INSTRUCTION
+                    minValue = 95
+                }
+            }
         }
     }
-//    verify {
-//        rule {
-//            isEnabled = true
-//            bound {
-//                minValue = 80 // Set your desired coverage threshold
-//                valueType = kotlinx.kover.api.VerificationValueType.COVERED_LINES_PERCENTAGE
-//            }
-//        }
-//    }
 }
 
 tasks.register("koverFullReport") {

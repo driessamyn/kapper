@@ -1,7 +1,8 @@
 package net.samyn.kapper.internal
 
-import net.samyn.kapper.Kapper.Field
+import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
+import java.sql.JDBCType
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -10,7 +11,7 @@ import kotlin.reflect.full.primaryConstructor
 internal class Mapper<T : Any>(
     val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter::convert,
-    val sqlTypesConverter: (Int, String, ResultSet, String) -> Any = SQLTypesConverter::convertSQLType,
+    val sqlTypesConverter: (JDBCType, String, ResultSet, String) -> Any = SQLTypesConverter::convertSQLType,
 ) {
     // TODO: relax case sensitivity of tokens names?
     private val constructor: KFunction<T> =
