@@ -2,7 +2,7 @@
 # https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
 
 [versions]
-junit-jupiter = "5.11.3"
+junit-jupiter = "5.11.4"
 kotest = "6.0.0.M1"
 kotlin = "2.1.0"
 mockito = "5.14.2"
