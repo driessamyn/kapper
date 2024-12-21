@@ -1,12 +1,13 @@
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
-import net.samyn.kapper.Kapper.Field
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperResultException
 import net.samyn.kapper.internal.DbConnectionUtils.getDbFlavour
 import net.samyn.kapper.internal.SQLTypesConverter.setParameter
 import java.sql.Connection
+import java.sql.JDBCType
 import java.sql.ResultSet
 import java.util.HashMap
 
@@ -51,7 +52,7 @@ internal class KapperImpl : Kapper {
                 val fields =
                     (1..rs.metaData.columnCount).map {
                         rs.metaData.getColumnName(it) to
-                            Field(rs.metaData.getColumnType(it), rs.metaData.getColumnTypeName(it))
+                            Field(JDBCType.valueOf(rs.metaData.getColumnType(it)), rs.metaData.getColumnTypeName(it))
                     }.toMap()
                 while (rs.next()) {
                     results.add(

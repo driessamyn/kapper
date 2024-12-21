@@ -3,7 +3,6 @@ package net.samyn.kapper
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import net.samyn.kapper.internal.Mapper.Field
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.testcontainers.containers.JdbcDatabaseContainer

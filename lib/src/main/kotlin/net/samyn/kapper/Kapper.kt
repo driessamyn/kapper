@@ -1,6 +1,5 @@
 package net.samyn.kapper
 
-import net.samyn.kapper.Kapper.Field
 import net.samyn.kapper.internal.KapperImpl
 import java.sql.Connection
 import java.sql.ResultSet
@@ -317,6 +316,4 @@ interface Kapper {
         sql: String,
         args: Map<String, Any?>,
     ): Int
-
-    data class Field(val type: Int, val typeName: String)
 }
