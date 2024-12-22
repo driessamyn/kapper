@@ -6,6 +6,8 @@ import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperResultException
 import net.samyn.kapper.internal.DbConnectionUtils.getDbFlavour
 import net.samyn.kapper.internal.SQLTypesConverter.setParameter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.JDBCType
 import java.sql.ResultSet
@@ -14,6 +16,10 @@ import java.util.HashMap
 // TODO: this is only covered by the TestContainer integration tests.
 //  Break this up further and ensure unit test coverage.
 internal class KapperImpl : Kapper {
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    }
+
     override fun <T : Any> query(
         clazz: Class<T>,
         connection: Connection,
@@ -43,8 +49,7 @@ internal class KapperImpl : Kapper {
                     stmt.setObject(i, a.value)
                 }
             }
-            // TODO: introduce SLF4J
-            println(stmt)
+            logger.debug("Executing prepared statement: $stmt")
             // TODO: refactor
             stmt.executeQuery().use { rs ->
                 // TODO: cache data
@@ -111,8 +116,7 @@ internal class KapperImpl : Kapper {
                     stmt.setParameter(i, a.value, connection.getDbFlavour())
                 }
             }
-            // TODO: introduce SLF4J
-            println(stmt)
+            logger.debug("Executing prepared statement: $stmt")
             return stmt.executeUpdate()
         }
     }
