@@ -111,7 +111,6 @@ If you need support for another DB, and/or find an issue with a particular DB, f
 Kapper is in its early stages of development.
 The following will be worked on in the next few releases:
 
-- Introduce SLF4J for logging. 
 - Example repo to enhance the documentation.
 - Create a benchmark suite to validate performance.
 - Cache query parsing.

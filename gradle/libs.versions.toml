@@ -9,6 +9,7 @@ mockito = "5.14.2"
 mockk = "1.13.13"
 mysql-driver = "9.1.0"
 postgresql-driver = "42.7.4"
+slf4j = "2.0.16"
 test-conatainers = "1.20.4"
 
 [libraries]
@@ -20,6 +21,7 @@ mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mysql-driver = { module = "com.mysql:mysql-connector-j", version.ref = "mysql-driver" }
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql-driver" }
+slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 test-cotainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "test-conatainers" }
 test-containers-junit-mysql = { module = "org.testcontainers:mysql", version.ref = "test-conatainers" }
 test-containers-junit-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-conatainers" }
