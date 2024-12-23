@@ -20,6 +20,10 @@ plugins {
     id("signing")
 }
 
+semver {
+    changeLogFormat = git.semver.plugin.changelog.ChangeLogFormat.defaultChangeLog
+}
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -173,6 +177,7 @@ tasks.register<Jar>("dokkaJavadocJar") {
 }
 
 publishing {
+    println("Publishing version: $version")
     publications {
         create<MavenPublication>("maven") {
             groupId = project.group.toString()
