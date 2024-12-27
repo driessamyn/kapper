@@ -11,10 +11,11 @@ The main goals of the Kapper ORM are:
 2. **Performance**: Minimize overhead and dependencies to ensure fast execution of queries and updates.
 3. **Flexibility**: Allow integration with various database drivers and connection management strategies.
 
-Kapper aims to go against the grain of the heavy weight database abstractions such as Hibernate and JOOQ.
+Kapper aims to go against the grain of the heavyweight database abstractions such as Hibernate and JOOQ.
 Instead, it makes JDBC support easy without taking away any flexibility.
 In fact, it can happily live alongside an existing _vanilla_ JDBC integration.
-It does not generate code, it does not introduce another layer of abstraction, it is never intrusive.
+It does _not_ generate code, it does not introduce another layer of abstraction, it is never intrusive.
+It does _not_ hide SQL, instead it embraces the fact that SQL is the best language for DB interaction.
 
 Kapper also means hairdresser in Dutch, but I have yet to come up with a reason for why this is relevant.
 
@@ -75,7 +76,8 @@ ds.getConnection().use { connection ->
 }
 ```
 
-Other examples are available in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/).
+Other examples are available in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/) or in the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo.
+
 
 Kapper does not maintain a mapping between classes and DB tables or entities. 
 Instead, it can either map to a given class if the constructor arguments match the DB fields, or a mapping lambda can be passed in.
@@ -83,22 +85,32 @@ This means Kapper provides a strongly typed mapping, but still allows rows-to-ob
 
 ## Using Kapper in your project
 
-Currently, only snapshot releases are published.
-Stable versions will be published in due course, but if you want to try the snapshot releases, add the following dependency to your `build.gradle.kts`:
+Currently, only snapshot releases are published to [GitHub packages](./packages).
 
-  ```kotlin
-   dependencies {
-       implementation("com.github.driessamyn.kapper:kapper:<version>")
-   }
-   ```
-Or for Maven:
-   ```xml
-   <dependency>
-       <groupId>com.github.driessamyn.kapper</groupId>
-       <artifactId>kapper</artifactId>
-       <version>{version}</version>
-   </dependency>
-   ```
+Stable versions will be published in due course, but if you want to try the snapshot releases, ensure you configure GitHub packages as a repository:
+```kotlin
+repositories {
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/driessamyn/kapper")
+        credentials {
+            username = project.findProperty("gh.user") as String? ?: System.getenv("GH_USERNAME")
+            password = project.findProperty("gh.key") as String? ?: System.getenv("GH_TOKEN")
+        }
+    }
+}
+```
+
+And add the following dependency to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+   implementation("net.samyn:kapper:<VERSION>")
+}
+```
+
+See [Kapper-Example](https://github.com/driessamyn/kapper-examples) for example usage.
 
 ## Database support
 
@@ -111,11 +123,15 @@ If you need support for another DB, and/or find an issue with a particular DB, f
 Kapper is in its early stages of development.
 The following will be worked on in the next few releases:
 
-- Example repo to enhance the documentation.
 - Create a benchmark suite to validate performance.
 - Cache query parsing.
+- Improve date/time conversion.
 - Custom SQL type conversion.
 - Add MS SQL Server and Oracle integration tests.
+- Create transaction syntax sugar.
+- Support DTO argument for `execute`.
+
+Anything else you are missing, please [open an issue](kapper/issues) or submit a pull request.
 
 ## Contributing
 
