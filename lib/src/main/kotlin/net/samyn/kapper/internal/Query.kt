@@ -48,7 +48,7 @@ internal object QueryParser {
                         tokenNameBuilder = null
                         sqlBuilder.append(c)
                     } else {
-                        throw KapperParseException("$c is not a valid character part of the template token.")
+                        throw KapperParseException("'$c' is not a valid character part of the template token.")
                     }
                 }
                 else -> sqlBuilder.append(c)
@@ -67,5 +67,5 @@ internal object QueryParser {
 
     private fun Char.isValidTokenChar() = this.isLetterOrDigit() || this == '_' || this == '-'
 
-    private fun Char.isValidTokenSeparator() = this == ' ' || this == ',' || this == ')' || this == ';'
+    private fun Char.isValidTokenSeparator() = this == ' ' || this == ',' || this == ')' || this == ';' || this == '\n'
 }

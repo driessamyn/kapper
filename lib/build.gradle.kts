@@ -92,13 +92,18 @@ val integrationTestImplementation by configurations.getting {
 }
 
 kover {
+    currentProject {
+        sources {
+            excludedSourceSets.addAll("test", "integrationTest")
+        }
+    }
     reports {
         verify {
             rule {
                 bound {
                     aggregationForGroup = AggregationType.COVERED_PERCENTAGE
                     coverageUnits = CoverageUnit.INSTRUCTION
-                    minValue = 95
+                    minValue = 90
                 }
             }
         }

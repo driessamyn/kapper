@@ -1,9 +1,13 @@
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.KapperUnsupportedOperationException
 import net.samyn.kapper.internal.DbConnectionUtils.DbFlavour
 import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
+import java.util.Date
 import java.util.UUID
 
 // TODO: this could be more sophisticated by allowing type conversion hints.
@@ -23,16 +27,20 @@ internal object SQLTypesConverter {
                 -> resultSet.getBytes(field)
                 in listOf(JDBCType.BIT, JDBCType.BOOLEAN) -> resultSet.getBoolean(field)
                 in
+                listOf(JDBCType.CHAR),
+                -> resultSet.getString(field).toCharArray()[0]
+                in
                 listOf(
-                    JDBCType.CHAR, JDBCType.CLOB, JDBCType.LONGNVARCHAR, JDBCType.LONGVARCHAR,
+                    JDBCType.CLOB, JDBCType.LONGNVARCHAR, JDBCType.LONGVARCHAR,
                     JDBCType.NCHAR, JDBCType.NCLOB, JDBCType.NVARCHAR, JDBCType.ROWID, JDBCType.SQLXML, JDBCType.VARCHAR,
                 ),
                 -> resultSet.getString(field)
                 in listOf(JDBCType.DATE),
-                -> resultSet.getDate(field)
+                -> Date(resultSet.getDate(field).time)
                 in listOf(JDBCType.DECIMAL, JDBCType.FLOAT, JDBCType.NUMERIC, JDBCType.REAL),
                 -> resultSet.getFloat(field)
-                JDBCType.DOUBLE -> resultSet.getDouble(field)
+                JDBCType.DOUBLE ->
+                    resultSet.getDouble(field)
                 in listOf(JDBCType.INTEGER, JDBCType.SMALLINT, JDBCType.TINYINT),
                 -> resultSet.getInt(field)
                 JDBCType.JAVA_OBJECT,
@@ -43,7 +51,7 @@ internal object SQLTypesConverter {
                     JDBCType.TIME,
                     JDBCType.TIME_WITH_TIMEZONE,
                 ),
-                -> resultSet.getTime(field).toInstant()
+                -> resultSet.getTime(field).toLocalTime()
                 in
                 listOf(
                     JDBCType.TIMESTAMP,
@@ -57,7 +65,7 @@ internal object SQLTypesConverter {
                     when (sqlTypeName.lowercase()) {
                         "uuid" -> UUID.fromString(resultSet.getString(field))
                         else ->
-                            throw UnsupportedOperationException("Conversion from type $sqlType is not supported")
+                            throw KapperUnsupportedOperationException("Conversion from type $sqlType is not supported")
                     }
                 }
             }
@@ -76,6 +84,7 @@ internal object SQLTypesConverter {
             is Long -> setLong(index, value)
             is Float -> setFloat(index, value)
             is Double -> setDouble(index, value)
+            is Char -> setString(index, value.toString())
             is String -> setString(index, value)
             is ByteArray -> setBytes(index, value)
             is Boolean -> setBoolean(index, value)
@@ -86,6 +95,8 @@ internal object SQLTypesConverter {
                     setObject(index, value)
                 }
             }
+            is Instant -> setTimestamp(index, Timestamp.from(value))
+            is Date -> setDate(index, java.sql.Date(value.time))
             else -> setObject(index, value)
         }
     }
