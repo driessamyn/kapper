@@ -4,7 +4,13 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.AutoConverter
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.nio.ByteBuffer
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.util.Date
 import java.util.UUID
 
 class AutoConverterTest {
@@ -23,9 +29,17 @@ class AutoConverterTest {
     }
 
     @Test
-    fun `when invalid source type throw`() {
+    fun `when int cannot convert to UUID`() {
         shouldThrow<KapperUnsupportedOperationException> {
             AutoConverter.convert(123, UUID::class)
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["", "123e4567-e89b-12d3-a456-426614ZZZZZZ"])
+    fun `when invalid string cannot convert to UUID`(input: String) {
+        shouldThrow<KapperParseException> {
+            AutoConverter.convert(input, UUID::class)
         }
     }
 
@@ -33,6 +47,43 @@ class AutoConverterTest {
     fun `when invalid target type throw`() {
         shouldThrow<KapperUnsupportedOperationException> {
             AutoConverter.convert("123", String::class)
+        }
+    }
+
+    @Test
+    fun `convert valid Date to LocalDate`() {
+        val date = Date.from(Instant.parse("2023-10-01T00:00:00Z"))
+        val localDate = AutoConverter.convert(date, LocalDate::class) as LocalDate
+        localDate.shouldBe(LocalDate.of(2023, 10, 1))
+    }
+
+    @Test
+    fun `throw exception when invalid type is converted to LocalDate`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            AutoConverter.convert("2023-01-01", LocalDate::class) // Invalid input type
+        }
+    }
+
+    @Test
+    fun `convert valid LocalTime to Instant`() {
+        val time = LocalTime.of(12, 30) // 12:30 PM
+        val instant = AutoConverter.convert(time, Instant::class) as Instant
+        val expectedInstant = LocalDate.now().atTime(12, 30).toInstant(java.time.ZoneOffset.UTC)
+        instant.shouldBe(expectedInstant)
+    }
+
+    @Test
+    fun `convert LocalTime at midnight to Instant`() {
+        val midnight = LocalTime.MIDNIGHT
+        val instant = AutoConverter.convert(midnight, Instant::class) as Instant
+        val expectedInstant = LocalDate.now().atTime(0, 0).toInstant(java.time.ZoneOffset.UTC)
+        instant.shouldBe(expectedInstant)
+    }
+
+    @Test
+    fun `throw exception when invalid type is converted to Instant`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            AutoConverter.convert(Date(), Instant::class) // Invalid input type
         }
     }
 

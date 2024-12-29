@@ -1,7 +1,13 @@
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperUnsupportedOperationException
 import java.nio.ByteBuffer
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.util.Calendar
+import java.util.Date
 import java.util.UUID
 import kotlin.reflect.KClass
 
@@ -13,19 +19,44 @@ internal object AutoConverter {
         val converted =
             when (target) {
                 UUID::class -> {
-                    return if (value is String) {
-                        UUID.fromString(value)
+                    if (value is String) {
+                        try {
+                            UUID.fromString(value)
+                        } catch (e: Exception) {
+                            throw KapperParseException(
+                                "Cannot parse $value to UUID",
+                                e,
+                            )
+                        }
                     } else if (value is ByteArray) {
                         value.asUUID()
                     } else {
                         throw KapperUnsupportedOperationException(
-                            "Cannot auto-convert from ${value.javaClass} to ${target::class.java}",
+                            "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
                         )
                     }
                 }
+                LocalDate::class ->
+                    if (value is Date) {
+                        val cal = Calendar.getInstance()
+                        cal.time = value
+                        LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+                    } else {
+                        throw KapperUnsupportedOperationException(
+                            "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
+                        )
+                    }
+                Instant::class ->
+                    if (value is LocalTime) {
+                        value.atDate(LocalDate.now()).toInstant(java.time.ZoneOffset.UTC)
+                    } else {
+                        throw KapperUnsupportedOperationException(
+                            "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
+                        )
+                    }
                 else ->
                     throw KapperUnsupportedOperationException(
-                        "Cannot auto-convert from ${value.javaClass} to ${target::class.java}",
+                        "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
                     )
             }
         return converted

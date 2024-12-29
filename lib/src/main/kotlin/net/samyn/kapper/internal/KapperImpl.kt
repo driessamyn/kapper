@@ -46,7 +46,7 @@ internal class KapperImpl : Kapper {
                         ?: throw KapperParseException("Token with name `${a.key}' not found in template")
                 indexes.forEach { i ->
                     // TODO: allow custom SQL type conversion?
-                    stmt.setObject(i, a.value)
+                    stmt.setParameter(i, a.value, connection.getDbFlavour())
                 }
             }
             logger.debug("Executing prepared statement: $stmt")
