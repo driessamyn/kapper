@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.Date
 import java.util.UUID
@@ -77,6 +78,14 @@ class AutoConverterTest {
         val midnight = LocalTime.MIDNIGHT
         val instant = AutoConverter.convert(midnight, Instant::class) as Instant
         val expectedInstant = LocalDate.now().atTime(0, 0).toInstant(java.time.ZoneOffset.UTC)
+        instant.shouldBe(expectedInstant)
+    }
+
+    @Test
+    fun `convert valid LocalDateTime to Instant`() {
+        val now = LocalDateTime.now()
+        val instant = AutoConverter.convert(now, Instant::class) as Instant
+        val expectedInstant = now.toInstant(java.time.ZoneOffset.UTC)
         instant.shouldBe(expectedInstant)
     }
 
