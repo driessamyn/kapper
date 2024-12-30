@@ -5,6 +5,7 @@ import net.samyn.kapper.KapperUnsupportedOperationException
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.Calendar
 import java.util.Date
@@ -49,6 +50,8 @@ internal object AutoConverter {
                 Instant::class ->
                     if (value is LocalTime) {
                         value.atDate(LocalDate.now()).toInstant(java.time.ZoneOffset.UTC)
+                    } else if (value is LocalDateTime) {
+                        value.atZone(java.time.ZoneOffset.UTC).toInstant()
                     } else {
                         throw KapperUnsupportedOperationException(
                             "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
