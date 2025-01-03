@@ -47,6 +47,22 @@ internal object AutoConverter {
                             "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
                         )
                     }
+                LocalDateTime::class ->
+                    if (value is Instant) {
+                        LocalDateTime.ofInstant(value, java.time.ZoneOffset.UTC)
+                    } else {
+                        throw KapperUnsupportedOperationException(
+                            "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
+                        )
+                    }
+                LocalTime::class ->
+                    if (value is Instant) {
+                        LocalTime.ofInstant(value, java.time.ZoneOffset.UTC)
+                    } else {
+                        throw KapperUnsupportedOperationException(
+                            "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
+                        )
+                    }
                 Instant::class ->
                     if (value is LocalTime) {
                         value.atDate(LocalDate.now()).toInstant(java.time.ZoneOffset.UTC)
