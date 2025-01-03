@@ -96,6 +96,36 @@ class AutoConverterTest {
         }
     }
 
+    @Test
+    fun `convert valid Instant to LocalDateTime`() {
+        val now = Instant.now()
+        val localDateTime = AutoConverter.convert(now, LocalDateTime::class) as LocalDateTime
+        val expectedDt = LocalDateTime.ofInstant(now, java.time.ZoneOffset.UTC)
+        localDateTime.shouldBe(expectedDt)
+    }
+
+    @Test
+    fun `throw exception when invalid type is converted to LocalDateTime`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            AutoConverter.convert(Date(), LocalDateTime::class) // Invalid input type
+        }
+    }
+
+    @Test
+    fun `convert valid Instant to LocalTime`() {
+        val now = Instant.now()
+        val locaTime = AutoConverter.convert(now, LocalTime::class) as LocalTime
+        val expectedTime = LocalTime.ofInstant(now, java.time.ZoneOffset.UTC)
+        locaTime.shouldBe(expectedTime)
+    }
+
+    @Test
+    fun `throw exception when invalid type is converted to LocalTime`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            AutoConverter.convert(Date(), LocalTime::class) // Invalid input type
+        }
+    }
+
     private fun UUID.asBytes(): ByteArray {
         val b = ByteBuffer.wrap(ByteArray(16))
         b.putLong(mostSignificantBits)
