@@ -9,17 +9,16 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
 internal class Mapper<T : Any>(
-    val clazz: Class<T>,
+    private val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter::convert,
-    val sqlTypesConverter: (JDBCType, String, ResultSet, String) -> Any = SQLTypesConverter::convertSQLType,
+    val sqlTypesConverter: (JDBCType, String, ResultSet, Int) -> Any = SQLTypesConverter::convertSQLType,
 ) {
     // TODO: relax case sensitivity of tokens names?
     private val constructor: KFunction<T> =
         clazz.kotlin.primaryConstructor
             ?: throw KapperMappingException("No primary constructor found for ${clazz.name}")
     private val properties =
-        constructor.parameters
-            .map { it.name to it }.toMap()
+        constructor.parameters.associateBy { it.name?.lowercase() }
 
     private fun createInstance(columns: List<ColumnValue>): T {
         if (columns.size > properties.size) {
@@ -35,9 +34,9 @@ internal class Mapper<T : Any>(
             }
         }
         val args =
-            columns.map {
+            columns.associate {
                 val prop =
-                    properties[it.name]
+                    properties[it.name.lowercase()]
                         ?: throw KapperMappingException("No property found for ${it.name}")
                 // TODO: optimise this
                 if (it.value == null) {
@@ -47,7 +46,7 @@ internal class Mapper<T : Any>(
                 } else {
                     prop to it.value
                 }
-            }.toMap()
+            }
         val instance = constructor.callBy(args)
         return instance
     }
@@ -60,7 +59,7 @@ internal class Mapper<T : Any>(
             fields.map { field ->
                 ColumnValue(
                     field.key,
-                    sqlTypesConverter(field.value.type, field.value.typeName, resultSet, field.key),
+                    sqlTypesConverter(field.value.type, field.value.typeName, resultSet, field.value.columnIndex),
                 )
             },
         )

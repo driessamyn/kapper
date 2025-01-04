@@ -2,6 +2,7 @@ package net.samyn.kapper
 
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -75,6 +76,22 @@ class QueryTests : AbstractDbTests() {
             heroes.shouldContainExactlyInAnyOrder(
                 superman,
                 batman,
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("databaseContainers")
+    fun `support field labels`(container: JdbcDatabaseContainer<*>) {
+        data class SimpleClass(val superHeroName: String)
+        createConnection(container).use { connection ->
+            val hero =
+                connection.query<SimpleClass>(
+                    "SELECT name as superHeroName FROM super_heroes WHERE id = :id",
+                    "id" to superman.id,
+                )
+            hero.shouldContainOnly(
+                SimpleClass(superman.name),
             )
         }
     }

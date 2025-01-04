@@ -72,60 +72,60 @@ class SQLTypesConverterTest {
         @JvmStatic
         fun convertSQLTypeTests() =
             listOf(
-                arguments(named("ARRAY", JDBCType.ARRAY), "ARRAY", { f: String -> resultSet.getArray(f) }),
-                arguments(named("BIGINT", JDBCType.BIGINT), "BIGINT", { f: String -> resultSet.getLong(f) }),
-                arguments(named("BINARY", JDBCType.BINARY), "BINARY", { f: String -> resultSet.getBytes(f) }),
-                arguments(named("BLOB", JDBCType.BLOB), "BLOB", { f: String -> resultSet.getBytes(f) }),
+                arguments(named("ARRAY", JDBCType.ARRAY), "ARRAY", { f: Int -> resultSet.getArray(f) }),
+                arguments(named("BIGINT", JDBCType.BIGINT), "BIGINT", { f: Int -> resultSet.getLong(f) }),
+                arguments(named("BINARY", JDBCType.BINARY), "BINARY", { f: Int -> resultSet.getBytes(f) }),
+                arguments(named("BLOB", JDBCType.BLOB), "BLOB", { f: Int -> resultSet.getBytes(f) }),
                 arguments(
                     named("LONGVARBINARY", JDBCType.LONGVARBINARY),
                     "LONGVARBINARY",
-                    { f: String -> resultSet.getBytes(f) },
+                    { f: Int -> resultSet.getBytes(f) },
                 ),
-                arguments(named("VARBINARY", JDBCType.VARBINARY), "VARBINARY", { f: String -> resultSet.getBytes(f) }),
-                arguments(named("BIT", JDBCType.BIT), "BIT", { f: String -> resultSet.getBoolean(f) }),
-                arguments(named("BOOLEAN", JDBCType.BOOLEAN), "BOOLEAN", { f: String -> resultSet.getBoolean(f) }),
-                arguments(named("CLOB", JDBCType.CLOB), "CLOB", { f: String -> resultSet.getString(f) }),
+                arguments(named("VARBINARY", JDBCType.VARBINARY), "VARBINARY", { f: Int -> resultSet.getBytes(f) }),
+                arguments(named("BIT", JDBCType.BIT), "BIT", { f: Int -> resultSet.getBoolean(f) }),
+                arguments(named("BOOLEAN", JDBCType.BOOLEAN), "BOOLEAN", { f: Int -> resultSet.getBoolean(f) }),
+                arguments(named("CLOB", JDBCType.CLOB), "CLOB", { f: Int -> resultSet.getString(f) }),
                 arguments(
                     named("LONGNVARCHAR", JDBCType.LONGNVARCHAR),
                     "LONGNVARCHAR",
-                    { f: String -> resultSet.getString(f) },
+                    { f: Int -> resultSet.getString(f) },
                 ),
                 arguments(
                     named("LONGVARCHAR", JDBCType.LONGVARCHAR),
                     "LONGVARCHAR",
-                    { f: String -> resultSet.getString(f) },
+                    { f: Int -> resultSet.getString(f) },
                 ),
-                arguments(named("NCHAR", JDBCType.NCHAR), "NCHAR", { f: String -> resultSet.getString(f) }),
-                arguments(named("NCLOB", JDBCType.NCLOB), "NCLOB", { f: String -> resultSet.getString(f) }),
-                arguments(named("NVARCHAR", JDBCType.NVARCHAR), "NVARCHAR", { f: String -> resultSet.getString(f) }),
-                arguments(named("ROWID", JDBCType.ROWID), "ROWID", { f: String -> resultSet.getString(f) }),
-                arguments(named("SQLXML", JDBCType.SQLXML), "SQLXML", { f: String -> resultSet.getString(f) }),
-                arguments(named("VARCHAR", JDBCType.VARCHAR), "VARCHAR", { f: String -> resultSet.getString(f) }),
-                arguments(named("DATE", JDBCType.DATE), "DATE", { f: String -> resultSet.getDate(f) }),
-                arguments(named("DECIMAL", JDBCType.DECIMAL), "DECIMAL", { f: String -> resultSet.getFloat(f) }),
-                arguments(named("FLOAT", JDBCType.FLOAT), "FLOAT", { f: String -> resultSet.getFloat(f) }),
-                arguments(named("NUMERIC", JDBCType.NUMERIC), "NUMERIC", { f: String -> resultSet.getFloat(f) }),
-                arguments(named("REAL", JDBCType.REAL), "REAL", { f: String -> resultSet.getFloat(f) }),
-                arguments(named("DOUBLE", JDBCType.DOUBLE), "DOUBLE", { f: String -> resultSet.getDouble(f) }),
-                arguments(named("INTEGER", JDBCType.INTEGER), "INTEGER", { f: String -> resultSet.getInt(f) }),
-                arguments(named("SMALLINT", JDBCType.SMALLINT), "SMALLINT", { f: String -> resultSet.getInt(f) }),
-                arguments(named("TINYINT", JDBCType.TINYINT), "TINYINT", { f: String -> resultSet.getInt(f) }),
+                arguments(named("NCHAR", JDBCType.NCHAR), "NCHAR", { f: Int -> resultSet.getString(f) }),
+                arguments(named("NCLOB", JDBCType.NCLOB), "NCLOB", { f: Int -> resultSet.getString(f) }),
+                arguments(named("NVARCHAR", JDBCType.NVARCHAR), "NVARCHAR", { f: Int -> resultSet.getString(f) }),
+                arguments(named("ROWID", JDBCType.ROWID), "ROWID", { f: Int -> resultSet.getString(f) }),
+                arguments(named("SQLXML", JDBCType.SQLXML), "SQLXML", { f: Int -> resultSet.getString(f) }),
+                arguments(named("VARCHAR", JDBCType.VARCHAR), "VARCHAR", { f: Int -> resultSet.getString(f) }),
+                arguments(named("DATE", JDBCType.DATE), "DATE", { f: Int -> resultSet.getDate(f) }),
+                arguments(named("DECIMAL", JDBCType.DECIMAL), "DECIMAL", { f: Int -> resultSet.getFloat(f) }),
+                arguments(named("FLOAT", JDBCType.FLOAT), "FLOAT", { f: Int -> resultSet.getFloat(f) }),
+                arguments(named("NUMERIC", JDBCType.NUMERIC), "NUMERIC", { f: Int -> resultSet.getFloat(f) }),
+                arguments(named("REAL", JDBCType.REAL), "REAL", { f: Int -> resultSet.getFloat(f) }),
+                arguments(named("DOUBLE", JDBCType.DOUBLE), "DOUBLE", { f: Int -> resultSet.getDouble(f) }),
+                arguments(named("INTEGER", JDBCType.INTEGER), "INTEGER", { f: Int -> resultSet.getInt(f) }),
+                arguments(named("SMALLINT", JDBCType.SMALLINT), "SMALLINT", { f: Int -> resultSet.getInt(f) }),
+                arguments(named("TINYINT", JDBCType.TINYINT), "TINYINT", { f: Int -> resultSet.getInt(f) }),
                 arguments(
                     named("JAVA_OBJECT", JDBCType.JAVA_OBJECT),
                     "JAVA_OBJECT",
-                    { f: String -> resultSet.getObject(f) },
+                    { f: Int -> resultSet.getObject(f) },
                 ),
-                arguments(named("TIME", JDBCType.TIME), "TIME", { f: String -> resultSet.getTime(f) }),
+                arguments(named("TIME", JDBCType.TIME), "TIME", { f: Int -> resultSet.getTime(f) }),
                 arguments(
                     named("TIME_WITH_TIMEZONE", JDBCType.TIME),
                     "TIME_WITH_TIMEZONE",
-                    { f: String -> resultSet.getTime(f) },
+                    { f: Int -> resultSet.getTime(f) },
                 ),
-                arguments(named("TIMESTAMP", JDBCType.TIMESTAMP), "TIMESTAMP", { f: String -> resultSet.getTimestamp(f) }),
+                arguments(named("TIMESTAMP", JDBCType.TIMESTAMP), "TIMESTAMP", { f: Int -> resultSet.getTimestamp(f) }),
                 arguments(
                     named("TIMESTAMP_WITH_TIMEZONE", JDBCType.TIMESTAMP_WITH_TIMEZONE),
                     "TIMESTAMP_WITH_TIMEZONE",
-                    { f: String -> resultSet.getTimestamp(f) },
+                    { f: Int -> resultSet.getTimestamp(f) },
                 ),
             )
 
@@ -179,24 +179,24 @@ class SQLTypesConverterTest {
     fun `should convert SQL types correctly`(
         jdbcType: JDBCType,
         sqlTypeName: String,
-        expectedGetter: (String) -> Any,
+        expectedGetter: (Int) -> Any,
     ) {
-        SQLTypesConverter.convertSQLType(jdbcType, sqlTypeName, resultSet, "foo")
-        verify { expectedGetter("foo") }
+        SQLTypesConverter.convertSQLType(jdbcType, sqlTypeName, resultSet, 1)
+        verify { expectedGetter(1) }
     }
 
     @ParameterizedTest
     @MethodSource("convertSQLTypeUnsupportedTests")
     fun `unsupported SQL types throws`(jdbcType: JDBCType) {
         assertThrows<KapperUnsupportedOperationException> {
-            SQLTypesConverter.convertSQLType(jdbcType, jdbcType.toString(), resultSet, "foo")
+            SQLTypesConverter.convertSQLType(jdbcType, jdbcType.toString(), resultSet, 1)
         }
     }
 
     @Test
     fun `char needs truncating`() {
-        every { resultSet.getString("char") } returns "example"
-        val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, "char")
+        every { resultSet.getString(1) } returns "example"
+        val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, 1)
 
         result.shouldBe('e')
     }
@@ -204,8 +204,8 @@ class SQLTypesConverterTest {
     @Test
     fun `uuid needs parsing`() {
         val id = UUID.randomUUID()
-        every { resultSet.getString("uuid") } returns id.toString()
-        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, "uuid")
+        every { resultSet.getString(2) } returns id.toString()
+        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, 2)
 
         result.shouldBe(id)
     }
@@ -213,8 +213,8 @@ class SQLTypesConverterTest {
     @Test
     fun `time needs converting`() {
         val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
-        every { resultSet.getTime("time") } returns Time.valueOf(time)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME, "time", resultSet, "time")
+        every { resultSet.getTime(3) } returns Time.valueOf(time)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME, "time", resultSet, 3)
 
         result.shouldBe(time)
     }
@@ -222,8 +222,8 @@ class SQLTypesConverterTest {
     @Test
     fun `time with zone needs converting`() {
         val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
-        every { resultSet.getTime("time-zone") } returns Time.valueOf(time)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME_WITH_TIMEZONE, "time", resultSet, "time-zone")
+        every { resultSet.getTime(4) } returns Time.valueOf(time)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME_WITH_TIMEZONE, "time", resultSet, 4)
 
         result.shouldBe(time)
     }
@@ -231,8 +231,8 @@ class SQLTypesConverterTest {
     @Test
     fun `timestamp needs converting`() {
         val timestamp = Instant.now()
-        every { resultSet.getTimestamp("timestamp") } returns Timestamp.from(timestamp)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP, "timestamp", resultSet, "timestamp")
+        every { resultSet.getTimestamp(5) } returns Timestamp.from(timestamp)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP, "timestamp", resultSet, 5)
 
         result.shouldBe(timestamp)
     }
@@ -240,8 +240,8 @@ class SQLTypesConverterTest {
     @Test
     fun `timestamp with zone needs converting`() {
         val timestamp = Instant.now()
-        every { resultSet.getTimestamp("timestamp-zone") } returns Timestamp.from(timestamp)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "timestamp", resultSet, "timestamp-zone")
+        every { resultSet.getTimestamp(6) } returns Timestamp.from(timestamp)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "timestamp", resultSet, 6)
 
         result.shouldBe(timestamp)
     }

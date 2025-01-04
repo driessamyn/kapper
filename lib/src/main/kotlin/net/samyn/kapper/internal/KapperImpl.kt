@@ -55,10 +55,14 @@ internal class KapperImpl : Kapper {
                 // TODO: cache data
                 // TODO: cash fields (persist in query?)
                 val fields =
-                    (1..rs.metaData.columnCount).map {
-                        rs.metaData.getColumnName(it) to
-                            Field(JDBCType.valueOf(rs.metaData.getColumnType(it)), rs.metaData.getColumnTypeName(it))
-                    }.toMap()
+                    (1..rs.metaData.columnCount).associate {
+                        rs.metaData.getColumnLabel(it) to
+                            Field(
+                                it,
+                                JDBCType.valueOf(rs.metaData.getColumnType(it)),
+                                rs.metaData.getColumnTypeName(it),
+                            )
+                    }
                 while (rs.next()) {
                     results.add(
                         mapper(rs, fields),

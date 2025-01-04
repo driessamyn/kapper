@@ -17,53 +17,53 @@ internal object SQLTypesConverter {
         sqlType: JDBCType,
         sqlTypeName: String,
         resultSet: ResultSet,
-        field: String,
+        fieldIndex: Int,
     ): Any {
         val result =
             when (sqlType) {
-                JDBCType.ARRAY -> resultSet.getArray(field)
-                JDBCType.BIGINT -> resultSet.getLong(field)
+                JDBCType.ARRAY -> resultSet.getArray(fieldIndex)
+                JDBCType.BIGINT -> resultSet.getLong(fieldIndex)
                 in listOf(JDBCType.BINARY, JDBCType.BLOB, JDBCType.LONGVARBINARY, JDBCType.VARBINARY),
-                -> resultSet.getBytes(field)
-                in listOf(JDBCType.BIT, JDBCType.BOOLEAN) -> resultSet.getBoolean(field)
+                -> resultSet.getBytes(fieldIndex)
+                in listOf(JDBCType.BIT, JDBCType.BOOLEAN) -> resultSet.getBoolean(fieldIndex)
                 in
                 listOf(JDBCType.CHAR),
-                -> resultSet.getString(field).toCharArray()[0]
+                -> resultSet.getString(fieldIndex).toCharArray()[0]
                 in
                 listOf(
                     JDBCType.CLOB, JDBCType.LONGNVARCHAR, JDBCType.LONGVARCHAR,
                     JDBCType.NCHAR, JDBCType.NCLOB, JDBCType.NVARCHAR, JDBCType.ROWID, JDBCType.SQLXML, JDBCType.VARCHAR,
                 ),
-                -> resultSet.getString(field)
+                -> resultSet.getString(fieldIndex)
                 in listOf(JDBCType.DATE),
-                -> Date(resultSet.getDate(field).time)
+                -> Date(resultSet.getDate(fieldIndex).time)
                 in listOf(JDBCType.DECIMAL, JDBCType.FLOAT, JDBCType.NUMERIC, JDBCType.REAL),
-                -> resultSet.getFloat(field)
+                -> resultSet.getFloat(fieldIndex)
                 JDBCType.DOUBLE ->
-                    resultSet.getDouble(field)
+                    resultSet.getDouble(fieldIndex)
                 in listOf(JDBCType.INTEGER, JDBCType.SMALLINT, JDBCType.TINYINT),
-                -> resultSet.getInt(field)
+                -> resultSet.getInt(fieldIndex)
                 JDBCType.JAVA_OBJECT,
-                -> resultSet.getObject(field)
+                -> resultSet.getObject(fieldIndex)
                 // TODO: validate these with regards to timezones etc. This may be DB specific.
                 in
                 listOf(
                     JDBCType.TIME,
                     JDBCType.TIME_WITH_TIMEZONE,
                 ),
-                -> resultSet.getTime(field).toLocalTime()
+                -> resultSet.getTime(fieldIndex).toLocalTime()
                 in
                 listOf(
                     JDBCType.TIMESTAMP,
                     JDBCType.TIMESTAMP_WITH_TIMEZONE,
                 ),
-                -> resultSet.getTimestamp(field).toInstant()
+                -> resultSet.getTimestamp(fieldIndex).toInstant()
 
                 // includes: DATALINK, DISTINCT, OTHER, REF, REF_CURSOR, STRUCT, NULL
                 else -> {
                     // use name if type is
                     when (sqlTypeName.lowercase()) {
-                        "uuid" -> UUID.fromString(resultSet.getString(field))
+                        "uuid" -> UUID.fromString(resultSet.getString(fieldIndex))
                         else ->
                             throw KapperUnsupportedOperationException("Conversion from type $sqlType is not supported")
                     }
