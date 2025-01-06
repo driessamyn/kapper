@@ -23,6 +23,7 @@ plugins {
 
 semver {
     changeLogFormat = git.semver.plugin.changelog.ChangeLogFormat.defaultChangeLog
+    releasePattern = "\\Abuild: release(?:\\([^()]+\\))?:"
 }
 
 repositories {
