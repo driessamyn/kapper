@@ -1,8 +1,8 @@
-name: Create release and publish to Maven Central
+name: Create release
 on:
   push:
     tags:
-      - 'v*'
+      - '*.*.*'
 jobs:
   release:
     runs-on: ubuntu-latest
