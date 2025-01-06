@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.dokka)
     alias(libs.plugins.git.semver)
+    alias(libs.plugins.deployer)
 
     id("maven-publish")
     id("signing")
@@ -176,71 +177,72 @@ tasks.register<Jar>("dokkaJavadocJar") {
     archiveClassifier.set("javadoc")
 }
 
+private val info =
+    object {
+        val name = project.name
+        val groupId = project.group.toString()
+        val version = project.version.toString()
+        val description = "Kapper - A lightweight ORM for Kotlin and the JVM"
+        val ghUser = "driessamyn"
+        val ghProject = "kapper"
+        val url = "https://github.com/$ghUser/$ghProject"
+        val gitUrl = "$url.git"
+        val issuesUrl = "$url/issues"
+        val licence = "Apache-2.0"
+        val licenceUrl = "https://opensource.org/licenses/Apache-2.0"
+        val author = "Dries Samyn"
+    }
+
 publishing {
-    println("Publishing version: $version")
     publications {
         create<MavenPublication>("maven") {
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
+            groupId = info.groupId
+            artifactId = info.name
+            version = info.version
             from(components["kotlin"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["javadocJar"])
-            pom {
-                name.set(project.name)
-                description.set("Kapper - A lightweight ORM for Kotlin and the JVM")
-                url.set("https://github.com/driessamyn/kapper")
-                licenses {
-                    license {
-                        name.set("Apache-2.0")
-                        url.set("https://opensource.org/licenses/Apache-2.0")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("driessamyn")
-                        name.set("Dries Samyn")
-                    }
-                }
-                scm {
-                    url.set(
-                        "https://github.com/driessamyn/kapper.git",
-                    )
-                    connection.set(
-                        "scm:git:git://github.com/driessamyn/kapper.git",
-                    )
-                    developerConnection.set(
-                        "scm:git:git://github.com/driessamyn/kapper.git",
-                    )
-                }
-                issueManagement {
-                    url.set("https://github.com/driessamyn/kapper/issues")
-                }
-            }
-        }
-
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                setUrl("https://maven.pkg.github.com/driessamyn/kapper")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            val releasesRepoUrl = layout.buildDirectory.dir("repos/releases")
-            val snapshotsRepoUrl = layout.buildDirectory.dir("repos/snapshots")
-            url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
         }
     }
 }
 
-signing {
-    useInMemoryPgpKeys(System.getenv("GPG_SIGNING_KEY"), System.getenv("GPG_SIGNING_PASSPHRASE"))
-    sign(publishing.publications["maven"])
+deployer {
+    println("Publishing version: $version")
+//    verbose = true
+    release.version = info.version
+    projectInfo {
+        name.set(info.name)
+        description.set(info.description)
+        url.set(info.url)
+        groupId.set(info.groupId)
+        artifactId.set(info.name)
+        scm {
+            fromGithub(info.ghUser, info.ghProject)
+        }
+        license(apache2)
+        developer(info.ghUser, "dries@samyn.net")
+    }
+    content {
+        component {
+            fromMavenPublication("maven", clone = false)
+        }
+    }
+
+    localSpec {
+        directory.set(rootProject.layout.buildDirectory.get().dir("inspect"))
+    }
+    centralPortalSpec {
+        auth.user.set(secret("MAVEN_USERNAME"))
+        auth.password.set(secret("MAVEN_PASSWORD"))
+
+        signing.key.set(secret("GPG_SIGNING_KEY"))
+        signing.password.set(secret("GPG_SIGNING_PASSPHRASE"))
+    }
+    githubSpec {
+        owner.set("driessamyn")
+        repository.set("kapper")
+
+        auth.user.set(secret("GH_USER"))
+        auth.token.set(secret("GH_TOKEN"))
+    }
 }

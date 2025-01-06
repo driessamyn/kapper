@@ -1,0 +1,36 @@
+name: Create release and publish to Maven Central
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_USER: driessamyn
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+      GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+      MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+      MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+      - name: Publish package to Nexus
+        run: ./gradlew deployCentralPortal
+
+      - name: Create GitHub release
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          version=$(./gradlew -q printVersion)
+          ./gradlew -q printChangeLog | gh release create $tag -d -t "Kapper $version" -F -

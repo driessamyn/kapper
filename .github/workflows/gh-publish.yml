@@ -1,12 +1,15 @@
-name: Publish GitHub Packages
+name: Publish JAR to GitHub Packages
 on:
-#  release:
-#    types: [created]
   push:
     branches: [ main ]
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      GH_USER: driessamyn
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+      GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
     permissions:
       contents: read
       packages: write
@@ -20,11 +23,5 @@ jobs:
           distribution: 'zulu'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
-
       - name: Publish package
-        run: ./gradlew publish -V
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
-
+        run: ./gradlew deployGithub
