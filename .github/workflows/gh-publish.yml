@@ -1,7 +1,14 @@
 name: Publish JAR to GitHub Packages
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - 'release/*'
+
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest

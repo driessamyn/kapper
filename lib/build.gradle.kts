@@ -208,8 +208,6 @@ publishing {
 }
 
 deployer {
-    println("Publishing version: $version")
-//    verbose = true
     release.version = info.version
     projectInfo {
         name.set(info.name)
