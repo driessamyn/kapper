@@ -4,16 +4,18 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library for the Kotlin programming language, targeting the JVM ecosystem.
+It embraces SQL rathe than abstracting it away, providing a simple, intuitive API for executing queries and mapping results.
 
 The main goals of the Kapper ORM are:
 
-1. **Simplicity**: Provide a simple, intuitive API for common database operations, following Kotlin idioms.
-2. **Performance**: Minimize overhead and dependencies to ensure fast execution of queries and updates.
+1. **Simplicity**: Provide a simple, intuitive API for common database operations, following Kotlin idioms, but available to other JVM languages.
+2. **Performance**: Minimize overhead and dependencies.
 3. **Flexibility**: Allow integration with various database drivers and connection management strategies.
 
 Kapper aims to go against the grain of the heavyweight database abstractions such as Hibernate and JOOQ.
 Instead, it makes JDBC support easy without taking away any flexibility.
-In fact, it can happily live alongside an existing _vanilla_ JDBC integration.
+In fact, it can happily live alongside an existing _vanilla_ JDBC integration and/or your existing DB layer.
+
 It does _not_ generate code, it does not introduce another layer of abstraction, it is never intrusive.
 It does _not_ hide SQL, instead it embraces the fact that SQL is the best language for DB interaction.
 
@@ -76,8 +78,8 @@ ds.getConnection().use { connection ->
 }
 ```
 
-Other examples are available in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/) or in the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo.
-
+Other examples are available in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/) or check out the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo for more extended examples and documentation,
+including [a comparison with Hibernate and Ktorm](https://github.com/driessamyn/kapper-examples/tree/release-1.0-article?tab=readme-ov-file#comparison-with-orms).
 
 Kapper does not maintain a mapping between classes and DB tables or entities. 
 Instead, it can either map to a given class if the constructor arguments match the DB fields, or a mapping lambda can be passed in.
@@ -124,14 +126,18 @@ Kapper is in its early stages of development.
 The following will be worked on in the next few releases:
 
 - Create a benchmark suite to validate performance.
+- Improve and additional support for date/time conversion.
+- Increase Java API compatibility tests & examples.
+- Improve user documentation.
 - Cache query parsing.
-- Improve date/time conversion.
 - Custom SQL type conversion.
+- Bulk operations support
 - Add MS SQL Server and Oracle integration tests.
+- Tests & examples in other JVM languages.
 - Create transaction syntax sugar.
 - Support DTO argument for `execute`.
 
-Anything else you are missing, please [open an issue](kapper/issues) or submit a pull request.
+Anything else you are missing or want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
 
 ## Contributing
 
