@@ -3,16 +3,28 @@
 ![build](https://github.com/driessamyn/kapper/actions/workflows/build-and-test.yml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library for the Kotlin programming language, targeting the JVM ecosystem.
+<img alt="logo" src="./img/kapper-logo-small.png" align="left" style="margin-right: 7px;"/>
+
+<p style="font: italic bold 20px sans-serif;padding-top:7px;line-height: 1.6;">SQL is not a problem to be solved - it's a powerful tool to be embraced.<br />
+This is the philosophy behind Kapper...</p>
+
+<br clear="left" />
+
+Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library written in Kotlin, targeting the JVM ecosystem.
 It embraces SQL rathe than abstracting it away, providing a simple, intuitive API for executing queries and mapping results.
 
-The main goals of the Kapper ORM are:
+## The Kapper Philosophy
 
-1. **Simplicity**: Provide a simple, intuitive API for common database operations, following Kotlin idioms, but available to other JVM languages.
-2. **Performance**: Minimize overhead and dependencies.
-3. **Flexibility**: Allow integration with various database drivers and connection management strategies.
+Instead of adding another abstraction layer, Kapper embraces three core principles:
 
-Kapper aims to go against the grain of the heavyweight database abstractions such as Hibernate and JOOQ.
+1. **SQL is the Best Query Language**: SQL has evolved over decades to be expressive, powerful, and optimized for database operations.
+Instead of hiding it, we should leverage it directly.
+2. **Minimal Abstraction**: Kapper provides just enough abstraction to make database operations comfortable in Kotlin, without trying to reinvent database interactions. 
+Kapper prefers extension of existing APIs than abstraction of them.
+3. **Transparency**: What you write is what gets executed.
+There's no magic query generation or hidden database calls.
+
+Kapper aims to go against the grain of the heavyweight database abstractions.
 Instead, it makes JDBC support easy without taking away any flexibility.
 In fact, it can happily live alongside an existing _vanilla_ JDBC integration and/or your existing DB layer.
 
@@ -126,6 +138,7 @@ Kapper is in its early stages of development.
 The following will be worked on in the next few releases:
 
 - Create a benchmark suite to validate performance.
+- Add async & co-routine support.
 - Improve and additional support for date/time conversion.
 - Increase Java API compatibility tests & examples.
 - Improve user documentation.
