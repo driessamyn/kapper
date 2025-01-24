@@ -49,7 +49,7 @@ internal class KapperImpl : Kapper {
                     stmt.setParameter(i, a.value, connection.getDbFlavour())
                 }
             }
-            logger.debug("Executing prepared statement: $stmt")
+            logger.debug("Executing prepared statement: {}", stmt)
             // TODO: refactor
             stmt.executeQuery().use { rs ->
                 // TODO: cache data
