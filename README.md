@@ -132,25 +132,31 @@ Kapper's integration tests currently cover Postgresql and MySQL.
 Other DBs will be added.
 If you need support for another DB, and/or find an issue with a particular DB, feel free to [open an issue](kapper/issues) or, even better, submit a pull request. 
 
+# External content
+
+- [Dev.to - Kapper, a Fresh Look at ORMs for Kotlin and the JVM ](https://dev.to/driessamyn/kapper-a-fresh-look-at-orms-for-kotlin-and-the-jvm-1ln5)
+
 ## Roadmap
 
 Kapper is in its early stages of development.
 The following will be worked on in the next few releases:
 
-- Create a benchmark suite to validate performance.
-- Add async & co-routine support.
-- Improve and additional support for date/time conversion.
-- Increase Java API compatibility tests & examples.
-- Improve user documentation.
-- Cache query parsing.
-- Custom SQL type conversion.
-- Bulk operations support
-- Add MS SQL Server and Oracle integration tests.
-- Tests & examples in other JVM languages.
-- Create transaction syntax sugar.
-- Support DTO argument for `execute`.
+- [ ] Create a benchmark suite to validate performance.
+- [ ] Add co-routine support.
+- [ ] Add stream support.
+- [ ] Improve and additional support for date/time conversion.
+- [ ] Increase Java API compatibility tests & examples.
+- [ ] Improve user documentation.
+- [ ] Cache query parsing.
+- [ ] Custom SQL type conversion.
+- [ ] Bulk operations support
+- [ ] Add MS SQL Server and Oracle integration tests.
+- [ ] Tests & examples in other JVM languages.
+- [ ] Create transaction syntax sugar.
+- [ ] Support DTO argument for `execute`.
+- [ ] Add support for non-blocking JDBC drivers.
 
-Anything else you are missing or want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
+Anything else you think is missing, or you want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
 
 ## Contributing
 
