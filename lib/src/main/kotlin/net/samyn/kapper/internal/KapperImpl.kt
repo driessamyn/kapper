@@ -9,13 +9,15 @@ import net.samyn.kapper.internal.SQLTypesConverter.setParameter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
-import java.sql.JDBCType
 import java.sql.ResultSet
 import java.util.HashMap
 
 // TODO: this is only covered by the TestContainer integration tests.
 //  Break this up further and ensure unit test coverage.
-internal class KapperImpl : Kapper {
+internal class KapperImpl(
+    private val queryBuilder: (String) -> Query = { Query(it) },
+    private val fieldExtractor: (ResultSet) -> Map<String, Field> = { rs -> rs.extractFields() },
+) : Kapper {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     }
@@ -37,7 +39,7 @@ internal class KapperImpl : Kapper {
         args: Map<String, Any?>,
     ): List<T> {
         // TODO: cache query
-        val query = Query(sql)
+        val query = queryBuilder(sql)
         val results = mutableListOf<T>()
         connection.prepareStatement(query.sql).use { stmt ->
             args.forEach { a ->
@@ -49,20 +51,13 @@ internal class KapperImpl : Kapper {
                     stmt.setParameter(i, a.value, connection.getDbFlavour())
                 }
             }
-            logger.debug("Executing prepared statement: $stmt")
+            logger.debug("Executing prepared statement: {}", stmt)
             // TODO: refactor
             stmt.executeQuery().use { rs ->
                 // TODO: cache data
                 // TODO: cash fields (persist in query?)
-                val fields =
-                    (1..rs.metaData.columnCount).associate {
-                        rs.metaData.getColumnLabel(it) to
-                            Field(
-                                it,
-                                JDBCType.valueOf(rs.metaData.getColumnType(it)),
-                                rs.metaData.getColumnTypeName(it),
-                            )
-                    }
+                val fields = fieldExtractor(rs)
+
                 while (rs.next()) {
                     results.add(
                         mapper(rs, fields),
@@ -109,7 +104,7 @@ internal class KapperImpl : Kapper {
         args: Map<String, Any?>,
     ): Int {
         // TODO: cache query
-        val query = Query(sql)
+        val query = queryBuilder(sql)
         connection.prepareStatement(query.sql).use { stmt ->
             args.forEach { a ->
                 val indexes =
@@ -120,7 +115,7 @@ internal class KapperImpl : Kapper {
                     stmt.setParameter(i, a.value, connection.getDbFlavour())
                 }
             }
-            logger.debug("Executing prepared statement: $stmt")
+            logger.debug("Executing prepared statement: {}", stmt)
             return stmt.executeUpdate()
         }
     }
