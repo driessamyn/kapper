@@ -5,10 +5,12 @@ import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.QueryParser
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 
 class QueryParserTest {
     @ParameterizedTest
@@ -66,12 +68,64 @@ class QueryParserTest {
         tokens.size.shouldBe(1000)
     }
 
-    @Test
-    fun `when invalid token character is used`() {
-        val template = "WHERE id = :id! AND name = :name"
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "!", "@", "#", "$", "%", "^", "&", "*", "(", "+", "=", "{", "}", "[", "]", ":", "'",
+            "\"", "<", ">", ".", "?", "/", "\\", "|", "~", "`",
+        ],
+    )
+    fun `when invalid token character is used`(invalidChar: String) {
+        val template = "WHERE id = :id$invalidChar AND name = :name"
         assertThrows<KapperParseException> {
             QueryParser.parseQuery(template)
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "a", "B", "1", "-", "_",
+        ],
+    )
+    fun `when valid token character is used`(validChar: String) {
+        val template = "WHERE id=:$validChar"
+        val (sql, tokens) = QueryParser.parseQuery(template)
+        sql.shouldBe("WHERE id=?")
+        tokens.shouldContainExactly(
+            mapOf(validChar to listOf(1)),
+        )
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [" ", ",", ")", ";", "\n", "\t", "\r"],
+    )
+    fun `when valid token seperator character is used`(invalidChar: String) {
+        val template = "WHERE id = :id$invalidChar AND name = :name"
+        assertDoesNotThrow {
+            QueryParser.parseQuery(template)
+        }
+    }
+
+    @Test
+    fun `when token start but no name, ignore`() {
+        val template = "WHERE : @ id = :id"
+        val (sql, tokens) = QueryParser.parseQuery(template)
+        sql.shouldBe("WHERE : @ id = ?")
+        tokens.shouldContainExactly(
+            mapOf("id" to listOf(1)),
+        )
+    }
+
+    @Test
+    fun `when token start at end of query, ignore`() {
+        val template = "WHERE id = :id AND :"
+        val (sql, tokens) = QueryParser.parseQuery(template)
+        sql.shouldBe("WHERE id = ? AND :")
+        tokens.shouldContainExactly(
+            mapOf("id" to listOf(1)),
+        )
     }
 
     companion object {

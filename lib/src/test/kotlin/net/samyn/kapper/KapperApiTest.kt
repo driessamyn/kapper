@@ -16,7 +16,8 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 
-// purpose of these tests is to exercise the public API of Kapper in Kotlin
+// Purpose of these tests is to exercise the public API of Kapper in Kotlin.
+//  additional tests of the Kapper implementation are in the KapperImplTest
 class KapperApiTest {
     private val kapper = Kapper.getInstance()
     private val mockMetaData =

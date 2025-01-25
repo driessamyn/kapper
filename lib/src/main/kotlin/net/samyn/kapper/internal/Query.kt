@@ -41,7 +41,7 @@ internal object QueryParser {
                 tokenNameBuilder != null -> {
                     // valid token character
                     if (c.isValidTokenChar()) {
-                        tokenNameBuilder.append(c)
+                        tokenNameBuilder!!.append(c)
                         // valid token separator character
                     } else if (c.isValidTokenSeparator()) {
                         tokens.getOrPut(tokenNameBuilder.toString()) { mutableListOf() }.add(tokenIndex)
@@ -67,5 +67,6 @@ internal object QueryParser {
 
     private fun Char.isValidTokenChar() = this.isLetterOrDigit() || this == '_' || this == '-'
 
-    private fun Char.isValidTokenSeparator() = this == ' ' || this == ',' || this == ')' || this == ';' || this == '\n'
+    private fun Char.isValidTokenSeparator() =
+        this == ' ' || this == ',' || this == ')' || this == ';' || this == '\n' || this == '\t' || this == '\r'
 }
