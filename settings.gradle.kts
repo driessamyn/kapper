@@ -14,3 +14,4 @@ develocity {
 rootProject.name = "kapper"
 include("lib")
 project(":lib").name = "kapper"
+//project(":coroutines").name = "kapper-coroutines"

@@ -1,3 +1,3 @@
 plugins {
-    alias(libs.plugins.git.semver)
+//    alias(libs.plugins.git.semver)
 }

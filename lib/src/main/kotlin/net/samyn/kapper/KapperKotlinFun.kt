@@ -4,15 +4,6 @@ import java.sql.Connection
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
-object KapperInstance {
-    private val impl: Kapper = Kapper.getInstance()
-
-    /**
-     * Get a Kapper singleton instance.
-      */
-    fun get() = impl
-}
-
 /**
  * Execute a SQL query and map the results to a list of instances of the specified class.
  *
@@ -235,7 +226,7 @@ fun <T : Any> Connection.querySingle(
  * @param sql The SQL statement to execute.
  * @param args Optional key-value pairs representing named parameters to substitute into the statement.
  * @return The number of rows affected by the execution of the SQL statement.
- * @throws SQLException If there's a database error.
+ * @throws java.sql.SQLException If there's a database error.
  */
 fun Connection.execute(
     sql: String,
