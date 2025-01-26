@@ -99,9 +99,28 @@ This means Kapper provides a strongly typed mapping, but still allows rows-to-ob
 
 ## Using Kapper in your project
 
-Currently, only snapshot releases are published to [GitHub packages](./packages).
+Stable versions of Kapper are published to [Maven Central](https://central.sonatype.com/artifact/net.samyn/kapper/versions).
+To use this in your project, simply add the following dependency to your `build.gradle.kts` (or the Groovy equivalent in `build.gradle`):
 
-Stable versions will be published in due course, but if you want to try the snapshot releases, ensure you configure GitHub packages as a repository:
+```kotlin
+dependencies {
+    implementation("net.samyn:kapper:1.0.0")
+}
+```
+
+For Maven, use:
+
+```xml
+<dependency>
+    <groupId>net.samyn</groupId>
+    <artifactId>kapper</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+Snapshot releases are published from the `main` branch to [GitHub packages](./packages).
+
+In order to use these, add GitHub packages as a repository (and ensure `GH_USERNAME` and `GH_TOKEN` are set in your environment):
 ```kotlin
 repositories {
     mavenCentral()
