@@ -2,6 +2,7 @@
 junit-jupiter = "5.11.4"
 kotest = "6.0.0.M1"
 kotlin = "2.1.0"
+kotlinx-coroutines = "1.10.1"
 mockito = "5.15.2"
 mockk = "1.13.16"
 mysql-driver = "9.1.0"
@@ -12,7 +13,9 @@ test-conatainers = "1.20.4"
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
-kotlin-reflect = { module ="org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin"}
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin"}
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref="kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="kotlinx-coroutines" }
 # mockito only to be used from Java code (API usability test)
 mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

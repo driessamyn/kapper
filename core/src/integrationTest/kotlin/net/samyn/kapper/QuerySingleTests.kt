@@ -95,7 +95,7 @@ class QuerySingleTests : AbstractDbTests() {
                 )
             villain.shouldNotBeNull()
             villain.id.shouldBe(superman.id.toString())
-            villain.name.shouldBe(superman.name.toString())
+            villain.name.shouldBe(superman.name)
         }
     }
 

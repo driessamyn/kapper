@@ -3,10 +3,6 @@ plugins {
     id("kapper.library-publish")
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation(libs.kotlin.reflect)
     implementation(libs.slf4j)
