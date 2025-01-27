@@ -121,10 +121,6 @@ val integrationTestImplementation by configurations.getting {
     extendsFrom(configurations.implementation.get())
 }
 
-tasks.register("koverFullReport") {
-    dependsOn(tasks.test, tasks["integrationTest"], tasks.koverXmlReport, tasks.koverHtmlReport)
-}
-
 tasks.test {
     finalizedBy(tasks.koverXmlReport, tasks.koverHtmlReport)
 }
