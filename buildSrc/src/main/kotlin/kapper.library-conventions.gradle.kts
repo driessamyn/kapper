@@ -12,6 +12,9 @@ plugins {
     id("com.github.jmongard.git-semver-plugin")
 }
 
+repositories {
+    mavenCentral()
+}
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
@@ -116,10 +119,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 
 val integrationTestImplementation by configurations.getting {
     extendsFrom(configurations.implementation.get())
-}
-
-tasks.register("koverFullReport") {
-    dependsOn(tasks.test, tasks["integrationTest"], tasks.koverXmlReport, tasks.koverHtmlReport)
 }
 
 tasks.test {

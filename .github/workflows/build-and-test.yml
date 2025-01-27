@@ -27,11 +27,8 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
 
-    - name: Build with Gradle
+    - name: Build & Test with Gradle
       run: ./gradlew build
-
-    - name: Run tests
-      run: ./gradlew check
 
     - name: Upload Test Report
       uses: actions/upload-artifact@v4
@@ -45,7 +42,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: core/build/reports/kover
+        path: build/reports/kover
         retention-days: 1
 
     - name: Publish Test Results
@@ -60,6 +57,6 @@ jobs:
       uses: mi-kas/kover-report@v1
       with:
         path: |
-          core/build/reports/kover/report.xml
+          build/reports/kover/report.xml
         title: Code Coverage
         update-comment: true
