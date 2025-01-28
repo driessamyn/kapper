@@ -10,7 +10,7 @@ import kotlin.reflect.full.primaryConstructor
 
 internal class Mapper<T : Any>(
     private val clazz: Class<T>,
-    val autoConverter: (Any, KClass<*>) -> Any = AutoConverter::convert,
+    val autoConverter: (Any, KClass<*>) -> Any = AutoConverter()::convert,
     val sqlTypesConverter: (JDBCType, String, ResultSet, Int) -> Any? = SQLTypesConverter::convertSQLType,
 ) {
     private val constructor: KFunction<T> =
