@@ -41,7 +41,7 @@ internal object AutoConverter {
                     if (value is Date) {
                         val cal = Calendar.getInstance()
                         cal.time = value
-                        LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+                        LocalDate.of(cal[Calendar.YEAR], cal[Calendar.MONTH] + 1, cal[Calendar.DAY_OF_MONTH])
                     } else {
                         throw KapperUnsupportedOperationException(
                             "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",

@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 
 // this is the Java equivalent of the Kotlin KapperApiTest
 //  its purpose is to test kapper is usable from Java
-public class KapperJavaApiTest {
+class KapperJavaApiTest {
     private final Kapper kapper = Kapper.getInstance();
 
     @Mock
@@ -32,9 +32,9 @@ public class KapperJavaApiTest {
     private Connection mockConnection;
 
     // TODO: support auto-mapping for record classes
-    public record TestEntity(int id, String name) { }
+    record TestEntity(int id, String name) { }
 
-    public KapperJavaApiTest() {
+    KapperJavaApiTest() {
         MockitoAnnotations.openMocks(this);
         setupMocks();
     }
@@ -69,7 +69,7 @@ public class KapperJavaApiTest {
     }
 
     @Test
-    public void testGetInstance() {
+    void testGetInstance() {
         assertNotNull(kapper.getClass());
     }
 
@@ -79,7 +79,7 @@ public class KapperJavaApiTest {
         //  this can be added later.
 
         @Test
-        public void testQueryWithCustomMapper() throws Exception {
+        void testQueryWithCustomMapper() throws Exception {
             // Setup result set behavior
             when(mockResultSet.next()).thenReturn(true, true, false);
             when(mockResultSet.getInt("id")).thenReturn(1, 2);
@@ -119,7 +119,7 @@ public class KapperJavaApiTest {
     @Nested
     class QuerySingleTests {
         @Test
-        public void testQuerySingleWithCustomMapper() throws Exception {
+        void testQuerySingleWithCustomMapper() throws Exception {
             // Setup result set behavior
             when(mockResultSet.next()).thenReturn(true, false);
             when(mockResultSet.getInt("id")).thenReturn(1);
@@ -157,7 +157,7 @@ public class KapperJavaApiTest {
     @Nested
     class ExecuteTests {
         @Test
-        public void testExecuteWithMap() throws Exception {
+        void testExecuteWithMap() throws Exception {
             // Setup statement behavior
             when(mockStatement.executeUpdate()).thenReturn(1);
 
