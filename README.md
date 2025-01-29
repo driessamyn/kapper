@@ -1,7 +1,10 @@
 # Kapper ORM
 
-![build](https://github.com/driessamyn/kapper/actions/workflows/build-and-test.yml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Maven Central](https://img.shields.io/maven-central/v/net.samyn/kapper.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.samyn%22%20AND%20a:%22kapper%22)
+![build](https://github.com/driessamyn/kapper/actions/workflows/build-and-test.yml/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=driessamyn_kapper&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=driessamyn_kapper)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=driessamyn_kapper&metric=coverage)](https://sonarcloud.io/summary/new_code?id=driessamyn_kapper)
 
 <img alt="logo" src="./img/kapper-logo-small.png" align="left" style="margin-right: 7px;"/>
 

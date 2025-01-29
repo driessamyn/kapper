@@ -15,5 +15,4 @@ dependencies {
     integrationTestImplementation(libs.bundles.test.dbs)
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation(kotlin("test"))
 }
