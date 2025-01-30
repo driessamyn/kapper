@@ -23,7 +23,8 @@ publishing {
             version = info.version
             from(components["kotlin"])
             artifact(tasks["sourcesJar"])
-            artifact(tasks["javadocJar"])
+            artifact(tasks["dokkaJavadocJar"])
+            artifact(tasks["dokkaHtmlJar"])
         }
     }
 }

@@ -1,4 +1,5 @@
 [versions]
+dokka = "2.0.0"
 junit-jupiter = "5.11.4"
 kotest = "6.0.0.M1"
 kotlin = "2.1.0"
@@ -29,7 +30,8 @@ test-containers-junit-postgresql = { module = "org.testcontainers:postgresql", v
 # PLUGINS
 ##  This way because buildSrc is not supported for plugins
 deployer-plugin = { module = "io.deepmedia.tools.deployer:io.deepmedia.tools.deployer.gradle.plugin", version = "0.17.0" }
-dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
+dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+dokka-javadoc-plugin = { module = "org.jetbrains.dokka-javadoc:org.jetbrains.dokka-javadoc.gradle.plugin", version.ref = "dokka" }
 git-semver-plugin = { module = "com.github.jmongard:git-semver-plugin", version = "0.14.0" }
 ktlint-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version = "12.1.2" }
 kotlin-jvm-plugin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
