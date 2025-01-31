@@ -10,7 +10,6 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.dokka")
     id("org.jetbrains.dokka-javadoc")
-    id("com.github.jmongard.git-semver-plugin")
 }
 
 repositories {
@@ -45,20 +44,12 @@ kover {
     }
 }
 
-semver {
-    changeLogFormat = git.semver.plugin.changelog.ChangeLogFormat.defaultChangeLog
-    releasePattern = "\\Abuild: release(?:\\([^()]+\\))?:"
-}
-
 sourceSets {
     create("integrationTest") {
         compileClasspath += sourceSets.main.get().output
         runtimeClasspath += sourceSets.main.get().output
     }
 }
-
-group = "net.samyn"
-version = semver.version
 
 tasks.jar {
     manifest {

@@ -24,7 +24,6 @@ publishing {
             from(components["kotlin"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["dokkaJavadocJar"])
-            artifact(tasks["dokkaHtmlJar"])
         }
     }
 }
