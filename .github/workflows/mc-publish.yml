@@ -19,14 +19,25 @@ jobs:
       MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
       MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'zulu'
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Show changes
+        run: git status
+      - name: History
+        run: git --no-pager log -n 100 --oneline
+      - name: Tags
+        run: git show-ref --tags
+      - name: Print version
+        run: ./gradlew printSemVersion --info
+      - name: Show changes again
+        run: git status
+      # TODO: remove the noDirtyCheck property once figured out why this thinks the working directory is dirty
+      - name: Print version (no dirty check)
+        run: ./gradlew -PnoDirtyCheck=true printSemVersion --info
       - name: Publish package
-        run: ./gradlew deployCentralPortal
+        run: ./gradlew -PnoDirtyCheck=true :kapper:deployCentralPortal :kapper-coroutines:deployCentralPortal --info

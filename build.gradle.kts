@@ -1,8 +1,8 @@
 plugins {
-//    alias(libs.plugins.git.semver)
     kotlin("jvm")
     id("org.jetbrains.kotlinx.kover")
     alias(libs.plugins.sonar)
+    alias(libs.plugins.git.semver)
 }
 
 repositories {
@@ -12,6 +12,17 @@ repositories {
 dependencies {
     kover(project(":kapper"))
     kover(project(":kapper-coroutines"))
+}
+
+semver {
+    changeLogFormat = git.semver.plugin.changelog.ChangeLogFormat.defaultChangeLog
+    releasePattern = "\\\\ABuild: release(?:\\\\([^()]+\\\\))?:"
+}
+
+val projectVersion = semver.version
+subprojects {
+    group = "net.samyn"
+    version = projectVersion
 }
 
 tasks.build {
