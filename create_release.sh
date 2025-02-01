@@ -8,5 +8,5 @@
 # git push origin <version>
 
 tag=$(git describe --tags --abbrev=0)
-version=$(./gradlew -q printVersion)
-./gradlew -q printChangeLog | gh release create $tag -d -t "Kapper $version" -F -
+version=$(./gradlew -PnoDirtyCheck=true -q printVersion)
+./gradlew -PnoDirtyCheck=true -q printChangeLog | gh release create $tag -d -t "Kapper $version" -F -

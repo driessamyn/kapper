@@ -29,7 +29,7 @@ publishing {
 }
 
 deployer {
-    verbose = true
+//    verbose = true
 
     release.version = info.version
 
