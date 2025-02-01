@@ -1,7 +1,7 @@
 # Kapper ORM
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Maven Central](https://img.shields.io/maven-central/v/net.samyn/kapper.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.samyn%22%20AND%20a:%22kapper%22)
+[![Maven Central](https://img.shields.io/maven-central/v/net.samyn/kapper.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/net.samyn/kapper)
 ![build](https://github.com/driessamyn/kapper/actions/workflows/build-and-test.yml/badge.svg)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=driessamyn_kapper&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=driessamyn_kapper)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=driessamyn_kapper&metric=coverage)](https://sonarcloud.io/summary/new_code?id=driessamyn_kapper)
@@ -107,7 +107,7 @@ To use this in your project, simply add the following dependency to your `build.
 
 ```kotlin
 dependencies {
-    implementation("net.samyn:kapper:1.0.0")
+    implementation("net.samyn:kapper:1.1.0")
 }
 ```
 
@@ -117,7 +117,7 @@ For Maven, use:
 <dependency>
     <groupId>net.samyn</groupId>
     <artifactId>kapper</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -146,6 +146,29 @@ dependencies {
 }
 ```
 
+## Coroutine support
+
+Kapper supports coroutines with the inclusion of the `kapper-coroutines` module:
+
+```kotlin
+dependencies {
+    implementation("net.samyn:kapper-coroutines:1.0.0")
+}
+```  
+
+This module provides an extension function `withConnection` on the `DataSource` object, optionally allowing you to specify a `Dispatcher`.
+If no `Dispatcher` is provided, the default `Dispatchers.IO` is used.
+
+For example:
+
+```kotlin
+suspend fun listHeroes(): List<SuperHero> =
+    dataSource.withConnection {
+        // Kapper query runs on Dispatchers.IO
+        it.query<SuperHero>("SELECT * FROM super_heroes")
+    }
+```  
+
 See [Kapper-Example](https://github.com/driessamyn/kapper-examples) for example usage.
 
 ## Database support
@@ -164,7 +187,7 @@ Kapper is in its early stages of development.
 The following will be worked on in the next few releases:
 
 - [ ] Create a benchmark suite to validate performance.
-- [ ] Add co-routine support.
+- [x] Add co-routine support.
 - [ ] Add stream support.
 - [ ] Improve and additional support for date/time conversion.
 - [ ] Increase Java API compatibility tests & examples.

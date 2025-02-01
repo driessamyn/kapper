@@ -24,13 +24,15 @@ publishing {
             from(components["kotlin"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["dokkaJavadocJar"])
-            artifact(tasks["dokkaHtmlJar"])
         }
     }
 }
 
 deployer {
+//    verbose = true
+
     release.version = info.version
+
     projectInfo {
         name.set(info.name)
         description.set(info.description)
