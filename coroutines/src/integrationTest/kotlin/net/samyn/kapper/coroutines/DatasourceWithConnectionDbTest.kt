@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import net.samyn.kapper.execute
 import net.samyn.kapper.query
 import net.samyn.kapper.querySingle
+import net.samyn.kapper.withTransaction
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.postgresql.ds.PGSimpleDataSource
@@ -55,18 +56,18 @@ class DatasourceWithConnectionDbTest {
             val queryJob =
                 launch {
                     dataSource.withConnection { connection ->
-                        connection.autoCommit = false
-                        connection.execute(
-                            "CREATE TABLE IF NOT EXISTS some_table (id SERIAL PRIMARY KEY, value INT);",
-                        )
-                        // please don't do this in _real_ code
-                        (0..1000).forEach {
+                        connection.withTransaction {
                             connection.execute(
-                                "INSERT INTO some_table(value) VALUES(:value);",
-                                "value" to it,
+                                "CREATE TABLE IF NOT EXISTS some_table (id SERIAL PRIMARY KEY, value INT);",
                             )
+                            // please don't do this in _real_ code
+                            (0..1000).forEach {
+                                connection.execute(
+                                    "INSERT INTO some_table(value) VALUES(:value);",
+                                    "value" to it,
+                                )
+                            }
                         }
-                        connection.commit()
                     }
                 }
             queryJob.join()
