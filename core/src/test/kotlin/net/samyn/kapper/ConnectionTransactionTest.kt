@@ -7,7 +7,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 
-class TransactionTest {
+class ConnectionTransactionTest {
     val connection = mockk<Connection>(relaxed = true)
 
     @Test
