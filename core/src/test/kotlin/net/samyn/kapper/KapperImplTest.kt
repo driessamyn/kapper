@@ -92,6 +92,7 @@ class KapperImplTest {
                     mapOf("id" to 3),
                 )
             verify { mockStatement.setParameter(1, 3, DbConnectionUtils.DbFlavour.UNKNOWN) }
+            verify { mockStatement.close() }
         }
 
         @Test
@@ -105,6 +106,7 @@ class KapperImplTest {
                     mapOf("id" to 3),
                 )
             verify { mockStatement.executeQuery() }
+            verify { mockStatement.close() }
         }
 
         @Test
@@ -138,6 +140,7 @@ class KapperImplTest {
                     mapOf("id" to 1),
                 )
             verify { mockConnection.prepareStatement(mockSqlQuery) }
+            verify { mockStatement.close() }
         }
 
         @Test
