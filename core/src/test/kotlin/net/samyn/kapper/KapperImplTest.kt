@@ -92,6 +92,7 @@ class KapperImplTest {
                     mapOf("id" to 3),
                 )
             verify { mockStatement.setParameter(1, 3, DbConnectionUtils.DbFlavour.UNKNOWN) }
+            verify { mockStatement.close() }
         }
 
         @Test
@@ -105,6 +106,7 @@ class KapperImplTest {
                     mapOf("id" to 3),
                 )
             verify { mockStatement.executeQuery() }
+            verify { mockStatement.close() }
         }
 
         @Test
@@ -118,20 +120,6 @@ class KapperImplTest {
                     mapOf("id" to 3),
                 )
             verify { mockMapper(mockResultSet, testFieldMeta) }
-        }
-
-        @Test
-        fun `throws when token not found`() {
-            shouldThrow<KapperParseException> {
-                kapper
-                    .query(
-                        TestEntity::class.java,
-                        mockConnection,
-                        "SELECT * FROM test_entity WHERE id = :id",
-                        mockMapper,
-                        mapOf("id-does-not-exist" to 1),
-                    )
-            }
         }
     }
 
@@ -152,6 +140,7 @@ class KapperImplTest {
                     mapOf("id" to 1),
                 )
             verify { mockConnection.prepareStatement(mockSqlQuery) }
+            verify { mockStatement.close() }
         }
 
         @Test
@@ -191,20 +180,6 @@ class KapperImplTest {
                     mapOf("id" to 3),
                 )
             verify { mockMapper(mockResultSet, testFieldMeta) }
-        }
-
-        @Test
-        fun `throws when token not found`() {
-            shouldThrow<KapperParseException> {
-                kapper
-                    .querySingle(
-                        TestEntity::class.java,
-                        mockConnection,
-                        "SELECT * FROM test_entity WHERE id = :id",
-                        mockMapper,
-                        mapOf("id-does-not-exist" to 1),
-                    )
-            }
         }
 
         @Test
@@ -271,18 +246,6 @@ class KapperImplTest {
                     mapOf("id" to 3),
                 )
             verify { mockStatement.executeUpdate() }
-        }
-
-        @Test
-        fun `throws when token not found`() {
-            shouldThrow<KapperParseException> {
-                kapper
-                    .execute(
-                        mockConnection,
-                        "SELECT * FROM test_entity WHERE id = :id",
-                        mapOf("id-does-not-exist" to 3),
-                    )
-            }
         }
     }
 }

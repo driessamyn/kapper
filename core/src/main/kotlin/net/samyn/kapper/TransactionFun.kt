@@ -13,7 +13,11 @@ inline fun Connection.withTransaction(block: Connection.() -> Unit) {
         block()
         commit()
     } catch (e: Exception) {
-        rollback()
+        try {
+            rollback()
+        } catch (rollbackException: Exception) {
+            e.addSuppressed(rollbackException)
+        }
         throw e
     } finally {
         autoCommit = true
