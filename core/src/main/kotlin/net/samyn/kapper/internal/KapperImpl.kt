@@ -1,11 +1,9 @@
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.Args
 import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
-import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperResultException
-import net.samyn.kapper.internal.DbConnectionUtils.getDbFlavour
-import net.samyn.kapper.internal.SQLTypesConverter.setParameter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
@@ -26,7 +24,7 @@ internal class KapperImpl(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: Map<String, Any?>,
+        args: Args,
     ): List<T> =
         // TODO: cash mapper
         query(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
@@ -36,21 +34,13 @@ internal class KapperImpl(
         connection: Connection,
         sql: String,
         mapper: (ResultSet, Map<String, Field>) -> T,
-        args: Map<String, Any?>,
+        args: Args,
     ): List<T> {
         // TODO: cache query
         val query = queryBuilder(sql)
         val results = mutableListOf<T>()
         connection.prepareStatement(query.sql).use { stmt ->
-            args.forEach { a ->
-                val indexes =
-                    query.tokens[a.key]
-                        ?: throw KapperParseException("Token with name `${a.key}' not found in template")
-                indexes.forEach { i ->
-                    // TODO: allow custom SQL type conversion?
-                    stmt.setParameter(i, a.value, connection.getDbFlavour())
-                }
-            }
+            args.setParameters(query, stmt, connection)
             logger.debug("Executing prepared statement: {}", stmt)
             // TODO: refactor
             stmt.executeQuery().use { rs ->
@@ -73,7 +63,7 @@ internal class KapperImpl(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: Map<String, Any?>,
+        args: Args,
     ): T? =
         // TODO: cash mapper
         querySingle(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
@@ -83,7 +73,7 @@ internal class KapperImpl(
         connection: Connection,
         sql: String,
         mapper: (ResultSet, Map<String, Field>) -> T,
-        args: Map<String, Any?>,
+        args: Args,
     ): T? {
         val results = query(clazz, connection, sql, mapper, args)
         if (results.size > 1) {
@@ -101,20 +91,12 @@ internal class KapperImpl(
     override fun execute(
         connection: Connection,
         sql: String,
-        args: Map<String, Any?>,
+        args: Args,
     ): Int {
         // TODO: cache query
         val query = queryBuilder(sql)
         connection.prepareStatement(query.sql).use { stmt ->
-            args.forEach { a ->
-                val indexes =
-                    query.tokens[a.key]
-                        ?: throw KapperParseException("Token with name `${a.key}' not found in template")
-                indexes.forEach { i ->
-                    // TODO: allow custom SQL type conversion?
-                    stmt.setParameter(i, a.value, connection.getDbFlavour())
-                }
-            }
+            args.setParameters(query, stmt, connection)
             logger.debug("Executing prepared statement: {}", stmt)
             return stmt.executeUpdate()
         }

@@ -4,6 +4,8 @@ import net.samyn.kapper.internal.KapperImpl
 import java.sql.Connection
 import java.sql.ResultSet
 
+typealias Args = Map<String, Any?>
+
 /**
  * Kapper API interface for executing SQL statements and queries.
  * Used in cases where the extension methods cannot be used or are not preferred.
@@ -27,7 +29,7 @@ interface Kapper {
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: Map<String, Any?>,
+        args: Args,
     ): List<T>
 
     /**
@@ -45,7 +47,7 @@ interface Kapper {
         connection: Connection,
         sql: String,
         mapper: (ResultSet, Map<String, Field>) -> T,
-        args: Map<String, Any?>,
+        args: Args,
     ): List<T>
 
     /**
@@ -147,7 +149,7 @@ interface Kapper {
         connection: Connection,
         sql: String,
         mapper: (ResultSet, Map<String, Field>) -> T,
-        args: Map<String, Any?>,
+        args: Args,
     ): T?
 
     /**
@@ -175,6 +177,6 @@ interface Kapper {
     fun execute(
         connection: Connection,
         sql: String,
-        args: Map<String, Any?>,
+        args: Args,
     ): Int
 }
