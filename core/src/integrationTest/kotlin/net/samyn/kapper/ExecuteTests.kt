@@ -1,11 +1,14 @@
 package net.samyn.kapper
 
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MySQLContainer
+import java.sql.SQLException
 import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toKotlinUuid
@@ -160,6 +163,59 @@ class ExecuteTests : AbstractDbTests() {
                 )
 
             results.shouldBe(ids.size)
+        }
+    }
+
+    @ParameterizedTest()
+    @MethodSource("databaseContainers")
+    fun `with TX completes`(container: JdbcDatabaseContainer<*>) {
+        createConnection(container).use { connection ->
+            connection.withTransaction {
+                val results =
+                    connection.execute(
+                        """
+                        INSERT INTO $table(id, name, email) VALUES(:id, :name, :email);
+                        """.trimIndent(),
+                        "id" to UUID.randomUUID(),
+                        "name" to "thor",
+                        "email" to "thor@world.com",
+                    ) +
+                        connection.execute(
+                            """
+                            INSERT INTO $table(id, name, email) VALUES(:id, :name, :email);
+                            """.trimIndent(),
+                            "id" to UUID.randomUUID(),
+                            "name" to "thor",
+                            "email" to "thor@world.com",
+                        )
+                results shouldBe 2
+            }
+        }
+    }
+
+    @ParameterizedTest()
+    @MethodSource("databaseContainers")
+    fun `with TX rolls back`(container: JdbcDatabaseContainer<*>) {
+        createConnection(container).use { connection ->
+            val id = UUID.randomUUID()
+            shouldThrow<SQLException> {
+                connection.withTransaction {
+                    repeat(2) {
+                        connection.execute(
+                            """
+                            INSERT INTO $table(id, name, email) VALUES(:id, :name, :email);
+                            """.trimIndent(),
+                            "id" to id,
+                            "name" to "thor",
+                            "email" to "thor@world.com",
+                        )
+                    }
+                }
+            }
+            connection.query<SuperHero>(
+                "SELECT * FROM $table WHERE id = :id",
+                "id" to id,
+            ).shouldBeEmpty()
         }
     }
 }
