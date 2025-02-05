@@ -1,7 +1,9 @@
 package net.samyn.kapper
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -44,6 +46,22 @@ class ConnectionTransactionTest {
                 throw exception
             }
         } shouldBe exception
+        verify { connection.rollback() }
+    }
+
+    @Test
+    fun `when rollback throws, rethrow`() {
+        val exception = Exception("test")
+        val rollbackException = Exception("rollback failed")
+        every { connection.rollback() } throws rollbackException
+        val caught =
+            shouldThrow<Exception> {
+                connection.withTransaction {
+                    throw exception
+                }
+            }
+        caught shouldBe exception
+        caught.suppressed shouldContain rollbackException
         verify { connection.rollback() }
     }
 }
