@@ -28,5 +28,12 @@ replay_pid*
 
 # Ignore Gradle build output directory
 build
+
+# Ignore IntelliJ project files
 /.idea
+
+# Ignore Qodo
 .qodo
+
+# SonarQube
+.scannerwork/

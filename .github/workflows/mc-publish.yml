@@ -26,18 +26,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Show changes
-        run: git status
       - name: History
         run: git --no-pager log -n 100 --oneline
       - name: Tags
         run: git show-ref --tags
       - name: Print version
         run: ./gradlew printSemVersion --info
-      - name: Show changes again
+      - name: Show changes
         run: git status
-      # TODO: remove the noDirtyCheck property once figured out why this thinks the working directory is dirty
-      - name: Print version (no dirty check)
-        run: ./gradlew -PnoDirtyCheck=true printSemVersion --info
+      - name: Untracked changes
+        run: git ls-files . --exclude-standard --others
       - name: Publish package
-        run: ./gradlew -PnoDirtyCheck=true :kapper:deployCentralPortal :kapper-coroutines:deployCentralPortal --info
+        run: ./gradlew :kapper:deployCentralPortal :kapper-coroutines:deployCentralPortal --info
