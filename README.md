@@ -146,6 +146,43 @@ dependencies {
 }
 ```
 
+## DB Transactions
+
+Kapper provides a couple of extension functions to make working with transactions easier.
+
+The `withTransaction` function on `Connection` starts a transaction, executes the provided block, and commit the transaction if the block completes successfully.
+The same function on `DataSrouce` behaves the same except it also creating (and closing) the connection.
+
+For example:
+
+```kotlin
+datasource.connection.withTransaction { connection ->
+    // insert a row:
+    connection.execute(
+        "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age);",
+        "id" to UUID.randomUUID(),
+        "name" to "Batman",
+        "email" to "batman@dc.com",
+        "age" to 85,
+    )
+}
+```
+
+is the equivalent of:
+
+```kotlin
+datasource.withTransaction { connection ->
+    // insert a row:
+    connection.execute(
+        "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age);",
+        "id" to UUID.randomUUID(),
+        "name" to "Batman",
+        "email" to "batman@dc.com",
+        "age" to 85,
+    )
+}
+```
+
 ## Coroutine support
 
 Kapper supports coroutines with the inclusion of the `kapper-coroutines` module:
