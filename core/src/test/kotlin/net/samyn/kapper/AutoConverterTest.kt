@@ -16,6 +16,7 @@ import java.time.LocalTime
 import java.util.Date
 import java.util.UUID
 import kotlin.reflect.KClass
+import kotlin.uuid.ExperimentalUuidApi
 
 class AutoConverterTest {
     private val mockConverter = mockk<(Any) -> Any>()
@@ -56,6 +57,14 @@ class AutoConverterTest {
         fun `supports UUID`() {
             shouldNotThrow<KapperUnsupportedOperationException> {
                 autoConverter.convert("123e4567-e89b-12d3-a456-426614174000", UUID::class)
+            }
+        }
+
+        @OptIn(ExperimentalUuidApi::class)
+        @Test
+        fun `supports kotlin UUID`() {
+            shouldNotThrow<KapperUnsupportedOperationException> {
+                autoConverter.convert("123e4567-e89b-12d3-a456-426614174000", kotlin.uuid.Uuid::class)
             }
         }
 
