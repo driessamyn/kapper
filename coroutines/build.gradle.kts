@@ -7,6 +7,7 @@ dependencies {
     api(project(":kapper"))
 
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.slf4j)
 
     testImplementation(libs.mockito)
     testImplementation(libs.bundles.test)

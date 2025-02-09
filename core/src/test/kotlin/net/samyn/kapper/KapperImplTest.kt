@@ -4,17 +4,19 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import net.samyn.kapper.internal.DbConnectionUtils
 import net.samyn.kapper.internal.KapperImpl
 import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.SQLTypesConverter.setParameter
+import net.samyn.kapper.internal.executeQuery
+import net.samyn.kapper.internal.extractFields
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.ResultSetMetaData
 
 // Complements tests in KapperApiTest, targeting KapperImpl directly
 class KapperImplTest {
@@ -27,12 +29,8 @@ class KapperImplTest {
             every { sql } returns mockSqlQuery
             every { tokens } returns (mapOf("id" to listOf(1)))
         }
-    private val mockMetaData =
-        mockk<ResultSetMetaData>(relaxed = true)
     private val mockResultSet =
-        mockk<ResultSet>(relaxed = true) {
-            every { metaData } returns mockMetaData
-        }
+        mockk<ResultSet>(relaxed = true)
     private val mockStatement =
         mockk<PreparedStatement>(relaxed = true) {
             every { executeQuery() } returns mockResultSet
@@ -46,43 +44,62 @@ class KapperImplTest {
                 }
         }
     private val mockMapper = mockk<(ResultSet, Map<String, Field>) -> TestEntity>(relaxed = true)
-    private val mockFieldExtractor = mockk<(ResultSet) -> Map<String, Field>>(relaxed = true)
     private val testFieldMeta =
         mapOf(
             "id" to Field(1, java.sql.JDBCType.INTEGER, "INTEGER"),
         )
 
-    private val kapper = KapperImpl(mockQueryBuilder, mockFieldExtractor)
-
     init {
+        mockkStatic(Connection::executeQuery)
+        mockkStatic(ResultSet::extractFields)
         every { mockMapper.invoke(any(), any()) } returns TestEntity(1, "test")
         every { mockQueryBuilder(mockSqlTemplate) } returns mockQuery
-        every { mockFieldExtractor(mockResultSet) } returns testFieldMeta
+        every { mockResultSet.extractFields() } returns testFieldMeta
     }
+
+    private val kapper = KapperImpl(mockQueryBuilder)
 
     data class TestEntity(val id: Int, val name: String)
 
     @Nested
     inner class QueryTest {
         init {
+            every { mockConnection.executeQuery(any(), any()) } returns mockResultSet
             every { mockResultSet.next() } returns true andThen true andThen false
         }
 
         @Test
-        fun `processes SQL template`() {
+        fun `execute query`() {
+            val sql = "SELECT * FROM test_entity WHERE id = :id"
+            val args = mapOf("id" to 1)
             kapper
                 .query(
                     TestEntity::class.java,
                     mockConnection,
-                    "SELECT * FROM test_entity WHERE id = :id",
+                    sql,
                     mockMapper,
-                    mapOf("id" to 1),
+                    args,
                 )
-            verify { mockConnection.prepareStatement(mockSqlQuery) }
+            verify { mockConnection.executeQuery(sql, args) }
         }
 
         @Test
-        fun `sets parameters`() {
+        fun `executes query`() {
+            val sql = "SELECT * FROM test_entity WHERE id = :id"
+            val args = mapOf("id" to 1)
+            kapper
+                .query(
+                    TestEntity::class.java,
+                    mockConnection,
+                    sql,
+                    mockMapper,
+                    args,
+                )
+            verify { mockConnection.executeQuery(sql, args) }
+        }
+
+        @Test
+        fun `close resultset`() {
             kapper
                 .query(
                     TestEntity::class.java,
@@ -91,22 +108,7 @@ class KapperImplTest {
                     mockMapper,
                     mapOf("id" to 3),
                 )
-            verify { mockStatement.setParameter(1, 3, DbConnectionUtils.DbFlavour.UNKNOWN) }
-            verify { mockStatement.close() }
-        }
-
-        @Test
-        fun `executes statement`() {
-            kapper
-                .query(
-                    TestEntity::class.java,
-                    mockConnection,
-                    "SELECT * FROM test_entity WHERE id = :id",
-                    mockMapper,
-                    mapOf("id" to 3),
-                )
-            verify { mockStatement.executeQuery() }
-            verify { mockStatement.close() }
+            verify { mockResultSet.close() }
         }
 
         @Test
@@ -126,25 +128,27 @@ class KapperImplTest {
     @Nested
     inner class QuerySingleTest {
         init {
+            every { mockConnection.executeQuery(any(), any()) } returns mockResultSet
             every { mockResultSet.next() } returns true andThen false
         }
 
         @Test
-        fun `processes SQL template`() {
+        fun `execute query`() {
+            val sql = "SELECT * FROM test_entity WHERE id = :id"
+            val args = mapOf("id" to 1)
             kapper
                 .querySingle(
                     TestEntity::class.java,
                     mockConnection,
-                    "SELECT * FROM test_entity WHERE id = :id",
+                    sql,
                     mockMapper,
-                    mapOf("id" to 1),
+                    args,
                 )
-            verify { mockConnection.prepareStatement(mockSqlQuery) }
-            verify { mockStatement.close() }
+            verify { mockConnection.executeQuery(sql, args) }
         }
 
         @Test
-        fun `sets parameters`() {
+        fun `close resultset`() {
             kapper
                 .querySingle(
                     TestEntity::class.java,
@@ -153,20 +157,7 @@ class KapperImplTest {
                     mockMapper,
                     mapOf("id" to 3),
                 )
-            verify { mockStatement.setParameter(1, 3, DbConnectionUtils.DbFlavour.UNKNOWN) }
-        }
-
-        @Test
-        fun `executes statement`() {
-            kapper
-                .querySingle(
-                    TestEntity::class.java,
-                    mockConnection,
-                    "SELECT * FROM test_entity WHERE id = :id",
-                    mockMapper,
-                    mapOf("id" to 3),
-                )
-            verify { mockStatement.executeQuery() }
+            verify { mockResultSet.close() }
         }
 
         @Test

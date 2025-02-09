@@ -1,6 +1,7 @@
 package net.samyn.kapper
 
 import net.samyn.kapper.internal.KapperImpl
+import net.samyn.kapper.internal.Mapper
 import java.sql.Connection
 import java.sql.ResultSet
 
@@ -30,7 +31,7 @@ interface Kapper {
         connection: Connection,
         sql: String,
         args: Args,
-    ): List<T>
+    ) = query(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
 
     /**
      * Execute a SQL query and map the results to a list of instances of the specified class.

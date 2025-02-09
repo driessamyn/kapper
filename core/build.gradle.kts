@@ -13,6 +13,4 @@ dependencies {
     integrationTestImplementation(libs.bundles.test)
     integrationTestImplementation(libs.bundles.test.containers)
     integrationTestImplementation(libs.bundles.test.dbs)
-
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

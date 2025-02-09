@@ -1,3 +1,5 @@
+@file:JvmSynthetic
+
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.Field
@@ -8,7 +10,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
-internal class Mapper<T : Any>(
+class Mapper<T : Any>(
     private val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter()::convert,
     val sqlTypesConverter: (JDBCType, String, ResultSet, Int) -> Any? = SQLTypesConverter::convertSQLType,

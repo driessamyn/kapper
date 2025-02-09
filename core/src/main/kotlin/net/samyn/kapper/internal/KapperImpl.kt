@@ -1,20 +1,19 @@
+@file:JvmSynthetic
+
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.Args
 import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperResultException
+import net.samyn.kapper.internal.DbConnectionUtils.getDbFlavour
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
-import java.util.HashMap
 
-// TODO: this is only covered by the TestContainer integration tests.
-//  Break this up further and ensure unit test coverage.
 internal class KapperImpl(
     private val queryBuilder: (String) -> Query = { Query(it) },
-    private val fieldExtractor: (ResultSet) -> Map<String, Field> = { rs -> rs.extractFields() },
 ) : Kapper {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -24,38 +23,16 @@ internal class KapperImpl(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: Args,
-    ): List<T> =
-        // TODO: cash mapper
-        query(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
-
-    override fun <T : Any> query(
-        clazz: Class<T>,
-        connection: Connection,
-        sql: String,
         mapper: (ResultSet, Map<String, Field>) -> T,
         args: Args,
     ): List<T> {
-        // TODO: cache query
-        val query = queryBuilder(sql)
         val results = mutableListOf<T>()
-        connection.prepareStatement(query.sql).use { stmt ->
-            args.setParameters(query, stmt, connection)
-            logger.debug("Executing prepared statement: {}", stmt)
-            // TODO: refactor
-            stmt.executeQuery().use { rs ->
-                // TODO: cache data
-                // TODO: cash fields (persist in query?)
-                val fields = fieldExtractor(rs)
-
-                while (rs.next()) {
-                    results.add(
-                        mapper(rs, fields),
-                    )
-                }
+        connection.executeQuery(sql, args).use { rs ->
+            val fields = rs.extractFields()
+            while (rs.next()) {
+                results.add(mapper(rs, fields))
             }
         }
-
         return results
     }
 
@@ -96,7 +73,7 @@ internal class KapperImpl(
         // TODO: cache query
         val query = queryBuilder(sql)
         connection.prepareStatement(query.sql).use { stmt ->
-            args.setParameters(query, stmt, connection)
+            args.setParameters(query, stmt, connection.getDbFlavour())
             logger.debug("Executing prepared statement: {}", stmt)
             return stmt.executeUpdate()
         }

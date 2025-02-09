@@ -37,6 +37,8 @@ class KapperApiTest {
     private val mockStatement =
         mockk<PreparedStatement>(relaxed = true) {
             every { executeQuery() } returns mockResultSet
+        }.also {
+            every { mockResultSet.statement } returns it
         }
     private val mockConnection =
         mockk<Connection>(relaxed = true) {

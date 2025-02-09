@@ -1,3 +1,5 @@
+@file:JvmSynthetic
+
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.KapperParseException
@@ -9,6 +11,7 @@ import net.samyn.kapper.KapperParseException
  * @property sql the JDBC formatted query string with placeholders
  * @property tokens the tokens and their indexes in the query string
  */
+@PublishedApi
 internal data class Query(
     val template: String,
     private val queryParser: (String) -> Pair<String, Map<String, List<Int>>> = QueryParser::parseQuery,
