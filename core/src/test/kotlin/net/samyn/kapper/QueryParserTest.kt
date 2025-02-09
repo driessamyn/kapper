@@ -1,6 +1,7 @@
 package net.samyn.kapper
 
 import io.kotest.assertions.assertSoftly
+import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.QueryParser
@@ -101,7 +102,7 @@ class QueryParserTest {
     @ValueSource(
         strings = [" ", ",", ")", ";", "\n", "\t", "\r"],
     )
-    fun `when valid token seperator character is used`(invalidChar: String) {
+    fun `when valid token separator character is used`(invalidChar: String) {
         val template = "WHERE id = :id$invalidChar AND name = :name"
         assertDoesNotThrow {
             QueryParser.parseQuery(template)
@@ -123,6 +124,34 @@ class QueryParserTest {
         val template = "WHERE id = :id AND :"
         val (sql, tokens) = QueryParser.parseQuery(template)
         sql.shouldBe("WHERE id = ? AND :")
+        tokens.shouldContainExactly(
+            mapOf("id" to listOf(1)),
+        )
+    }
+
+    @Test
+    fun `strip query padding`() {
+        val template = "    SELECT foo   "
+        val (sql, tokens) = QueryParser.parseQuery(template)
+        sql.shouldBe("SELECT foo")
+    }
+
+    @Test
+    fun `double colon should not be recognised as token`() {
+        val template = "SELECT id::text, title, created_at as createdAt, content FROM blogs;"
+        val (sql, tokens) = QueryParser.parseQuery(template)
+        sql.shouldBe("SELECT id::text, title, created_at as createdAt, content FROM blogs;")
+        tokens.shouldBeEmpty()
+    }
+
+    @ParameterizedTest
+    @MethodSource("validTokenStarts")
+    fun `valid token starts`(
+        template: String,
+        expectedSql: String,
+    ) {
+        val (sql, tokens) = QueryParser.parseQuery(template)
+        sql.shouldBe(expectedSql)
         tokens.shouldContainExactly(
             mapOf("id" to listOf(1)),
         )
@@ -157,6 +186,20 @@ class QueryParserTest {
                     "UPDATE super_hero SET name = ? WHERE id = ?;",
                     mapOf("name" to listOf(1), "id" to listOf(2)),
                 ),
+            )
+
+        @JvmStatic
+        fun validTokenStarts() =
+            listOf(
+                Arguments.of("WHERE id=:id", "WHERE id=?"),
+                Arguments.of("WHERE id= :id", "WHERE id= ?"),
+                Arguments.of("WHERE id IN( :id )", "WHERE id IN( ? )"),
+                Arguments.of("WHERE id IN(:id)", "WHERE id IN(?)"),
+                Arguments.of("WHERE id IN(:id,'foo')", "WHERE id IN(?,'foo')"),
+                Arguments.of("WHERE id IN('foo',:id)", "WHERE id IN('foo',?)"),
+                Arguments.of("WHERE id IN('foo', :id)", "WHERE id IN('foo', ?)"),
+                Arguments.of("WHERE id IN('foo',:id,'bar')", "WHERE id IN('foo',?,'bar')"),
+                Arguments.of("WHERE id IN('foo', :id, 'bar')", "WHERE id IN('foo', ?, 'bar')"),
             )
     }
 }
