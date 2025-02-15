@@ -23,7 +23,10 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.toJavaUuid
 
+@OptIn(ExperimentalUuidApi::class)
 class SQLTypesConverterTest {
     companion object {
         val statement = mockk<PreparedStatement>(relaxed = true)
@@ -55,18 +58,41 @@ class SQLTypesConverterTest {
                 ),
             )
 
-        private val uuid = UUID.randomUUID()
-
         @JvmStatic
         fun parameterWithConvertTests() =
             listOf(
-                arguments(
-                    named("UUID", uuid),
-                    { i: Int, v: Any? -> statement.setObject(i, v) },
-                    uuid,
-                    DbFlavour.POSTGRESQL,
-                ),
-                arguments(named("UUID", uuid), statement::setString, uuid.toString(), DbFlavour.MYSQL),
+                UUID.randomUUID().let {
+                    arguments(
+                        named("java-UUID-pg", it),
+                        { i: Int, v: Any? -> statement.setObject(i, v) },
+                        it,
+                        DbFlavour.POSTGRESQL,
+                    )
+                },
+                UUID.randomUUID().let {
+                    arguments(
+                        named("java-UUID-mysql", it),
+                        statement::setString,
+                        it.toString(),
+                        DbFlavour.MYSQL,
+                    )
+                },
+                kotlin.uuid.Uuid.random().let {
+                    arguments(
+                        named("kotlin-UUID-pg", it),
+                        { i: Int, v: Any? -> statement.setObject(i, v) },
+                        it.toJavaUuid(),
+                        DbFlavour.POSTGRESQL,
+                    )
+                },
+                kotlin.uuid.Uuid.random().let {
+                    arguments(
+                        named("kotlin-UUID-mysql", it),
+                        statement::setString,
+                        it.toString(),
+                        DbFlavour.MYSQL,
+                    )
+                },
             )
 
         @JvmStatic

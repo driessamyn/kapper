@@ -9,6 +9,8 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.util.Date
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.toJavaUuid
 
 // TODO: this could be more sophisticated by allowing type conversion hints.
 // TODO: check what hibernate does for these conversions.
@@ -72,6 +74,7 @@ internal object SQLTypesConverter {
         return result
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     fun PreparedStatement.setParameter(
         index: Int,
         value: Any?,
@@ -93,6 +96,13 @@ internal object SQLTypesConverter {
                     setString(index, value.toString())
                 } else {
                     setObject(index, value)
+                }
+            }
+            is kotlin.uuid.Uuid -> {
+                if (DbFlavour.MYSQL == dbFlavour) {
+                    setString(index, value.toString())
+                } else {
+                    setObject(index, value.toJavaUuid())
                 }
             }
             is Instant -> setTimestamp(index, Timestamp.from(value))

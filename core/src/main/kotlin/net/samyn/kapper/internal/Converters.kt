@@ -10,6 +10,8 @@ import java.time.LocalTime
 import java.util.Calendar
 import java.util.Date
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.toJavaUuid
 
 internal fun convertInstant(value: Any): Instant =
     when (value) {
@@ -57,6 +59,7 @@ internal fun convertLocalDate(value: Any): LocalDate =
         )
     }
 
+@OptIn(ExperimentalUuidApi::class)
 internal fun convertUUID(value: Any): UUID =
     when (value) {
         is String -> {
@@ -72,6 +75,10 @@ internal fun convertUUID(value: Any): UUID =
 
         is ByteArray -> {
             value.asUUID()
+        }
+
+        is kotlin.uuid.Uuid -> {
+            value.toJavaUuid()
         }
 
         else -> {

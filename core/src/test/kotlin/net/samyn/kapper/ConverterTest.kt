@@ -18,6 +18,8 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.Date
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.toJavaUuid
 
 class ConverterTest {
     @Nested
@@ -34,6 +36,14 @@ class ConverterTest {
             val uuid = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
             val autoConvertedUuid = convertUUID(uuid.asBytes())
             autoConvertedUuid.shouldBe(uuid)
+        }
+
+        @OptIn(ExperimentalUuidApi::class)
+        @Test
+        fun `when kotlin UUID convert`() {
+            val uuid = kotlin.uuid.Uuid.parse("123e4567-e89b-12d3-a456-426614174000")
+            val autoConvertedUuid = convertUUID(uuid)
+            autoConvertedUuid.shouldBe(uuid.toJavaUuid())
         }
 
         @Test
@@ -74,7 +84,7 @@ class ConverterTest {
         @Test
         fun `convert valid LocalTime to Instant`() {
             val time = LocalTime.of(12, 30) // 12:30 PM
-            val instant = convertInstant(time) as Instant
+            val instant = convertInstant(time)
             val expectedInstant = LocalDate.now().atTime(12, 30).toInstant(java.time.ZoneOffset.UTC)
             instant.shouldBe(expectedInstant)
         }
@@ -82,7 +92,7 @@ class ConverterTest {
         @Test
         fun `convert LocalTime at midnight to Instant`() {
             val midnight = LocalTime.MIDNIGHT
-            val instant = convertInstant(midnight) as Instant
+            val instant = convertInstant(midnight)
             val expectedInstant = LocalDate.now().atTime(0, 0).toInstant(java.time.ZoneOffset.UTC)
             instant.shouldBe(expectedInstant)
         }
@@ -90,7 +100,7 @@ class ConverterTest {
         @Test
         fun `convert valid LocalDateTime to Instant`() {
             val now = LocalDateTime.now()
-            val instant = convertInstant(now) as Instant
+            val instant = convertInstant(now)
             val expectedInstant = now.toInstant(java.time.ZoneOffset.UTC)
             instant.shouldBe(expectedInstant)
         }
@@ -108,7 +118,7 @@ class ConverterTest {
         @Test
         fun `convert valid Instant to LocalDateTime`() {
             val now = Instant.now()
-            val localDateTime = convertLocalDateTime(now) as LocalDateTime
+            val localDateTime = convertLocalDateTime(now)
             val expectedDt = LocalDateTime.ofInstant(now, java.time.ZoneOffset.UTC)
             localDateTime.shouldBe(expectedDt)
         }
@@ -126,7 +136,7 @@ class ConverterTest {
         @Test
         fun `convert valid Instant to LocalTime`() {
             val now = Instant.now()
-            val locaTime = convertLocalTime(now) as LocalTime
+            val locaTime = convertLocalTime(now)
             val expectedTime = LocalTime.ofInstant(now, java.time.ZoneOffset.UTC)
             locaTime.shouldBe(expectedTime)
         }
