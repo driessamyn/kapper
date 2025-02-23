@@ -1,4 +1,4 @@
-package net.samyn.kapper
+package net.samyn.kapper.internal
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -6,15 +6,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import net.samyn.kapper.internal.DbConnectionUtils
-import net.samyn.kapper.internal.KapperImpl
-import net.samyn.kapper.internal.Query
+import net.samyn.kapper.Field
+import net.samyn.kapper.KapperResultException
 import net.samyn.kapper.internal.SQLTypesConverter.setParameter
-import net.samyn.kapper.internal.executeQuery
-import net.samyn.kapper.internal.extractFields
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.sql.Connection
+import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
@@ -46,7 +44,7 @@ class KapperImplTest {
     private val mockMapper = mockk<(ResultSet, Map<String, Field>) -> TestEntity>(relaxed = true)
     private val testFieldMeta =
         mapOf(
-            "id" to Field(1, java.sql.JDBCType.INTEGER, "INTEGER"),
+            "id" to Field(1, JDBCType.INTEGER, "INTEGER"),
         )
 
     init {

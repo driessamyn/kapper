@@ -1,4 +1,4 @@
-package net.samyn.kapper
+package net.samyn.kapper.internal
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -6,7 +6,8 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import net.samyn.kapper.internal.Mapper
+import net.samyn.kapper.Field
+import net.samyn.kapper.KapperMappingException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource

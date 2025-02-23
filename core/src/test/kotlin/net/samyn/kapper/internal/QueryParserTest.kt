@@ -1,10 +1,10 @@
-package net.samyn.kapper
+package net.samyn.kapper.internal
 
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import net.samyn.kapper.internal.QueryParser
+import net.samyn.kapper.KapperParseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows

@@ -1,9 +1,9 @@
-package net.samyn.kapper
+package net.samyn.kapper.internal
 
 import io.kotest.matchers.maps.shouldContainExactly
 import io.mockk.every
 import io.mockk.mockk
-import net.samyn.kapper.internal.extractFields
+import net.samyn.kapper.Field
 import org.junit.jupiter.api.Test
 import java.sql.JDBCType
 import java.sql.ResultSet
