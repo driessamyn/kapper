@@ -81,7 +81,7 @@ fun <T : Any> Connection.query(
     clazz: KClass<T>,
     sql: String,
     vararg args: Pair<String, Any?>,
-): List<T> = KapperInstance.get().query(clazz.java, this, sql, args.toMap())
+): List<T> = Kapper.instance.query(clazz.java, this, sql, args.toMap())
 
 /**
  * Execute a SQL query and map the results to a list of instances of the specified class with a custom mapper.
@@ -97,4 +97,4 @@ fun <T : Any> Connection.query(
     sql: String,
     mapper: (ResultSet, Map<String, Field>) -> T,
     args: Map<String, Any?>,
-): List<T> = KapperInstance.get().query(clazz.java, this, sql, mapper, args)
+): List<T> = Kapper.instance.query(clazz.java, this, sql, mapper, args)

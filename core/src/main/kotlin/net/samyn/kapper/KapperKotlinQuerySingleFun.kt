@@ -89,7 +89,7 @@ fun <T : Any> Connection.querySingle(
     clazz: KClass<T>,
     sql: String,
     vararg args: Pair<String, Any?>,
-): T? = KapperInstance.get().querySingle(clazz.java, this, sql, args.toMap())
+): T? = Kapper.instance.querySingle(clazz.java, this, sql, args.toMap())
 
 /**
  * Execute a SQL query and map the result to a single instance of the specified class, or null of no results found.
@@ -105,4 +105,4 @@ fun <T : Any> Connection.querySingle(
     sql: String,
     mapper: (ResultSet, Map<String, Field>) -> T,
     vararg args: Pair<String, Any?>,
-): T? = KapperInstance.get().querySingle(clazz.java, this, sql, mapper, args.toMap())
+): T? = Kapper.instance.querySingle(clazz.java, this, sql, mapper, args.toMap())

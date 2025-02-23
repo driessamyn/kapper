@@ -11,10 +11,9 @@ import net.samyn.kapper.KapperParseException
  * @property sql the JDBC formatted query string with placeholders
  * @property tokens the tokens and their indexes in the query string
  */
-@PublishedApi
-internal data class Query(
+data class Query(
     val template: String,
-    private val queryParser: (String) -> Pair<String, Map<String, List<Int>>> = QueryParser::parseQuery,
+    private val queryParser: (String) -> Pair<String, Map<String, List<Int>>> = ::parseQuery,
 ) {
     val sql: String
     val tokens: Map<String, List<Int>>
@@ -26,53 +25,51 @@ internal data class Query(
     }
 }
 
-internal object QueryParser {
-    fun parseQuery(template: String): Pair<String, Map<String, List<Int>>> {
-        val sqlBuilder = StringBuilder()
-        val tokens = mutableMapOf<String, MutableList<Int>>()
-        var tokenIndex = 0
-        var tokenNameBuilder: StringBuilder? = null
+internal fun parseQuery(template: String): Pair<String, Map<String, List<Int>>> {
+    val sqlBuilder = StringBuilder()
+    val tokens = mutableMapOf<String, MutableList<Int>>()
+    var tokenIndex = 0
+    var tokenNameBuilder: StringBuilder? = null
 
-        template.trim().forEachIndexed { i, c ->
-            when {
-                // Token start char, and it follows at least one valid token character
-                c.isTokenStart() &&
-                    // doubled-up placeholders should not result in token, this is to support e.g. type casting in PostgreSQL
-                    template.getOrNull(i - 1)?.isTokenStart() != true &&
-                    template.getOrNull(i + 1)?.isValidTokenChar() == true -> {
-                    tokenNameBuilder = StringBuilder()
-                    tokenIndex++
-                    sqlBuilder.append('?')
-                }
-                tokenNameBuilder != null -> {
-                    // valid token character
-                    if (c.isValidTokenChar()) {
-                        tokenNameBuilder!!.append(c)
-                        // valid token separator character
-                    } else if (c.isValidTokenSeparator()) {
-                        tokens.getOrPut(tokenNameBuilder.toString()) { mutableListOf() }.add(tokenIndex)
-                        tokenNameBuilder = null
-                        sqlBuilder.append(c)
-                    } else {
-                        throw KapperParseException("'$c' is not a valid character part of the template token.")
-                    }
-                }
-                else -> sqlBuilder.append(c)
+    template.trim().forEachIndexed { i, c ->
+        when {
+            // Token start char, and it follows at least one valid token character
+            c.isTokenStart() &&
+                // doubled-up placeholders should not result in token, this is to support e.g. type casting in PostgreSQL
+                template.getOrNull(i - 1)?.isTokenStart() != true &&
+                template.getOrNull(i + 1)?.isValidTokenChar() == true -> {
+                tokenNameBuilder = StringBuilder()
+                tokenIndex++
+                sqlBuilder.append('?')
             }
+            tokenNameBuilder != null -> {
+                // valid token character
+                if (c.isValidTokenChar()) {
+                    tokenNameBuilder!!.append(c)
+                    // valid token separator character
+                } else if (c.isValidTokenSeparator()) {
+                    tokens.getOrPut(tokenNameBuilder.toString()) { mutableListOf() }.add(tokenIndex)
+                    tokenNameBuilder = null
+                    sqlBuilder.append(c)
+                } else {
+                    throw KapperParseException("'$c' is not a valid character part of the template token.")
+                }
+            }
+            else -> sqlBuilder.append(c)
         }
-
-        // Handle case where token is at the end of the string
-        tokenNameBuilder?.let {
-            tokens.getOrPut(tokenNameBuilder.toString()) { mutableListOf() }.add(tokenIndex)
-        }
-
-        return sqlBuilder.toString() to tokens
     }
 
-    private fun Char.isTokenStart() = this == ':' || this == '@'
+    // Handle case where token is at the end of the string
+    tokenNameBuilder?.let {
+        tokens.getOrPut(tokenNameBuilder.toString()) { mutableListOf() }.add(tokenIndex)
+    }
 
-    private fun Char.isValidTokenChar() = this.isLetterOrDigit() || this == '_' || this == '-'
-
-    private fun Char.isValidTokenSeparator() =
-        this == ' ' || this == ',' || this == ')' || this == ';' || this == '\n' || this == '\t' || this == '\r'
+    return sqlBuilder.toString() to tokens
 }
+
+private fun Char.isTokenStart() = this == ':' || this == '@'
+
+private fun Char.isValidTokenChar() = this.isLetterOrDigit() || this == '_' || this == '-'
+
+private fun Char.isValidTokenSeparator() =
+    this == ' ' || this == ',' || this == ')' || this == ';' || this == '\n' || this == '\t' || this == '\r'

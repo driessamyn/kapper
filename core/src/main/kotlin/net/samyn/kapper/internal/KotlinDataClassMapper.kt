@@ -4,17 +4,18 @@ package net.samyn.kapper.internal
 
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
+import net.samyn.kapper.Mapper
 import java.sql.JDBCType
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
-class Mapper<T : Any>(
+class KotlinDataClassMapper<T : Any>(
     private val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter()::convert,
     val sqlTypesConverter: (JDBCType, String, ResultSet, Int) -> Any? = SQLTypesConverter::convertSQLType,
-) {
+) : Mapper<T> {
     private val constructor: KFunction<T> =
         clazz.kotlin.primaryConstructor
             ?: throw KapperMappingException("No primary constructor found for ${clazz.name}")
@@ -39,7 +40,6 @@ class Mapper<T : Any>(
                 val prop =
                     properties[it.name.lowercase()]
                         ?: throw KapperMappingException("No property found for ${it.name}")
-                // TODO: optimise this
                 if (it.value == null) {
                     prop to null
                 } else if (it.value::class != prop.type.classifier) {
@@ -52,7 +52,7 @@ class Mapper<T : Any>(
         return instance
     }
 
-    fun createInstance(
+    override fun createInstance(
         resultSet: ResultSet,
         fields: Map<String, Field>,
     ): T {

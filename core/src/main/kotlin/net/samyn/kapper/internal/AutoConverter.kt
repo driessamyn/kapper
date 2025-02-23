@@ -26,7 +26,8 @@ internal class AutoConverter(
         value: Any,
         target: KClass<*>,
     ): Any =
-        // Kover considers this not covered, which I think is a bug. Will reproduce in separate project and raise issue.
+        // Kover considers this not covered, which I think is a bug.
+        //  https://github.com/Kotlin/kotlinx-kover/issues/729
         converters[target]?.invoke(value) ?: throw KapperUnsupportedOperationException(
             "Cannot auto-convert from ${value.javaClass} to ${target.qualifiedName}",
         )

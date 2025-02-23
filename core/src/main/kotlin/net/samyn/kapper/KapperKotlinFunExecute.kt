@@ -32,5 +32,5 @@ fun Connection.execute(
     sql: String,
     vararg args: Pair<String, Any?>,
 ): Int {
-    return KapperInstance.get().execute(this, sql, args.toMap())
+    return Kapper.instance.execute(this, sql, args.toMap())
 }

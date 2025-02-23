@@ -18,9 +18,9 @@ class ArgsTest {
         mapOf(
             "foo" to 1,
             "bar" to "baz",
-        ).setParameters(query, preparedStatementMock, DbConnectionUtils.DbFlavour.UNKNOWN)
-        verify { preparedStatementMock.setParameter(1, 1, DbConnectionUtils.DbFlavour.UNKNOWN) }
-        verify { preparedStatementMock.setParameter(2, "baz", DbConnectionUtils.DbFlavour.UNKNOWN) }
+        ).setParameters(query, preparedStatementMock, DbFlavour.UNKNOWN)
+        verify { preparedStatementMock.setParameter(1, 1, DbFlavour.UNKNOWN) }
+        verify { preparedStatementMock.setParameter(2, "baz", DbFlavour.UNKNOWN) }
     }
 
     @Test
@@ -29,7 +29,7 @@ class ArgsTest {
             shouldThrow<KapperParseException> {
                 mapOf(
                     "id" to 1,
-                ).setParameters(query, preparedStatementMock, DbConnectionUtils.DbFlavour.UNKNOWN)
+                ).setParameters(query, preparedStatementMock, DbFlavour.UNKNOWN)
             }
         ex.message shouldContain "'id'"
     }

@@ -11,7 +11,7 @@ import java.sql.PreparedStatement
 internal fun Args.setParameters(
     query: Query,
     stmt: PreparedStatement,
-    dbFlavour: DbConnectionUtils.DbFlavour,
+    dbFlavour: DbFlavour,
 ) {
     this.forEach { a ->
         val indexes =

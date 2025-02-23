@@ -5,7 +5,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import net.samyn.kapper.KapperUnsupportedOperationException
-import net.samyn.kapper.internal.DbConnectionUtils.DbFlavour
 import net.samyn.kapper.internal.SQLTypesConverter.setParameter
 import org.junit.jupiter.api.Named.named
 import org.junit.jupiter.api.Test

@@ -11,3 +11,6 @@ class KapperParseException(message: String, cause: Throwable? = null) :
 
 class KapperResultException(message: String, cause: Throwable? = null) :
     RuntimeException(message, cause)
+
+class KapperQueryException(message: String, cause: Throwable? = null) :
+    RuntimeException(message, cause)
