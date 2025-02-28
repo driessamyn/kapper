@@ -1,3 +1,5 @@
+@file:JvmSynthetic
+
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.Field

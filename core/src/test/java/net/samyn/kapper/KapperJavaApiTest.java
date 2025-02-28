@@ -1,5 +1,6 @@
 package net.samyn.kapper;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -14,11 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-// this is the Java equivalent of the Kotlin KapperApiTest
-//  its purpose is to test kapper is usable from Java
+// This test class is used to test the usability of the Java API of Kapper
 class KapperJavaApiTest {
-    private final Kapper kapper = Kapper.getInstance();
-
     @Mock
     private ResultSetMetaData mockMetaData;
 
@@ -31,12 +29,18 @@ class KapperJavaApiTest {
     @Mock
     private Connection mockConnection;
 
-    // TODO: support auto-mapping for record classes
+    private final AutoCloseable mocks;
+
     record TestEntity(int id, String name) { }
 
     KapperJavaApiTest() {
-        MockitoAnnotations.openMocks(this);
+        mocks = MockitoAnnotations.openMocks(this);
         setupMocks();
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        mocks.close();
     }
 
     private void setupMocks() {
@@ -70,13 +74,13 @@ class KapperJavaApiTest {
 
     @Test
     void testGetInstance() {
-        assertNotNull(kapper.getClass());
+        assertNotNull(Kapper.getInstance().getClass());
     }
 
     @Nested
     class QueryTests {
-        // TODO: Kapper currently doesn't support auto-mapping to Java classes
-        //  this can be added later.
+        // NOTE: Kapper currently doesn't support auto-mapping to Java classes
+        //  this will be added later.
 
         @Test
         void testQueryWithCustomMapper() throws Exception {
@@ -87,7 +91,7 @@ class KapperJavaApiTest {
 
             Map<String, Object> args = Map.of("id", 1);
 
-            List<TestEntity> result = kapper.query(
+            List<TestEntity> result = Kapper.getInstance().query(
                     TestEntity.class,
                     mockConnection,
                     "SELECT * FROM test_table where id = :id",
@@ -114,6 +118,27 @@ class KapperJavaApiTest {
             verify(mockStatement).close();
             verify(mockResultSet).close();
         }
+
+        @Test
+        void testQueryWithAutoMapperForRecord() throws Exception {
+            // Setup result set behavior
+            when(mockResultSet.next()).thenReturn(true, true, false);
+            when(mockResultSet.getInt("id")).thenReturn(1, 2);
+            when(mockResultSet.getString("name")).thenReturn("Test1", "Test2");
+
+            Map<String, Object> args = Map.of("id", 1);
+
+            var kapper = Kapper.getInstance();
+            // Kapper currently doesn't support auto-mapping to Java record classes, so expect to throw.
+            assertThrows(KapperMappingException.class, () -> {
+                kapper.query(
+                        TestEntity.class,
+                        mockConnection,
+                        "SELECT * FROM test_table where id = :id",
+                        args
+                );
+            });
+        }
     }
 
     @Nested
@@ -127,7 +152,7 @@ class KapperJavaApiTest {
 
             Map<String, Object> args = Map.of("id", 1);
 
-            TestEntity result = kapper.querySingle(
+            TestEntity result = Kapper.getInstance().querySingle(
                     TestEntity.class,
                     mockConnection,
                     "SELECT * FROM test_table where id = :id",
@@ -165,7 +190,7 @@ class KapperJavaApiTest {
             args.put("id", 1);
             args.put("name", "Test1");
 
-            int result = kapper.execute(
+            int result = Kapper.getInstance().execute(
                     mockConnection,
                     "INSERT INTO test_table(id, name) VALUES(:id, :name)",
                     args

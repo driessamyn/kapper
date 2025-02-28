@@ -10,7 +10,6 @@ import net.samyn.kapper.withTransaction
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
-import org.postgresql.ds.PGSimpleDataSource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -115,11 +114,4 @@ class DatasourceWithConnectionDbTest {
             emptyResult.count() shouldBe 0
         }
     }
-
-    private fun createDataSource(postgresql: PostgreSQLContainer<*>) =
-        PGSimpleDataSource().also {
-            it.setUrl(postgresql.jdbcUrl)
-            it.user = postgresql.username
-            it.password = postgresql.password
-        }
 }

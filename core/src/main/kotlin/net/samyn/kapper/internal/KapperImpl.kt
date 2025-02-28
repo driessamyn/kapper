@@ -1,20 +1,20 @@
+@file:JvmSynthetic
+
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.Args
 import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
+import net.samyn.kapper.KapperQueryException
 import net.samyn.kapper.KapperResultException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
-import java.util.HashMap
+import java.sql.SQLException
 
-// TODO: this is only covered by the TestContainer integration tests.
-//  Break this up further and ensure unit test coverage.
 internal class KapperImpl(
-    private val queryBuilder: (String) -> Query = { Query(it) },
-    private val fieldExtractor: (ResultSet) -> Map<String, Field> = { rs -> rs.extractFields() },
+    private val queryFactory: (String) -> Query = { Query(it) },
 ) : Kapper {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -24,49 +24,26 @@ internal class KapperImpl(
         clazz: Class<T>,
         connection: Connection,
         sql: String,
-        args: Args,
-    ): List<T> =
-        // TODO: cash mapper
-        query(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
-
-    override fun <T : Any> query(
-        clazz: Class<T>,
-        connection: Connection,
-        sql: String,
         mapper: (ResultSet, Map<String, Field>) -> T,
         args: Args,
     ): List<T> {
-        // TODO: cache query
-        val query = queryBuilder(sql)
-        val results = mutableListOf<T>()
-        connection.prepareStatement(query.sql).use { stmt ->
-            args.setParameters(query, stmt, connection)
-            logger.debug("Executing prepared statement: {}", stmt)
-            // TODO: refactor
-            stmt.executeQuery().use { rs ->
-                // TODO: cache data
-                // TODO: cash fields (persist in query?)
-                val fields = fieldExtractor(rs)
-
-                while (rs.next()) {
-                    results.add(
-                        mapper(rs, fields),
-                    )
+        require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
+        return buildList {
+            connection.executeQuery(queryFactory(sql), args).use { rs ->
+                try {
+                    val fields = rs.extractFields()
+                    while (rs.next()) {
+                        add(mapper(rs, fields))
+                    }
+                } catch (e: SQLException) {
+                    "Failed to execute query: $sql".also {
+                        logger.warn(it, e)
+                        throw KapperQueryException(it, e)
+                    }
                 }
             }
         }
-
-        return results
     }
-
-    override fun <T : Any> querySingle(
-        clazz: Class<T>,
-        connection: Connection,
-        sql: String,
-        args: Args,
-    ): T? =
-        // TODO: cash mapper
-        querySingle(clazz, connection, sql, Mapper(clazz)::createInstance, args.toMap())
 
     override fun <T : Any> querySingle(
         clazz: Class<T>,
@@ -85,18 +62,11 @@ internal class KapperImpl(
     override fun execute(
         connection: Connection,
         sql: String,
-        args: HashMap<String, Any?>,
-    ): Int = execute(connection, sql, args.toMap())
-
-    override fun execute(
-        connection: Connection,
-        sql: String,
         args: Args,
     ): Int {
-        // TODO: cache query
-        val query = queryBuilder(sql)
+        val query = queryFactory(sql)
         connection.prepareStatement(query.sql).use { stmt ->
-            args.setParameters(query, stmt, connection)
+            args.setParameters(query, stmt, connection.getDbFlavour())
             logger.debug("Executing prepared statement: {}", stmt)
             return stmt.executeUpdate()
         }

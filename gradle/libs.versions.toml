@@ -24,6 +24,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mysql-driver = { module = "com.mysql:mysql-connector-j", version.ref = "mysql-driver" }
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql-driver" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 test-cotainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "test-conatainers" }
 test-containers-junit-mysql = { module = "org.testcontainers:mysql", version.ref = "test-conatainers" }
 test-containers-junit-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-conatainers" }

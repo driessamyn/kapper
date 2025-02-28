@@ -1,12 +1,9 @@
-package net.samyn.kapper
+package net.samyn.kapper.internal
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import net.samyn.kapper.internal.convertInstant
-import net.samyn.kapper.internal.convertLocalDate
-import net.samyn.kapper.internal.convertLocalDateTime
-import net.samyn.kapper.internal.convertLocalTime
-import net.samyn.kapper.internal.convertUUID
+import net.samyn.kapper.KapperParseException
+import net.samyn.kapper.KapperUnsupportedOperationException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
