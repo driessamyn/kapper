@@ -22,17 +22,19 @@ import kotlin.time.Duration.Companion.seconds
 
 class DatasourceWithConnectionTest {
     @Test
-    fun `create connection`() {
+    fun `create connection and pass to block`() {
         val dataSource = mockk<DataSource>(relaxed = true)
         val connection = mockk<Connection>(relaxed = true)
         coEvery { dataSource.connection } returns connection
         coEvery { connection.close() } just Runs
         val dispatcher = Dispatchers.IO
-        val block: suspend (Connection) -> Int = { 123 }
 
         val result =
             runBlocking {
-                dataSource.withConnection(dispatcher, block)
+                dataSource.withConnection(dispatcher) {
+                    it shouldBe connection
+                    123
+                }
             }
 
         coVerify { dataSource.connection }

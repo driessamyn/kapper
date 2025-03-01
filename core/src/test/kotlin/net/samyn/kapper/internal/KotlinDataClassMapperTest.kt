@@ -1,4 +1,4 @@
-package net.samyn.kapper
+package net.samyn.kapper.internal
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -6,7 +6,8 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import net.samyn.kapper.internal.Mapper
+import net.samyn.kapper.Field
+import net.samyn.kapper.KapperMappingException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -15,7 +16,7 @@ import java.sql.ResultSet
 import java.util.UUID
 import kotlin.reflect.KClass
 
-class MapperTest {
+class KotlinDataClassMapperTest {
     private val autoMapperMock = mockk<(Any, KClass<*>) -> Any>(relaxed = true)
     private val resultSet = mockk<ResultSet>(relaxed = true)
     val sqlTypeConverterMock = mockk<(JDBCType, String, ResultSet, Int) -> Any?>(relaxed = true)
@@ -40,8 +41,8 @@ class MapperTest {
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(4)) } returns
             batman.age!!
 
-        val mapper = Mapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
-        val instance = mapper.createInstance(resultSet, fields)
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val instance = kotlinDataClassMapper.createInstance(resultSet, fields)
 
         instance.shouldBe(batman)
     }
@@ -59,8 +60,8 @@ class MapperTest {
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
             batman.name
 
-        val mapper = Mapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
-        val instance = mapper.createInstance(resultSet, fields)
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val instance = kotlinDataClassMapper.createInstance(resultSet, fields)
 
         instance.shouldBe(SuperHero(batman.id, "Batman", null, null))
     }
@@ -86,10 +87,10 @@ class MapperTest {
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(5)) } returns
             "bar"
 
-        val mapper = Mapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
         val ex =
             shouldThrow<KapperMappingException> {
-                mapper.createInstance(resultSet, fields)
+                kotlinDataClassMapper.createInstance(resultSet, fields)
             }
         ex.message.shouldContain("foo")
     }
@@ -110,10 +111,10 @@ class MapperTest {
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3)) } returns
             batman.age!!
 
-        val mapper = Mapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
         val ex =
             shouldThrow<KapperMappingException> {
-                mapper.createInstance(resultSet, fields)
+                kotlinDataClassMapper.createInstance(resultSet, fields)
             }
         ex.message.shouldContain("id")
     }
@@ -131,8 +132,8 @@ class MapperTest {
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
             123
 
-        val mapper = Mapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
-        mapper.createInstance(resultSet, fields)
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        kotlinDataClassMapper.createInstance(resultSet, fields)
         verify { autoMapperMock(123, String::class) }
     }
 
@@ -152,8 +153,8 @@ class MapperTest {
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3)) } returns
             null
 
-        val mapper = Mapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
-        val instance = mapper.createInstance(resultSet, fields)
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val instance = kotlinDataClassMapper.createInstance(resultSet, fields)
 
         instance.shouldBe(SuperHero(batman.id, "Batman", null, null))
     }
@@ -166,7 +167,7 @@ class MapperTest {
     @Test
     fun `should throw when no primary constructor`() {
         shouldThrow<KapperMappingException> {
-            Mapper(NoPrimaryConstructor::class.java, autoMapperMock, sqlTypeConverterMock)
+            KotlinDataClassMapper(NoPrimaryConstructor::class.java, autoMapperMock, sqlTypeConverterMock)
         }
     }
 
@@ -181,10 +182,10 @@ class MapperTest {
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
             UUID.randomUUID()
 
-        val mapper = Mapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
         val ex =
             shouldThrow<KapperMappingException> {
-                mapper.createInstance(resultSet, fields)
+                kotlinDataClassMapper.createInstance(resultSet, fields)
             }
         ex.message.shouldContain("foo")
     }

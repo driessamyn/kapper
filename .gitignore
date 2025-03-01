@@ -28,6 +28,7 @@ replay_pid*
 
 # Ignore Gradle build output directory
 build
+kotlin-compiler-*.salive
 
 # Ignore IntelliJ project files
 /.idea

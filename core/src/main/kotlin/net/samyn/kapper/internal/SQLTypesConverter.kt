@@ -1,7 +1,8 @@
+@file:JvmSynthetic
+
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.KapperUnsupportedOperationException
-import net.samyn.kapper.internal.DbConnectionUtils.DbFlavour
 import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -45,7 +46,6 @@ internal object SQLTypesConverter {
                 -> resultSet.getInt(fieldIndex)
                 JDBCType.JAVA_OBJECT,
                 -> resultSet.getObject(fieldIndex)
-                // TODO: validate these with regards to timezones etc. This may be DB specific.
                 in
                 listOf(
                     JDBCType.TIME,

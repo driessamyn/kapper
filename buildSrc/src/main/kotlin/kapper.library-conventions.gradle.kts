@@ -30,8 +30,16 @@ kover {
         sources {
             excludedSourceSets.addAll("test", "integrationTest")
         }
+        instrumentation {
+            disabledForTestTasks.add("integrationTest")
+        }
     }
     reports {
+        filters {
+            excludes {
+                annotatedBy("net.samyn.kapper.annotation.ExcludeFromCoverageKoverIssue")
+            }
+        }
         verify {
             rule {
                 bound {
@@ -94,7 +102,7 @@ tasks.named<Test>("test") {
     systemProperties(
         // Configuration parameters to execute classes in parallel but methods in same thread
         "junit.jupiter.execution.parallel.enabled" to "true",
-        "junit.jupiter.execution.parallel.mode.default" to "concurrent",
+        "junit.jupiter.execution.parallel.mode.default" to "same_thread",
         "junit.jupiter.execution.parallel.mode.classes.default" to "concurrent",
     )
 }
