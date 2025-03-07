@@ -51,7 +51,7 @@ class FlowQueryTest {
     @Test
     fun `when query emit each row as a flow item`() {
         runBlocking {
-            connection.query<Hero>(
+            connection.queryAsFlow<Hero>(
                 queryTemplate,
                 mapper,
                 "id" to 1,
@@ -64,7 +64,7 @@ class FlowQueryTest {
         runBlocking {
             mockkStatic("net.samyn.kapper.MapperFactoryKt") {
                 every { createMapper(Hero::class.java).createInstance(any(), any()) } returns result
-                connection.query<Hero>(
+                connection.queryAsFlow<Hero>(
                     queryTemplate,
                     "id" to 1,
                 ).toList() shouldBe listOf(result)
@@ -75,7 +75,7 @@ class FlowQueryTest {
     @Test
     fun `when query emit close after collection`() {
         runBlocking {
-            connection.query<Hero>(
+            connection.queryAsFlow<Hero>(
                 queryTemplate,
                 mapper,
                 "id" to 1,
@@ -89,7 +89,7 @@ class FlowQueryTest {
         val ex = Exception("test")
         runBlocking {
             try {
-                connection.query<Hero>(
+                connection.queryAsFlow<Hero>(
                     queryTemplate,
                     mapper,
                     "id" to 1,
@@ -105,13 +105,13 @@ class FlowQueryTest {
 
     @Test
     fun `when cancel close`() {
-        // never finish the query
+        // never finish the queryAsFlow
         every { resultSet.next() } returns true
         runBlocking {
             var count = 0
             val job =
                 async {
-                    connection.query<Hero>(
+                    connection.queryAsFlow<Hero>(
                         queryTemplate,
                         mapper,
                         "id" to 1,
@@ -134,7 +134,7 @@ class FlowQueryTest {
         every { resultSet.next() } throws ex
         runBlocking {
             shouldThrow<KapperQueryException> {
-                connection.query<Hero>(
+                connection.queryAsFlow<Hero>(
                     queryTemplate,
                     mapper,
                     "id" to 1,
@@ -147,7 +147,7 @@ class FlowQueryTest {
     fun `when sql blank throw`() {
         runBlocking {
             shouldThrow<IllegalArgumentException> {
-                connection.query<Hero>(
+                connection.queryAsFlow<Hero>(
                     "",
                     mapper,
                     "id" to 1,
