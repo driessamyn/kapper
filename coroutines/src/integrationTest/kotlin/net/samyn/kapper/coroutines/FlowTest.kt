@@ -72,9 +72,9 @@ class FlowTest {
                 createDataSource(postgresql).withConnection { connection ->
                     val one =
                         async {
-                            printGreen("Executing query - $connection, filtering even ages")
+                            printGreen("Executing queryAsFlow - $connection, filtering even ages")
                             connection
-                                .query<SuperHero>(
+                                .queryAsFlow<SuperHero>(
                                     "SELECT * FROM super_heroes",
                                 )
                                 .filter {
@@ -86,9 +86,9 @@ class FlowTest {
                         }
                     val two =
                         async {
-                            printRed("Executing query - $connection, filtering odd ages")
+                            printRed("Executing queryAsFlow - $connection, filtering odd ages")
                             connection
-                                .query<SuperHero>(
+                                .queryAsFlow<SuperHero>(
                                     "SELECT * FROM super_heroes",
                                 )
                                 .filter {
@@ -131,9 +131,9 @@ class FlowTest {
                 createDataSource(postgresql).withConnection { connection ->
                     val one =
                         async {
-                            printGreen("Executing query - $connection, filtering even ages")
+                            printGreen("Executing queryAsFlow - $connection, filtering even ages")
                             connection
-                                .query<SuperHero>(
+                                .queryAsFlow<SuperHero>(
                                     "SELECT * FROM super_heroes",
                                 )
                                 .filter {
@@ -153,9 +153,9 @@ class FlowTest {
                         }
                     val two =
                         async {
-                            printRed("Executing query - $connection, filtering odd ages")
+                            printRed("Executing queryAsFlow - $connection, filtering odd ages")
                             connection
-                                .query<SuperHero>(
+                                .queryAsFlow<SuperHero>(
                                     "SELECT * FROM super_heroes",
                                 )
                                 .filter {
@@ -196,9 +196,9 @@ class FlowTest {
             createDataSource(postgresql).withConnection { connection ->
                 val job =
                     async {
-                        println("Executing query - $connection, exit when age 20 is exceeded")
+                        println("Executing queryAsFlow - $connection, exit when age 20 is exceeded")
                         connection
-                            .query<SuperHero>(
+                            .queryAsFlow<SuperHero>(
                                 "SELECT * FROM super_heroes",
                             )
                             .map {
@@ -209,7 +209,7 @@ class FlowTest {
                                 printGreen("[${Thread.currentThread().name}] acc=$a")
                                 a.also {
                                     if (a > 20) {
-                                        println("Cancelling query as cumulative age is $a")
+                                        println("Cancelling queryAsFlow as cumulative age is $a")
                                         cancel("Cumulative age exceeded 20")
                                     }
                                 }
