@@ -15,7 +15,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 
 /**
- * Execute a SQL query and map the results to a Flow of instances of the specified class.
+ * Execute a SQL queryAsFlow and map the results to a Flow of instances of the specified class.
  *
  * This function uses reflection to automatically map the result set columns to the properties of the specified class.
  * For advanced mappings, use the overloaded version with a custom `mapper` function.
@@ -26,7 +26,7 @@ import java.sql.SQLException
  * data class User(val id: Int, val name: String)
  *
  * // Fetch all users where "active" is true
- * val users: Flow<User> = connection.query(
+ * val users: Flow<User> = connection.queryAsFlow(
  *     sql = "SELECT id, name FROM users WHERE active = :active",
  *     "active" to true
  * )
@@ -35,27 +35,27 @@ import java.sql.SQLException
  * users.collect { println(it) }
  * ```
  *
- * @param sql The SQL query to execute.
- * @param args Optional key-value pairs representing named parameters to substitute into the query.
- * @return The query result as a [Flow] of [T] instances.
+ * @param sql The SQL queryAsFlow to execute.
+ * @param args Optional key-value pairs representing named parameters to substitute into the queryAsFlow.
+ * @return The queryAsFlow result as a [Flow] of [T] instances.
  * @throws java.sql.SQLException If there's a database error.
  */
-inline fun <reified T : Any> Connection.query(
+inline fun <reified T : Any> Connection.queryAsFlow(
     sql: String,
     vararg args: Pair<String, Any?>,
 ): Flow<T> =
-    query(
+    queryAsFlow(
         sql,
         createMapper(T::class.java)::createInstance,
         *args,
     )
 
 /**
- * Execute a SQL query and map the results to a Flow of instances of the specified class with a custom mapper.
+ * Execute a SQL queryAsFlow and map the results to a Flow of instances of the specified class with a custom mapper.
  *
  * **Example**:
  * ```kotlin
- * val users: Flow<User> = connection.query(
+ * val users: Flow<User> = connection.queryAsFlow(
  *     sql = "SELECT id, name FROM users",
  *     mapper = { resultSet, _ ->
  *         User(
@@ -67,18 +67,18 @@ inline fun <reified T : Any> Connection.query(
  * users.collect { println(it) }
  * ```
  *
- * @param sql The SQL query to execute.
+ * @param sql The SQL queryAsFlow to execute.
  * @param mapper Custom mapping function to transform the [ResultSet] into the target class.
- * @param args Optional parameters to be substituted in the SQL query during execution.
- * @return The query result as a [Flow] of [T] instances.
+ * @param args Optional parameters to be substituted in the SQL queryAsFlow during execution.
+ * @return The queryAsFlow result as a [Flow] of [T] instances.
  * @throws KapperQueryException If there's a database error.
  */
-inline fun <reified T : Any> Connection.query(
+inline fun <reified T : Any> Connection.queryAsFlow(
     sql: String,
     noinline mapper: (ResultSet, Map<String, Field>) -> T,
     vararg args: Pair<String, Any?>,
 ): Flow<T> {
-    require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
+    require(sql.isNotBlank()) { "SQL queryAsFlow cannot be empty or blank" }
     this.executeQuery(Query(sql), args.toMap()).let { rs ->
         return queryFlow(rs, mapper, sql)
     }
@@ -102,7 +102,7 @@ fun <T : Any> queryFlow(
             logger.info("Query results processing cancelled: ${e.message}")
             throw e
         } catch (e: SQLException) {
-            "Error executing query: $sql".also {
+            "Error executing queryAsFlow: $sql".also {
                 logger.warn(it, e)
                 throw KapperQueryException(it, e)
             }
