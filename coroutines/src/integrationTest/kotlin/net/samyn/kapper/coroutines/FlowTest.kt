@@ -73,7 +73,7 @@ class FlowTest {
                 createDataSource(postgresql).withConnection { connection ->
                     val one =
                         async {
-                            printGreen("Executing queryAsFlow - $connection, filtering even ages")
+                            printGreen("Executing query - $connection, filtering even ages")
                             connection
                                 .queryAsFlow<SuperHero>(
                                     "SELECT * FROM super_heroes",
@@ -87,7 +87,7 @@ class FlowTest {
                         }
                     val two =
                         async {
-                            printRed("Executing queryAsFlow - $connection, filtering odd ages")
+                            printRed("Executing query - $connection, filtering odd ages")
                             connection
                                 .queryAsFlow<SuperHero>(
                                     "SELECT * FROM super_heroes",
@@ -154,7 +154,7 @@ class FlowTest {
                         }
                     val two =
                         async {
-                            printRed("Executing queryAsFlow - $connection, filtering odd ages")
+                            printRed("Executing query - $connection, filtering odd ages")
                             connection
                                 .queryAsFlow<SuperHero>(
                                     "SELECT * FROM super_heroes",
@@ -209,13 +209,13 @@ class FlowTest {
                                 printGreen("[${Thread.currentThread().name}] acc=$a")
                                 a.also {
                                     if (a > 20) {
-                                        println("Cancelling queryAsFlow as cumulative age is $a")
+                                        println("Cancelling query as cumulative age is $a")
                                         cancel("Cumulative age exceeded 20")
                                     }
                                 }
                             }
                     }
-                println("Executing queryAsFlow - $connection, exit when age 20 is exceeded")
+                println("Executing query - $connection, exit when age 20 is exceeded")
                 shouldThrow<CancellationException> {
                     job.await() shouldBeGreaterThan 20
                 }

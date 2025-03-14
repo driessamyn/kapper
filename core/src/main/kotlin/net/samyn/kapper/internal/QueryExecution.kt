@@ -19,7 +19,7 @@ fun Connection.executeQuery(
     this.prepareStatement(query.sql).let { stmt ->
         try {
             args.setParameters(query, stmt, this.getDbFlavour())
-            logger.warn("Executing prepared statement for query: {}", stmt)
+            logger.debug("Executing prepared statement for query: {}", stmt)
             stmt.fetchSize = fetchSize
             return CloseableResultSet(stmt.executeQuery()) {
                 // cancel the statement when the ResultSet is closed and the statement isn't yet.

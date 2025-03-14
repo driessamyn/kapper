@@ -24,7 +24,7 @@ class DatasourceWithConnectionDbTest {
     @Test
     fun `slow query on IO dispatcher`() {
         // this is a bit of a naughty test as it includes a sleep,
-        //  but wanted to validate this against a real JDBC driver and a real slow queryAsFlow.
+        //  but wanted to validate this against a real JDBC driver and a real slow query.
         runBlocking {
             val dataSource = createDataSource(postgresql)
             var slept = false
@@ -32,7 +32,7 @@ class DatasourceWithConnectionDbTest {
                 launch {
                     val int =
                         dataSource.withConnection { connection ->
-                            println("Executing slow queryAsFlow - $connection")
+                            println("Executing slow query - $connection")
                             connection.querySingle<Int>(
                                 "SELECT 1, pg_sleep(1)",
                                 { rs, _ -> rs.getInt(1) },
@@ -82,7 +82,7 @@ class DatasourceWithConnectionDbTest {
     @Test
     fun `execute failed tx on IO dispatcher`() {
         // this is a bit of a naughty test as it includes a sleep,
-        //  but wanted to validate this against a real JDBC driver and a real slow queryAsFlow.
+        //  but wanted to validate this against a real JDBC driver and a real slow query.
         runBlocking {
             val dataSource = createDataSource(postgresql)
             val queryJob =
