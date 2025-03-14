@@ -70,6 +70,7 @@ inline fun <reified T : Any> Connection.queryAsFlow(
  * @param sql The SQL queryAsFlow to execute.
  * @param mapper Custom mapping function to transform the [ResultSet] into the target class.
  * @param args Optional parameters to be substituted in the SQL queryAsFlow during execution.
+ * @param fetchSize The number of rows to fetch from the database at a time. Default is 1000. This means the statement can be cancelled (and the DB driver supports it) if the flow is cancelled.
  * @return The queryAsFlow result as a [Flow] of [T] instances.
  * @throws KapperQueryException If there's a database error.
  */
@@ -77,9 +78,10 @@ inline fun <reified T : Any> Connection.queryAsFlow(
     sql: String,
     noinline mapper: (ResultSet, Map<String, Field>) -> T,
     vararg args: Pair<String, Any?>,
+    fetchSize: Int = 1000,
 ): Flow<T> {
     require(sql.isNotBlank()) { "SQL queryAsFlow cannot be empty or blank" }
-    this.executeQuery(Query(sql), args.toMap()).let { rs ->
+    this.executeQuery(Query(sql), args.toMap(), fetchSize).let { rs ->
         return queryFlow(rs, mapper, sql)
     }
 }

@@ -42,7 +42,7 @@ class FlowQueryTest {
         mockkStatic(Connection::executeQuery)
         mockkStatic(ResultSet::extractFields)
         every { resultSet.extractFields() } returns fields
-        every { connection.executeQuery(query, mapOf("id" to 1)) } returns resultSet
+        every { connection.executeQuery(any(), any(), any()) } returns resultSet
         every { mapper.invoke(resultSet, fields) } returns result
     }
 
@@ -154,5 +154,30 @@ class FlowQueryTest {
                 ).collect {}
             }
         }
+    }
+
+    @Test
+    fun `when fetchsize set`() {
+        runBlocking {
+            connection.queryAsFlow<Hero>(
+                queryTemplate,
+                mapper,
+                "id" to 1,
+                fetchSize = 10,
+            ).toList()
+        }
+        verify { connection.executeQuery(any(), any(), 10) }
+    }
+
+    @Test
+    fun `when fetchsize not set use default`() {
+        runBlocking {
+            connection.queryAsFlow<Hero>(
+                queryTemplate,
+                mapper,
+                "id" to 1,
+            ).toList()
+        }
+        verify { connection.executeQuery(any(), any(), 1000) }
     }
 }

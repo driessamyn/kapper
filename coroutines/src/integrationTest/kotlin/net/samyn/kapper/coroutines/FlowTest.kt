@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.reduce
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import net.samyn.kapper.withTransaction
@@ -189,14 +190,13 @@ class FlowTest {
     }
 
     @Test
-    fun `cancel query during processing`() {
+    fun `cancel query explicitely`() {
         runBlocking {
             // here we exit early (in this example when cumulative age has exceeded 20)
             // cancelling the flow will cancel the JDBC iterator early and close the ResultSet.
             createDataSource(postgresql).withConnection { connection ->
                 val job =
                     async {
-                        println("Executing queryAsFlow - $connection, exit when age 20 is exceeded")
                         connection
                             .queryAsFlow<SuperHero>(
                                 "SELECT * FROM super_heroes",
@@ -215,11 +215,34 @@ class FlowTest {
                                 }
                             }
                     }
+                println("Executing queryAsFlow - $connection, exit when age 20 is exceeded")
                 shouldThrow<CancellationException> {
                     job.await() shouldBeGreaterThan 20
                 }
             }
             println("Query finished")
+        }
+    }
+
+    @Test
+    fun `cancel query by expression`() {
+        runBlocking {
+            // This query never completes, so we cancel it after a certain condition is met.
+            data class Entry(val n: Int)
+            val job =
+                async {
+                    createDataSource(postgresql).withConnection { connection ->
+                        connection.queryAsFlow<Entry>(
+                            """
+                            SELECT generate_series(1, 1000) AS n;
+                            """.trimIndent(),
+                        ).takeWhile {
+                            println("Processing $it")
+                            it.n <= 10
+                        }.toList()
+                    }
+                }
+            job.await().size shouldBe 10
         }
     }
 
