@@ -10,7 +10,7 @@ mockk = "1.13.17"
 mysql-driver = "9.2.0"
 postgresql-driver = "42.7.5"
 slf4j = "2.0.17"
-test-conatainers = "1.20.5"
+test-conatainers = "1.20.6"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
