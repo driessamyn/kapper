@@ -51,7 +51,7 @@ class DatasourceWithConnectionDbTest {
     @Test
     fun `execute tx on IO dispatcher`() {
         // this is a bit of a naughty test as it includes a sleep,
-        //  but wanted to validate this against a real JDBC driver and a real slow query.
+        //  but wanted to validate this against a real JDBC driver and a real slow queryAsFlow.
         runBlocking {
             val dataSource = createDataSource(postgresql)
             val insertJob =

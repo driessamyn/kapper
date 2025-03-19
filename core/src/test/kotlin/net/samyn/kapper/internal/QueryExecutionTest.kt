@@ -68,6 +68,13 @@ class QueryExecutionTest {
     }
 
     @Test
+    fun `when executeQuery cancel statement when ResultSet closed`() {
+        val rs = connection.executeQuery(query, args)
+        rs.close()
+        verify { statement.cancel() }
+    }
+
+    @Test
     fun `when executeQuery do not close statement if already closed`() {
         every { statement.isClosed } returns true
         val rs = connection.executeQuery(query, args)
@@ -83,5 +90,17 @@ class QueryExecutionTest {
             connection.executeQuery(query, args)
         }.shouldBe(ex)
         verify { statement.close() }
+    }
+
+    @Test
+    fun `when fetchsize set`() {
+        connection.executeQuery(query, args, 10)
+        verify { statement.fetchSize = 10 }
+    }
+
+    @Test
+    fun `when fetchsize not set default`() {
+        connection.executeQuery(query, args)
+        verify { statement.fetchSize = 0 }
     }
 }

@@ -26,25 +26,25 @@ import java.sql.SQLException
  * data class User(val id: Int, val name: String)
  *
  * // Fetch all users where "active" is true
- * val users: Flow<User> = connection.query(
+ * val users: Flow<User> = connection.queryAsFlow(
  *     sql = "SELECT id, name FROM users WHERE active = :active",
  *     "active" to true
  * )
  *
- * // Iterate over the user list and print each user
+ * // Process the user flow and print each user
  * users.collect { println(it) }
  * ```
  *
  * @param sql The SQL query to execute.
- * @param args Optional key-value pairs representing named parameters to substitute into the query.
+ * @param args Optional key-value pairs representing named parameters to substitute into the queryAsFlow.
  * @return The query result as a [Flow] of [T] instances.
  * @throws java.sql.SQLException If there's a database error.
  */
-inline fun <reified T : Any> Connection.query(
+inline fun <reified T : Any> Connection.queryAsFlow(
     sql: String,
     vararg args: Pair<String, Any?>,
 ): Flow<T> =
-    query(
+    queryAsFlow(
         sql,
         createMapper(T::class.java)::createInstance,
         *args,
@@ -55,7 +55,7 @@ inline fun <reified T : Any> Connection.query(
  *
  * **Example**:
  * ```kotlin
- * val users: Flow<User> = connection.query(
+ * val users: Flow<User> = connection.queryAsFlow(
  *     sql = "SELECT id, name FROM users",
  *     mapper = { resultSet, _ ->
  *         User(
@@ -69,17 +69,19 @@ inline fun <reified T : Any> Connection.query(
  *
  * @param sql The SQL query to execute.
  * @param mapper Custom mapping function to transform the [ResultSet] into the target class.
- * @param args Optional parameters to be substituted in the SQL query during execution.
+ * @param args Optional parameters to be substituted in the SQL queryAsFlow during execution.
+ * @param fetchSize The number of rows to fetch from the database at a time. Default is 1000. This means the statement can be cancelled (and the DB driver supports it) if the flow is cancelled.
  * @return The query result as a [Flow] of [T] instances.
  * @throws KapperQueryException If there's a database error.
  */
-inline fun <reified T : Any> Connection.query(
+inline fun <reified T : Any> Connection.queryAsFlow(
     sql: String,
     noinline mapper: (ResultSet, Map<String, Field>) -> T,
     vararg args: Pair<String, Any?>,
+    fetchSize: Int = 1000,
 ): Flow<T> {
     require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
-    this.executeQuery(Query(sql), args.toMap()).let { rs ->
+    this.executeQuery(Query(sql), args.toMap(), fetchSize).let { rs ->
         return queryFlow(rs, mapper, sql)
     }
 }

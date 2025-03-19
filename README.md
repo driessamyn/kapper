@@ -47,7 +47,7 @@ Kapper is in early development phase and while it is functional, breaking API ch
 Snapshot releases are published from the main branch to [GitHub Packages](packages/2353016).
 Stable releases will be published to Maven Central.
 
-## Usage
+## Usage Overview
 
 Here's a simple example of how to use Kapper:
 
@@ -93,21 +93,23 @@ ds.getConnection().use { connection ->
 }
 ```
 
-Other examples are available in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/) or check out the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo for more extended examples and documentation,
-including [a comparison with Hibernate and Ktorm](https://github.com/driessamyn/kapper-examples/tree/release-1.0-article?tab=readme-ov-file#comparison-with-orms).
-
 Kapper does not maintain a mapping between classes and DB tables or entities. 
 Instead, it can either map to a given class if the constructor arguments match the DB fields, or a mapping lambda can be passed in.
-This means Kapper provides a strongly typed mapping, but still allows rows-to-object mapping with lambdas for more flexibility or advanced used cases.
+This means Kapper provides a strongly typed mapping, but still allows rows-to-object mapping with lambdas or mapper functions for more flexibility or advanced used cases.
 
-## Using Kapper in your project
+Further examples and documentation are explored below and in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/), or check out the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo for more extended examples and documentation,
+including [a comparison with Hibernate and Ktorm](https://github.com/driessamyn/kapper-examples/tree/release-1.0-article?tab=readme-ov-file#comparison-with-orms).
+
+## How to use Kapper
+
+### Import dependencies
 
 Stable versions of Kapper are published to [Maven Central](https://central.sonatype.com/artifact/net.samyn/kapper/versions).
 To use this in your project, simply add the following dependency to your `build.gradle.kts` (or the Groovy equivalent in `build.gradle`):
 
 ```kotlin
 dependencies {
-    implementation("net.samyn:kapper:1.1.0")
+    implementation("net.samyn:kapper:<version>")
 }
 ```
 
@@ -117,9 +119,11 @@ For Maven, use:
 <dependency>
     <groupId>net.samyn</groupId>
     <artifactId>kapper</artifactId>
-    <version>1.1.0</version>
+    <version>[VERSION]</version>
 </dependency>
 ```
+
+For co-routine support (see below), use `kapper-coroutines` instead.
 
 Snapshot releases are published from the `main` branch to [GitHub packages](./packages).
 
@@ -138,20 +142,111 @@ repositories {
 }
 ```
 
-And add the following dependency to your `build.gradle.kts`:
+### Basic usage
+
+#### Queries
+
+Kapper can auto-map the results of a SQL query to a data class:
 
 ```kotlin
-dependencies {
-   implementation("net.samyn:kapper:<VERSION>")
+data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
+
+val heroes = dataSource.connection.use {
+    it.query<SuperHero>("SELECT * FROM super_heroes")
 }
 ```
 
-## DB Transactions
+Parameters can optionally be passed to the query by prefixing the query template tokens with `:`,`?` or `$` and providing the values as key-value pairs:
 
-Kapper provides a couple of extension functions to make working with transactions easier.
+```kotlin
+val olderHeroes = dataSource.connection.use {
+    it.query<SuperHero>(
+        "SELECT * FROM super_heroes WHERE age > :age",
+        "age" to 80,
+    )
+}
+```
+
+Kapper also support using a custom mapper in case auto-mapping cannot be used or is not desired.
+This is done by simply passing a mapper function to the query, using a lambda or a function reference:
+
+```kotlin
+val heroAges =
+    dataSource.connection.use {
+        it.query<Pair<String, *>>(
+            "SELECT * FROM super_heroes WHERE age > :age",
+            { resultSet, fields ->
+                Pair(
+                    resultSet.getString(fields["name"]!!.columnIndex),
+                    resultSet.getInt(fields["age"]!!.columnIndex),
+                )
+            },
+            "age" to 80,
+        )
+    }
+}
+```
+
+The `querySingle` function can be used to return a single result, or null if the query returns no results:
+
+```kotlin
+val batman =
+    dataSource.connection.use {
+        it.querySingle<SuperHero>(
+            "SELECT * FROM super_heroes WHERE name = :name",
+            "name" to "Batman",
+        )
+    }
+```
+
+#### Execute
+
+Kapper provides an `execute` function to execute SQL statements that do not return a result set, such as `INSERT`, `UPDATE`, or `DELETE` statements.
+
+For example:
+
+```kotlin
+datasource.connection.use {
+    it.execute(
+        """
+            INSERT INTO super_heroes(id, name, email, age) 
+            VALUES (:id, :name, :email, :age)
+            """.trimIndent(),
+        "id" to UUID.randomUUID(),
+        "name" to "Batman",
+        "email" to "batman@dc.com",
+        "age" to 85,
+    )
+}
+
+datasource.connection.use {
+    it.execute(
+        """
+            UPDATE super_heroes
+            SET age = 86
+            WHERE name = :name
+            """.trimIndent(),
+        "name" to "Batman",
+    )
+}
+
+datasource.connection.use {
+    it.execute(
+        """
+                DELETE FROM super_heroes
+                WHERE name = :name
+                """.trimIndent(),
+        "name" to "Batman",
+    )
+}
+```
+
+### DB Transactions
+
+Kapper provides extension functions to make working with transactions easier.
 
 The `withTransaction` function on `Connection` starts a transaction, executes the provided block, and commit the transaction if the block completes successfully.
-The same function on `DataSrouce` behaves the same except it also creating (and closing) the connection.
+The same function on `DataSrouce` behaves the same except it also creates (and closes) the connection.
 
 For example:
 
@@ -183,15 +278,17 @@ datasource.withTransaction { connection ->
 }
 ```
 
-## Coroutine support
+### Coroutine support
 
 Kapper supports coroutines with the inclusion of the `kapper-coroutines` module:
 
 ```kotlin
 dependencies {
-    implementation("net.samyn:kapper-coroutines:1.0.0")
+    implementation("net.samyn:kapper-coroutines:<versions>")
 }
-```  
+```
+
+#### Executing on a `Dispatcher`
 
 This module provides an extension function `withConnection` on the `DataSource` object, optionally allowing you to specify a `Dispatcher`.
 If no `Dispatcher` is provided, the default `Dispatchers.IO` is used.
@@ -204,9 +301,58 @@ suspend fun listHeroes(): List<SuperHero> =
         // Kapper query runs on Dispatchers.IO
         it.query<SuperHero>("SELECT * FROM super_heroes")
     }
-```  
+```
 
-See [Kapper-Example](https://github.com/driessamyn/kapper-examples) for example usage.
+### Returning a `Flow`
+
+The `queryAsFlow` function in the `kapper-coroutines` module returns a `Flow` of the results, allowing for easy integration with other coroutines constructs, and for example allowing a query to be cancelled:
+
+```kotlin
+runBlocking {
+    val job =
+        async {
+            getDataSource(postgresql).withConnection { connection ->
+                connection.queryAsFlow<PopularMovie>(
+                    """
+                    SELECT
+                     title,
+                     release_date as releasedate, 
+                     gross_worldwide as grossed
+                    FROM movies 
+                    ORDER BY gross_worldwide DESC
+                    """.trimIndent(),
+                )
+                .runningFold(0L to emptyList<PopularMovie>()) { (totalGross, movieList), movie ->
+                    val newTotal = totalGross + movie.grossed
+                    newTotal to (movieList + movie)
+                }.takeWhile { (totalGross, _) ->
+                    // query will be cancelled here
+                    totalGross <= 10_000_000_000
+                }.last()
+            }
+        }
+    println("Query started")
+    val popularMovies = job.await()
+    println(
+        "Popular movies are: ${popularMovies.second.map { it.title }}, " +
+            "grossing a total of ${String.format("%,d", popularMovies.first)}",
+    )
+}
+```
+
+Note that running a query that returns a very large number of results and filtering them in the `Flow` may not be the most efficient way to handle this.
+Filtering in the DB query itself is generally more efficient.
+The above only serves as an example of how to use `Flow` with Kapper and the ability to cancel queries.
+
+The `queryAsFlow` function optionally takes a `fetchSize` parameter, which can be used to set the fetch size of the underlying JDBC statement.
+When not set, the fetch size is set to 1,000.
+This allows Kapper to cancel the JDBC `Statement` when the `Flow` is cancelled, _and_ if supported by the JDBC driver itself.
+
+See [Kapper-Example](https://github.com/driessamyn/kapper-examples) for additional examples.
+
+> **Note**: operations on the JDBC drivers are blocking.
+> This means that regardless of the coroutine support, the actual DB operations are blocking and the connection remains open until the operation is completed.
+> See [Coroutine support in Kapper 1.1](https://dev.to/driessamyn/coroutine-support-in-kapper-11-45h9) for more information.
 
 ## Database support
 
@@ -225,7 +371,7 @@ The following will be worked on in the next few releases:
 
 - [ ] Create a benchmark suite to validate performance.
 - [x] Add co-routine support.
-- [ ] Add stream support.
+- [x] Add flow support.
 - [ ] Improve and additional support for date/time conversion.
 - [ ] Increase Java API compatibility tests & examples.
 - [ ] Improve user documentation.
@@ -234,7 +380,7 @@ The following will be worked on in the next few releases:
 - [ ] Bulk operations support
 - [ ] Add MS SQL Server and Oracle integration tests.
 - [ ] Tests & examples in other JVM languages.
-- [ ] Create transaction syntax sugar.
+- [x] Create transaction syntax sugar.
 - [ ] Support DTO argument for `execute`.
 - [ ] Add support for non-blocking JDBC drivers.
 
