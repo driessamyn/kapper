@@ -43,6 +43,18 @@ class DbFlavourTest {
     @ValueSource(
         strings =
             [
+                "SQLite",
+            ],
+    )
+    fun `when databaseProductName is sqlite then getDbFlavour returns SQLITE`(value: String) {
+        every { connection.metaData.databaseProductName } returns value
+        connection.getDbFlavour() shouldBe DbFlavour.SQLITE
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings =
+            [
                 // Oracle variants
                 "Oracle",
                 "Oracle Database",
@@ -92,7 +104,6 @@ class DbFlavourTest {
                 "HSQL Database Engine",
                 "HSQLDB",
                 "Apache Derby",
-                "SQLite",
                 "Firebird",
                 "Interbase",
                 "Progress",

@@ -1,0 +1,39 @@
+plugins {
+    id("kapper.library-conventions")
+    id "me.champeau.jmh" version "0.7.2"
+}
+
+dependencies {
+    implementation(project(":kapper-coroutines"))
+
+    implementation(libs.bundles.jmh)
+    implementation(libs.slf4j.simple)
+
+    // other libraries to benchmark against
+    implementation("org.hibernate.orm:hibernate-core:6.6.11.Final")
+    implementation("org.hibernate.orm:hibernate-community-dialects:6.4.1.Final")
+    implementation("org.ktorm:ktorm-core:4.1.1")
+    implementation("org.ktorm:ktorm-support-postgresql:4.1.1")
+    implementation("org.ktorm:ktorm-support-sqlite:4.1.1")
+
+    // supported DBs
+    implementation(libs.test.containers)
+    implementation(libs.test.containers.postgresql)
+    implementation(libs.sqlite.jdbc)
+
+    runtimeOnly(libs.postgresql.driver)
+
+    integrationTestImplementation(libs.bundles.test)
+    integrationTestRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+jmh {
+    benchmarkMode = ['avgt']
+    failOnError = true
+    warmup = '1s'
+    warmupBatchSize = 1
+    warmupIterations = 1
+    iterations = 1
+    timeOnIteration = '1s'
+    fork = 1
+}

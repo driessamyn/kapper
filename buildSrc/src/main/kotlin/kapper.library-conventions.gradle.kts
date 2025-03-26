@@ -28,7 +28,7 @@ java {
 kover {
     currentProject {
         sources {
-            excludedSourceSets.addAll("test", "integrationTest")
+            excludedSourceSets.addAll("test", "integrationTest", "jmh")
         }
         instrumentation {
             disabledForTestTasks.add("integrationTest")
@@ -38,6 +38,7 @@ kover {
         filters {
             excludes {
                 annotatedBy("net.samyn.kapper.annotation.ExcludeFromCoverageKoverIssue")
+                packages("net.samyn.kapper.benchmark")
             }
         }
         verify {

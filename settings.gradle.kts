@@ -12,6 +12,7 @@ develocity {
 }
 
 rootProject.name = "kapper"
-include("core", "coroutines")
+include("benchmark","core", "coroutines")
+project(":benchmark").name = "kapper-benchmark"
 project(":core").name = "kapper"
 project(":coroutines").name = "kapper-coroutines"
