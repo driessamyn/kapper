@@ -44,7 +44,7 @@ test-containers = ["test-cotainers-junit", "test-containers-junit-mysql", "test-
 test-dbs = ["mysql-driver", "postgresql-driver"]
 
 [plugins]
-sonar = { id = "org.sonarqube", version = "6.0.1.5171" }
+sonar = { id = "org.sonarqube", version = "6.1.0.5360" }
 git-semver = { id = "com.github.jmongard.git-semver-plugin", version.ref = "git-semver" }
 
 
