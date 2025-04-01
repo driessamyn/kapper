@@ -363,6 +363,9 @@ If you need support for another DB, and/or find an issue with a particular DB, f
 # External content
 
 - [Dev.to - Kapper, a Fresh Look at ORMs for Kotlin and the JVM ](https://dev.to/driessamyn/kapper-a-fresh-look-at-orms-for-kotlin-and-the-jvm-1ln5)
+- [Dev.to - Coroutine support in Kapper 1.1](https://dev.to/driessamyn/coroutine-support-in-kapper-11-45h9)
+- [Dev.to - Announcing Kapper 1.2: Cleaner Transactions with Less Boilerplate](https://dev.to/driessamyn/announcing-kapper-12-cleaner-transactions-with-less-boilerplate-2dbi)
+- [Dev.to - Kapper 1.3 Supports Flows](https://dev.to/driessamyn/kapper-13-supports-flows-more-kotlin-goodness-47f0)
 
 ## Roadmap
 
