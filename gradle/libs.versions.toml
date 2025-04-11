@@ -1,6 +1,7 @@
 [versions]
 dokka = "2.0.0"
 git-semver = "0.16.0"
+jmh = "1.37"
 junit-jupiter = "5.12.1"
 kotest = "6.0.0.M3"
 kotlin = "2.1.20"
@@ -10,9 +11,12 @@ mockk = "1.13.17"
 mysql-driver = "9.2.0"
 postgresql-driver = "42.7.5"
 slf4j = "2.0.17"
-test-conatainers = "1.20.6"
+sqlite = "3.44.1.0"
+test-containers = "1.20.6"
 
 [libraries]
+jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin"}
@@ -25,9 +29,11 @@ mysql-driver = { module = "com.mysql:mysql-connector-j", version.ref = "mysql-dr
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql-driver" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
-test-cotainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "test-conatainers" }
-test-containers-junit-mysql = { module = "org.testcontainers:mysql", version.ref = "test-conatainers" }
-test-containers-junit-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-conatainers" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+test-containers = { module = "org.testcontainers:testcontainers", version.ref = "test-containers" }
+test-containers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "test-containers" }
+test-containers-mysql = { module = "org.testcontainers:mysql", version.ref = "test-containers" }
+test-containers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-containers" }
 
 # PLUGINS
 ##  This way because buildSrc is not supported for plugins
@@ -39,13 +45,15 @@ kotlin-jvm-plugin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jv
 kover-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version = "0.9.1" }
 
 [bundles]
+jmh = ["jmh-core", "jmh-generator-annprocess"]
 test = ["junit-jupiter", "mockk", "kotest-assertions-core"]
-test-containers = ["test-cotainers-junit", "test-containers-junit-mysql", "test-containers-junit-postgresql"]
+test-containers = ["test-containers-junit", "test-containers-mysql", "test-containers-postgresql"]
 test-dbs = ["mysql-driver", "postgresql-driver"]
 
 [plugins]
 sonar = { id = "org.sonarqube", version = "6.1.0.5360" }
 git-semver = { id = "com.github.jmongard.git-semver-plugin", version.ref = "git-semver" }
+jmh = { id = "me.champeau.gradle:jmh-gradle-plugin", version = "0.7.2" }
 
 
 

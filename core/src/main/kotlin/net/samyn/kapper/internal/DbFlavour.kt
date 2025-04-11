@@ -10,6 +10,8 @@ fun Connection.getDbFlavour(): DbFlavour {
         DbFlavour.POSTGRESQL
     } else if (productName.contains("mysql")) {
         DbFlavour.MYSQL
+    } else if (productName.contains("sqlite")) {
+        DbFlavour.SQLITE
     } else {
         DbFlavour.UNKNOWN
     }
@@ -18,5 +20,6 @@ fun Connection.getDbFlavour(): DbFlavour {
 enum class DbFlavour {
     POSTGRESQL,
     MYSQL,
+    SQLITE,
     UNKNOWN,
 }
