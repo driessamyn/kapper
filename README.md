@@ -372,7 +372,7 @@ If you need support for another DB, and/or find an issue with a particular DB, f
 Kapper is in its early stages of development.
 The following will be worked on in the next few releases:
 
-- [ ] Create a benchmark suite to validate performance.
+- [x] Create a benchmark suite to validate performance.
 - [x] Add co-routine support.
 - [x] Add flow support.
 - [ ] Improve and additional support for date/time conversion.
@@ -381,7 +381,7 @@ The following will be worked on in the next few releases:
 - [ ] Cache query parsing.
 - [ ] Custom SQL type conversion.
 - [ ] Bulk operations support
-- [ ] Add MS SQL Server and Oracle integration tests.
+- [x] Add MS SQL Server, Oracle and SQLite integration tests.
 - [ ] Tests & examples in other JVM languages.
 - [x] Create transaction syntax sugar.
 - [ ] Support DTO argument for `execute`.

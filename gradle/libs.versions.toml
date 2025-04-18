@@ -8,7 +8,9 @@ kotlin = "2.1.20"
 kotlinx-coroutines = "1.10.2"
 mockito = "5.17.0"
 mockk = "1.14.0"
+mssql-server-driver = "12.10.0.jre11"
 mysql-driver = "9.2.0"
+oracle-driver = "23.7.0.25.01"
 postgresql-driver = "42.7.5"
 slf4j = "2.0.17"
 sqlite = "3.49.1.0"
@@ -25,14 +27,18 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 # mockito only to be used from Java code (API usability test)
 mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mssql-server-driver = { module = "com.microsoft.sqlserver:mssql-jdbc", version.ref = "mssql-server-driver" }
 mysql-driver = { module = "com.mysql:mysql-connector-j", version.ref = "mysql-driver" }
+oracle-driver = { module = "com.oracle.database.jdbc:ojdbc11", version.ref = "oracle-driver" }
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql-driver" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 test-containers = { module = "org.testcontainers:testcontainers", version.ref = "test-containers" }
 test-containers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "test-containers" }
+test-containers-mssqlserver = { module = "org.testcontainers:mssqlserver", version.ref = "test-containers" }
 test-containers-mysql = { module = "org.testcontainers:mysql", version.ref = "test-containers" }
+test-containers-oracle = { module = "org.testcontainers:oracle-free", version.ref = "test-containers" }
 test-containers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-containers" }
 
 # PLUGINS
@@ -47,8 +53,14 @@ kover-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version =
 [bundles]
 jmh = ["jmh-core", "jmh-generator-annprocess"]
 test = ["junit-jupiter", "mockk", "kotest-assertions-core"]
-test-containers = ["test-containers-junit", "test-containers-mysql", "test-containers-postgresql"]
-test-dbs = ["mysql-driver", "postgresql-driver"]
+test-containers = [
+    "test-containers-junit",
+    "test-containers-mysql",
+    "test-containers-postgresql",
+    "test-containers-mssqlserver",
+    "test-containers-oracle"
+]
+test-dbs = ["mysql-driver", "postgresql-driver", "sqlite-jdbc", "mssql-server-driver", "oracle-driver"]
 
 [plugins]
 sonar = { id = "org.sonarqube", version = "6.1.0.5360" }

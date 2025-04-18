@@ -1,20 +1,21 @@
 package net.samyn.kapper
 
-import io.kotest.matchers.booleans.shouldBeTrue
+import net.samyn.kapper.internal.DbFlavour
+import net.samyn.kapper.internal.getDbFlavour
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Named.named
-import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments.arguments
-import org.junit.jupiter.params.provider.MethodSource
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import java.sql.Connection
 import java.sql.DriverManager
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.use
 
 @Testcontainers
@@ -25,32 +26,32 @@ abstract class AbstractDbTests {
             mapOf(
                 "UUID" to
                     mapOf(
-                        MySQLContainer::class to "VARCHAR(36)",
+                        DbFlavour.MYSQL to "VARCHAR(36)",
                     ),
                 "CLOB" to
                     mapOf(
-                        MySQLContainer::class to "TEXT",
-                        PostgreSQLContainer::class to "TEXT",
+                        DbFlavour.MYSQL to "TEXT",
+                        DbFlavour.POSTGRESQL to "TEXT",
                     ),
                 "BINARY" to
                     mapOf(
-                        PostgreSQLContainer::class to "BYTEA",
+                        DbFlavour.POSTGRESQL to "BYTEA",
                     ),
                 "VARBINARY" to
                     mapOf(
-                        PostgreSQLContainer::class to "BYTEA",
+                        DbFlavour.POSTGRESQL to "BYTEA",
                     ),
                 "BLOB" to
                     mapOf(
-                        PostgreSQLContainer::class to "BYTEA",
+                        DbFlavour.POSTGRESQL to "BYTEA",
                     ),
                 "FLOAT" to
                     mapOf(
-                        PostgreSQLContainer::class to "NUMERIC",
+                        DbFlavour.POSTGRESQL to "NUMERIC",
                     ),
                 "REAL" to
                     mapOf(
-                        MySQLContainer::class to "FLOAT",
+                        DbFlavour.MYSQL to "FLOAT",
                     ),
             )
 
@@ -60,21 +61,41 @@ abstract class AbstractDbTests {
         @Container
         val mysql = MySQLContainer("mysql:8.4")
 
+//        @Container
+//        val oracle = OracleContainer("gvenzl/oracle-free:23.4-slim-faststart")
+//
+//        @Container
+//        val msSqlServer =
+//            MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12").acceptLicense()
+
         val allContainers =
             mapOf(
                 "PostgreSQL" to postgresql,
                 "MySQL" to mysql,
+//                "Oracle" to oracle,
+//                "MSSQLServer" to msSqlServer,
             )
 
         @JvmStatic
-        fun databaseContainers() = allContainers.map { arguments(named(it.key, it.value)) }
+        fun databaseContainers() =
+            allContainers.map {
+                arguments(named(it.key, getConnection(it.value)))
+            }
+
+        private val connections = ConcurrentHashMap<Class<*>, Connection>()
+
+        private fun getConnection(container: JdbcDatabaseContainer<*>) =
+            connections.computeIfAbsent(container.javaClass) {
+                Class.forName(container.driverClassName)
+                DriverManager.getConnection(container.jdbcUrl, container.username, container.password)
+            }
     }
 
     private fun convertDbColumnType(
         name: String,
-        container: JdbcDatabaseContainer<*>,
+        flavour: DbFlavour,
         suffix: String = "",
-    ) = specialTypes[name]?.get(container::class) ?: (name + suffix)
+    ) = specialTypes[name]?.get(flavour) ?: (name + suffix)
 
     val superman = SuperHero(UUID.randomUUID(), "Superman", "superman@dc.com", 86)
     val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
@@ -83,76 +104,76 @@ abstract class AbstractDbTests {
     @BeforeAll
     fun setup() {
         allContainers.values.forEach { container ->
-            setupDatabase(container)
+            setupDatabase(getConnection(container))
         }
     }
 
-    protected open fun setupDatabase(container: JdbcDatabaseContainer<*>) {
-        createConnection(container).use { connection ->
-            connection.createStatement().use { statement ->
-                statement.execute(
-                    """
-                    CREATE TABLE super_heroes (
-                        id ${convertDbColumnType("UUID", container)} PRIMARY KEY,
-                        name VARCHAR(100),
-                        email VARCHAR(100),
-                        age INT
-                    );
-                    """.trimIndent().also {
-                        println(it)
-                    },
-                )
-                statement.execute(
-                    """
-                    INSERT INTO super_heroes (id, name, email, age) VALUES
-                        ('${superman.id}', '${superman.name}', '${superman.email}', ${superman.age}),
-                        ('${batman.id}', '${batman.name}', '${batman.email}', ${batman.age}),
-                        ('${spiderMan.id}', '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age});
-                    """.trimIndent().also {
-                        println(it)
-                    },
-                )
-                statement.execute(
-                    """
-                    CREATE TABLE types_test (
-                        t_uuid ${convertDbColumnType("UUID", container)},
-                        t_char CHAR,
-                        t_varchar VARCHAR(120),
-                        t_clob ${convertDbColumnType("CLOB", container)},
-                        t_binary ${convertDbColumnType("BINARY", container, "(16)")},
-                        t_varbinary ${convertDbColumnType("VARBINARY", container, "(128)")},
-                        t_large_binary ${convertDbColumnType("BLOB", container)},
-                        t_numeric NUMERIC(12,6),
-                        t_decimal DECIMAL(12,6),
-                        t_smallint SMALLINT,
-                        t_int INT,
-                        t_bigint BIGINT,
-                        t_float ${convertDbColumnType("FLOAT", container, "(8)")},
-                        t_real ${convertDbColumnType("REAL", container)},
-                        t_double DOUBLE PRECISION,
-                        t_date DATE,
-                        t_local_date DATE,
-                        t_local_time TIME,
-                        t_timestamp TIMESTAMP,
-                        t_boolean BOOLEAN
-                    )
-                    """.trimIndent().also {
-                        println(it)
-                    },
-                )
-            }
+    @AfterAll
+    fun tearDown() {
+        connections.forEach { (_, connection) ->
+            connection.close()
+        }
+        connections.clear()
+        allContainers.values.forEach { container ->
+            container.stop()
         }
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    @Order(1)
-    fun `database should be running`(container: JdbcDatabaseContainer<*>) {
-        container.isRunning.shouldBeTrue()
+    protected open fun setupDatabase(connection: Connection) {
+        val dbFlavour = connection.getDbFlavour()
+        connection.createStatement().use { statement ->
+            statement.execute(
+                """
+                CREATE TABLE super_heroes (
+                    id ${convertDbColumnType("UUID", dbFlavour)} PRIMARY KEY,
+                    name VARCHAR(100),
+                    email VARCHAR(100),
+                    age INT
+                );
+                """.trimIndent().also {
+                    println(it)
+                },
+            )
+            statement.execute(
+                """
+                INSERT INTO super_heroes (id, name, email, age) VALUES
+                    ('${superman.id}', '${superman.name}', '${superman.email}', ${superman.age}),
+                    ('${batman.id}', '${batman.name}', '${batman.email}', ${batman.age}),
+                    ('${spiderMan.id}', '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age});
+                """.trimIndent().also {
+                    println(it)
+                },
+            )
+            statement.execute(
+                """
+                CREATE TABLE types_test (
+                    t_uuid ${convertDbColumnType("UUID", dbFlavour)},
+                    t_char CHAR,
+                    t_varchar VARCHAR(120),
+                    t_clob ${convertDbColumnType("CLOB", dbFlavour)},
+                    t_binary ${convertDbColumnType("BINARY", dbFlavour, "(16)")},
+                    t_varbinary ${convertDbColumnType("VARBINARY", dbFlavour, "(128)")},
+                    t_large_binary ${convertDbColumnType("BLOB", dbFlavour)},
+                    t_numeric NUMERIC(12,6),
+                    t_decimal DECIMAL(12,6),
+                    t_smallint SMALLINT,
+                    t_int INT,
+                    t_bigint BIGINT,
+                    t_float ${convertDbColumnType("FLOAT", dbFlavour, "(8)")},
+                    t_real ${convertDbColumnType("REAL", dbFlavour)},
+                    t_double DOUBLE PRECISION,
+                    t_date DATE,
+                    t_local_date DATE,
+                    t_local_time TIME,
+                    t_timestamp TIMESTAMP,
+                    t_boolean BOOLEAN
+                )
+                """.trimIndent().also {
+                    println(it)
+                },
+            )
+        }
     }
-
-    protected fun createConnection(container: JdbcDatabaseContainer<*>) =
-        DriverManager.getConnection(container.jdbcUrl, container.username, container.password)
 
     data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
 
