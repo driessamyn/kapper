@@ -26,7 +26,7 @@ class TypesTest : AbstractDbTests() {
                     t_char,
                     t_varchar,
                     t_clob,
-                    t_binary,
+                    t_binary,   
                     t_varbinary,
                     t_large_binary,
                     t_numeric,

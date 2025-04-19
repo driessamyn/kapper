@@ -22,6 +22,10 @@ import kotlin.use
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractDbTests {
     companion object {
+        init {
+            Class.forName("org.sqlite.JDBC")
+        }
+
         val specialTypes =
             mapOf(
                 "UUID" to
@@ -68,26 +72,30 @@ abstract class AbstractDbTests {
 //        val msSqlServer =
 //            MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12").acceptLicense()
 
-        val allContainers =
+        private val connections = ConcurrentHashMap<DbFlavour, Connection>()
+
+        private fun getConnection(container: JdbcDatabaseContainer<*>): Connection {
+            Class.forName(container.driverClassName)
+            return DriverManager.getConnection(container.jdbcUrl, container.username, container.password)
+        }
+
+        val dbs =
             mapOf(
-                "PostgreSQL" to postgresql,
-                "MySQL" to mysql,
+                DbFlavour.POSTGRESQL to { getConnection(postgresql) },
+                DbFlavour.MYSQL to { getConnection(mysql) },
+                DbFlavour.SQLITE to { DriverManager.getConnection("jdbc:sqlite::memory:") },
 //                "Oracle" to oracle,
 //                "MSSQLServer" to msSqlServer,
             )
+//        private val sqliteConnection =
+//            {
+//                Class.forName("org.sqlite.JDBC")
+//            }.let { DriverManager.getConnection("jdbc:sqlite::memory:") }
 
         @JvmStatic
         fun databaseContainers() =
-            allContainers.map {
-                arguments(named(it.key, getConnection(it.value)))
-            }
-
-        private val connections = ConcurrentHashMap<Class<*>, Connection>()
-
-        private fun getConnection(container: JdbcDatabaseContainer<*>) =
-            connections.computeIfAbsent(container.javaClass) {
-                Class.forName(container.driverClassName)
-                DriverManager.getConnection(container.jdbcUrl, container.username, container.password)
+            connections.map {
+                arguments(named(it.key.toString(), it.value))
             }
     }
 
@@ -103,8 +111,8 @@ abstract class AbstractDbTests {
 
     @BeforeAll
     fun setup() {
-        allContainers.values.forEach { container ->
-            setupDatabase(getConnection(container))
+        dbs.forEach { container ->
+            setupDatabase(connections.computeIfAbsent(container.key) { container.value() })
         }
     }
 
@@ -114,9 +122,6 @@ abstract class AbstractDbTests {
             connection.close()
         }
         connections.clear()
-        allContainers.values.forEach { container ->
-            container.stop()
-        }
     }
 
     protected open fun setupDatabase(connection: Connection) {

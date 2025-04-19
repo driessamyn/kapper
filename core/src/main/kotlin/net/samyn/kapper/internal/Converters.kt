@@ -33,15 +33,19 @@ internal fun convertInstant(value: Any): Instant =
 internal fun convertLocalTime(value: Any): LocalTime =
     if (value is Instant) {
         LocalTime.ofInstant(value, java.time.ZoneOffset.UTC)
+    } else if (value is String) {
+        LocalTime.parse(value)
     } else {
         throw KapperUnsupportedOperationException(
-            "Cannot auto-convert from ${value.javaClass} to LocalTime",
+            "Cannot auto-convert value '$value' from ${value.javaClass} to LocalTime",
         )
     }
 
 internal fun convertLocalDateTime(value: Any): LocalDateTime =
     if (value is Instant) {
         LocalDateTime.ofInstant(value, java.time.ZoneOffset.UTC)
+    } else if (value is String) {
+        LocalDateTime.parse(value)
     } else {
         throw KapperUnsupportedOperationException(
             "Cannot auto-convert from ${value.javaClass} to LocalDateTime",
@@ -53,6 +57,8 @@ internal fun convertLocalDate(value: Any): LocalDate =
         val cal = Calendar.getInstance()
         cal.time = value
         LocalDate.of(cal[Calendar.YEAR], cal[Calendar.MONTH] + 1, cal[Calendar.DAY_OF_MONTH])
+    } else if (value is String) {
+        LocalDate.parse(value)
     } else {
         throw KapperUnsupportedOperationException(
             "Cannot auto-convert from ${value.javaClass} to LocalDate",

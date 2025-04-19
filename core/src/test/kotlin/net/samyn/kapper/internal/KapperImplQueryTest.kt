@@ -35,7 +35,7 @@ class KapperImplQueryTest {
     private val mockMapper = mockk<(ResultSet, Map<String, Field>) -> TestEntity>(relaxed = true)
     private val testFieldMeta =
         mapOf(
-            "id" to Field(1, JDBCType.INTEGER, "INTEGER"),
+            "id" to Field(1, JDBCType.INTEGER, "INTEGER", DbFlavour.UNKNOWN),
         )
 
     companion object {
@@ -52,7 +52,7 @@ class KapperImplQueryTest {
         mockkStatic(ResultSet::extractFields)
         every { mockConnection.executeQuery(any(), any()) } returns mockResultSet
         every { mockConnection.getDbFlavour() } returns DbFlavour.UNKNOWN
-        every { mockResultSet.extractFields() } returns testFieldMeta
+        every { mockResultSet.extractFields(any()) } returns testFieldMeta
         every { mockMapper.invoke(any(), any()) } returns TestEntity(1, "test")
         every { mockQueryBuilder(mockSqlTemplate) } returns mockQuery
     }

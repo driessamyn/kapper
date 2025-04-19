@@ -14,7 +14,7 @@ import kotlin.reflect.full.primaryConstructor
 class KotlinDataClassMapper<T : Any>(
     private val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter()::convert,
-    val sqlTypesConverter: (JDBCType, String, ResultSet, Int) -> Any? = SQLTypesConverter::convertSQLType,
+    val sqlTypesConverter: (JDBCType, String, ResultSet, Int, DbFlavour) -> Any? = SQLTypesConverter::convertSQLType,
 ) : Mapper<T> {
     private val constructor: KFunction<T> =
         clazz.kotlin.primaryConstructor
@@ -60,7 +60,13 @@ class KotlinDataClassMapper<T : Any>(
             fields.map { field ->
                 ColumnValue(
                     field.key,
-                    sqlTypesConverter(field.value.type, field.value.typeName, resultSet, field.value.columnIndex),
+                    sqlTypesConverter(
+                        field.value.type,
+                        field.value.typeName,
+                        resultSet,
+                        field.value.columnIndex,
+                        field.value.dbFlavour,
+                    ),
                 )
             },
         )

@@ -7,6 +7,7 @@ import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.Date
 import java.util.UUID
@@ -19,6 +20,7 @@ internal object SQLTypesConverter {
         sqlTypeName: String,
         resultSet: ResultSet,
         fieldIndex: Int,
+        dbFlavour: DbFlavour,
     ): Any {
         val result =
             when (sqlType) {
@@ -37,7 +39,7 @@ internal object SQLTypesConverter {
                 ),
                 -> resultSet.getString(fieldIndex)
                 in listOf(JDBCType.DATE),
-                -> Date(resultSet.getDate(fieldIndex).time)
+                -> convertDate(resultSet, fieldIndex, dbFlavour)
                 in listOf(JDBCType.DECIMAL, JDBCType.FLOAT, JDBCType.NUMERIC, JDBCType.REAL),
                 -> resultSet.getFloat(fieldIndex)
                 JDBCType.DOUBLE ->
@@ -99,5 +101,77 @@ internal object SQLTypesConverter {
             is Date -> setDate(index, java.sql.Date(value.time))
             else -> setObject(index, value)
         }
+    }
+}
+
+val formatters =
+    mapOf(
+        "yyyy-MM-dd" to SimpleDateFormat("yyyy-MM-dd"),
+        "yyyy-MM-dd HH:mm" to SimpleDateFormat("yyyy-MM-dd HH:mm"),
+        "yyyy-MM-dd HH:mm:ss" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+        "yyyy-MM-dd HH:mm:ss.SSS" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
+        "yyyy-MM-dd'T'HH:mm" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm"),
+        "yyyy-MM-dd'T'HH:mm:ss" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"),
+        "yyyy-MM-dd'T'HH:mm:ss.SSS" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"),
+        "HH:mm" to SimpleDateFormat("HH:mm"),
+        "HH:mm:ss" to SimpleDateFormat("HH:mm:ss"),
+        "HH:mm:ss.SSS" to SimpleDateFormat("HH:mm:ss.SSS"),
+        "HH:mm'Z'" to SimpleDateFormat("HH:mm'Z'"),
+        "HH:mm:ss'Z'" to SimpleDateFormat("HH:mm:ss'Z'"),
+        "HH:mm:ss.SSS'Z'" to SimpleDateFormat("HH:mm:ss.SSS'Z'"),
+        "yyyy-MM-dd HH:mm'Z'" to SimpleDateFormat("yyyy-MM-dd HH:mm'Z'"),
+        "yyyy-MM-dd HH:mm:ss'Z'" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'"),
+        "yyyy-MM-dd HH:mm:ss.SSS'Z'" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'"),
+        "yyyy-MM-dd'T'HH:mm'Z'" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"),
+        "yyyy-MM-dd'T'HH:mm:ss'Z'" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"),
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
+    )
+
+fun convertDate(
+    resultSet: ResultSet,
+    fieldIndex: Int,
+    dbFlavour: DbFlavour,
+): Date {
+    when (dbFlavour) {
+        DbFlavour.SQLITE -> {
+            val date = resultSet.getObject(fieldIndex)
+            if (date is Long) {
+                return Date(date)
+            }
+            if (date is String) {
+                // https://sqlite.org/lang_datefunc.html#tmval
+                if (date[2] == ':') {
+                    // time formats
+                    when (date.length) {
+                        5 -> return formatters["HH:mm"]!!.parse(date)
+                        6 -> return formatters["HH:mm'Z'"]!!.parse(date)
+                        8 -> return formatters["HH:mm:ss"]!!.parse(date)
+                        9 -> return formatters["HH:mm:ss'Z'"]!!.parse(date)
+                        12 -> return formatters["HH:mm:ss.SSS"]!!.parse(date)
+                        13 -> return formatters["HH:mm:ss.SSS'Z'"]!!.parse(date)
+                    }
+                } else if (date.length > 10 && date[10] == 'T') {
+                    when (date.length) {
+                        16 -> return formatters["yyyy-MM-dd'T'HH:mm"]!!.parse(date)
+                        17 -> return formatters["yyyy-MM-dd'T'HH:mm'Z'"]!!.parse(date)
+                        19 -> return formatters["yyyy-MM-dd'T'HH:mm:ss"]!!.parse(date)
+                        20 -> return formatters["yyyy-MM-dd'T'HH:mm:ss'Z'"]!!.parse(date)
+                        23 -> return formatters["yyyy-MM-dd'T'HH:mm:ss.SSS"]!!.parse(date)
+                        24 -> return formatters["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"]!!.parse(date)
+                    }
+                }
+                when (date.length) {
+                    10 -> return formatters["yyyy-MM-dd"]!!.parse(date)
+                    16 -> return formatters["yyyy-MM-dd HH:mm"]!!.parse(date)
+                    17 -> return formatters["yyyy-MM-dd HH:mm'Z'"]!!.parse(date)
+                    19 -> return formatters["yyyy-MM-dd HH:mm:ss"]!!.parse(date)
+                    20 -> return formatters["yyyy-MM-dd HH:mm:ss'Z'"]!!.parse(date)
+                    23 -> return formatters["yyyy-MM-dd HH:mm:ss.SSS"]!!.parse(date)
+                    24 -> return formatters["yyyy-MM-dd HH:mm:ss.SSS'Z'"]!!.parse(date)
+                }
+            }
+            throw KapperUnsupportedOperationException("Conversion from type ${date.javaClass} to Date is not supported")
+        }
+        else -> return Date(resultSet.getDate(fieldIndex).time)
     }
 }

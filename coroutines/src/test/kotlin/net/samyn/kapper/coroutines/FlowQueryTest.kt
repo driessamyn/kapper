@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperQueryException
 import net.samyn.kapper.createMapper
+import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.executeQuery
 import net.samyn.kapper.internal.extractFields
@@ -24,8 +25,8 @@ import java.sql.SQLException
 class FlowQueryTest {
     private val fields =
         mapOf(
-            "id" to Field(1, java.sql.JDBCType.INTEGER, "id"),
-            "name" to Field(1, java.sql.JDBCType.VARCHAR, "name"),
+            "id" to Field(1, java.sql.JDBCType.INTEGER, "id", DbFlavour.UNKNOWN),
+            "name" to Field(1, java.sql.JDBCType.VARCHAR, "name", DbFlavour.UNKNOWN),
         )
     private val result = Hero(1, "Superman")
     private val resultSet =
@@ -41,7 +42,7 @@ class FlowQueryTest {
     init {
         mockkStatic(Connection::executeQuery)
         mockkStatic(ResultSet::extractFields)
-        every { resultSet.extractFields() } returns fields
+        every { resultSet.extractFields(any()) } returns fields
         every { connection.executeQuery(any(), any(), any()) } returns resultSet
         every { mapper.invoke(resultSet, fields) } returns result
     }

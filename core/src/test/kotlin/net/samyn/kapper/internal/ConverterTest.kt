@@ -59,9 +59,16 @@ class ConverterTest {
         }
 
         @Test
+        fun `convert valid string to LocalDate`() {
+            val date = "2023-10-01"
+            val localDate = convertLocalDate(date)
+            localDate.shouldBe(LocalDate.of(2023, 10, 1))
+        }
+
+        @Test
         fun `throw exception when invalid type is converted to LocalDate`() {
             shouldThrow<KapperUnsupportedOperationException> {
-                convertLocalDate("2023-01-01") // Invalid input type
+                convertLocalDate(2023) // Invalid input type
             }
         }
     }
@@ -111,6 +118,14 @@ class ConverterTest {
         }
 
         @Test
+        fun `convert valid String to LocalDateTime`() {
+            val dateTimeString = "2023-10-01T12:30:00"
+            val localDateTime = convertLocalDateTime(dateTimeString) as LocalDateTime
+            val expectedDt = LocalDateTime.parse(dateTimeString)
+            localDateTime.shouldBe(expectedDt)
+        }
+
+        @Test
         fun `throw exception when invalid type is converted to LocalDateTime`() {
             shouldThrow<KapperUnsupportedOperationException> {
                 convertLocalDateTime(Date()) // Invalid input type
@@ -125,6 +140,14 @@ class ConverterTest {
             val now = Instant.now()
             val locaTime = convertLocalTime(now) as LocalTime
             val expectedTime = LocalTime.ofInstant(now, java.time.ZoneOffset.UTC)
+            locaTime.shouldBe(expectedTime)
+        }
+
+        @Test
+        fun `convert valid String to LocalTime`() {
+            val timeString = "12:30:00"
+            val locaTime = convertLocalTime(timeString)
+            val expectedTime = LocalTime.parse(timeString)
             locaTime.shouldBe(expectedTime)
         }
 

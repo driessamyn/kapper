@@ -28,11 +28,11 @@ class MetadataTest {
                 every { metaData } returns mockMetadata
             }
 
-        val fields = mockResultSet.extractFields()
+        val fields = mockResultSet.extractFields(DbFlavour.UNKNOWN)
         fields.shouldContainExactly(
             mapOf(
-                "id" to Field(1, JDBCType.INTEGER, "INTEGER"),
-                "name" to Field(2, JDBCType.VARCHAR, "VARCHAR"),
+                "id" to Field(1, JDBCType.INTEGER, "INTEGER", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.VARCHAR, "VARCHAR", DbFlavour.UNKNOWN),
             ),
         )
     }

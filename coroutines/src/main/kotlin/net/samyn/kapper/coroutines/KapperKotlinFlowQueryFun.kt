@@ -6,9 +6,11 @@ import kotlinx.coroutines.flow.flow
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperQueryException
 import net.samyn.kapper.createMapper
+import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.executeQuery
 import net.samyn.kapper.internal.extractFields
+import net.samyn.kapper.internal.getDbFlavour
 import net.samyn.kapper.internal.logger
 import java.sql.Connection
 import java.sql.ResultSet
@@ -82,7 +84,7 @@ inline fun <reified T : Any> Connection.queryAsFlow(
 ): Flow<T> {
     require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
     this.executeQuery(Query(sql), args.toMap(), fetchSize).let { rs ->
-        return queryFlow(rs, mapper, sql)
+        return queryFlow(rs, mapper, sql, this.getDbFlavour())
     }
 }
 
@@ -93,8 +95,9 @@ fun <T : Any> queryFlow(
     rs: ResultSet,
     mapper: (ResultSet, Map<String, Field>) -> T,
     sql: String,
+    dbFlavour: DbFlavour,
 ): Flow<T> {
-    val fields = rs.extractFields()
+    val fields = rs.extractFields(dbFlavour)
     return flow {
         try {
             while (rs.next()) {

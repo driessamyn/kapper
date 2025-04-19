@@ -1,5 +1,6 @@
 package net.samyn.kapper.internal
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -12,15 +13,18 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Time
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import java.util.TimeZone
 import java.util.UUID
 
 class SQLTypesConverterTest {
@@ -180,7 +184,7 @@ class SQLTypesConverterTest {
         sqlTypeName: String,
         expectedGetter: (Int) -> Any,
     ) {
-        SQLTypesConverter.convertSQLType(jdbcType, sqlTypeName, resultSet, 1)
+        SQLTypesConverter.convertSQLType(jdbcType, sqlTypeName, resultSet, 1, DbFlavour.UNKNOWN)
         verify { expectedGetter(1) }
     }
 
@@ -188,14 +192,14 @@ class SQLTypesConverterTest {
     @MethodSource("convertSQLTypeUnsupportedTests")
     fun `unsupported SQL types throws`(jdbcType: JDBCType) {
         assertThrows<KapperUnsupportedOperationException> {
-            SQLTypesConverter.convertSQLType(jdbcType, jdbcType.toString(), resultSet, 1)
+            SQLTypesConverter.convertSQLType(jdbcType, jdbcType.toString(), resultSet, 1, DbFlavour.UNKNOWN)
         }
     }
 
     @Test
     fun `char needs truncating`() {
         every { resultSet.getString(1) } returns "example"
-        val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, 1)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, 1, DbFlavour.UNKNOWN)
 
         result.shouldBe('e')
     }
@@ -204,7 +208,7 @@ class SQLTypesConverterTest {
     fun `uuid needs parsing`() {
         val id = UUID.randomUUID()
         every { resultSet.getString(2) } returns id.toString()
-        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, 2)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, 2, DbFlavour.UNKNOWN)
 
         result.shouldBe(id)
     }
@@ -213,7 +217,7 @@ class SQLTypesConverterTest {
     fun `time needs converting`() {
         val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
         every { resultSet.getTime(3) } returns Time.valueOf(time)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME, "time", resultSet, 3)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME, "time", resultSet, 3, DbFlavour.UNKNOWN)
 
         result.shouldBe(time)
     }
@@ -222,7 +226,7 @@ class SQLTypesConverterTest {
     fun `time with zone needs converting`() {
         val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
         every { resultSet.getTime(4) } returns Time.valueOf(time)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME_WITH_TIMEZONE, "time", resultSet, 4)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME_WITH_TIMEZONE, "time", resultSet, 4, DbFlavour.UNKNOWN)
 
         result.shouldBe(time)
     }
@@ -231,7 +235,7 @@ class SQLTypesConverterTest {
     fun `timestamp needs converting`() {
         val timestamp = Instant.now()
         every { resultSet.getTimestamp(5) } returns Timestamp.from(timestamp)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP, "timestamp", resultSet, 5)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP, "timestamp", resultSet, 5, DbFlavour.UNKNOWN)
 
         result.shouldBe(timestamp)
     }
@@ -240,8 +244,67 @@ class SQLTypesConverterTest {
     fun `timestamp with zone needs converting`() {
         val timestamp = Instant.now()
         every { resultSet.getTimestamp(6) } returns Timestamp.from(timestamp)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "timestamp", resultSet, 6)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "timestamp", resultSet, 6, DbFlavour.UNKNOWN)
 
         result.shouldBe(timestamp)
+    }
+
+    @Test
+    fun `sqlite long date needs converting`() {
+        val date = Instant.now().toEpochMilli()
+        every { resultSet.getObject(7) } returns date
+        val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
+
+        result.shouldBe(Date(date))
+    }
+
+    @ParameterizedTest
+    // https://sqlite.org/lang_datefunc.html#tmval
+    @ValueSource(
+        strings = [
+            "yyyy-MM-dd",
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "HH:mm",
+            "HH:mm:ss",
+            "HH:mm:ss.SSS",
+            "yyyy-MM-dd HH:mm'Z'",
+            "yyyy-MM-dd HH:mm:ss'Z'",
+            "yyyy-MM-dd HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "HH:mm'Z'",
+            "HH:mm:ss'Z'",
+            "HH:mm:ss.SSS'Z'",
+        ],
+    )
+    fun `sqlite string date needs converting`(format: String) {
+        val df = SimpleDateFormat(format).also { it.timeZone = TimeZone.getTimeZone("CET") }
+        val date = df.format(Date.from(Instant.now()))
+        every { resultSet.getObject(7) } returns date
+        val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
+
+        df.format(result).shouldBe(date)
+    }
+
+    @Test
+    fun `sqlite invalid date throws`() {
+        every { resultSet.getObject(7) } returns "Thu Aug 08 17:26:32 GMT+08:00 2013"
+        shouldThrow<KapperUnsupportedOperationException> {
+            SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
+        }
+    }
+
+    @Test
+    fun `sqlite invalid date type throws`() {
+        every { resultSet.getObject(7) } returns 123
+        shouldThrow<KapperUnsupportedOperationException> {
+            SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
+        }
     }
 }
