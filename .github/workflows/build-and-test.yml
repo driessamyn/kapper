@@ -39,7 +39,7 @@ jobs:
     - name: Build & Test with Gradle
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ./gradlew build sonar
+      run: ./gradlew build sonar -Ddb=all
 
     - name: Upload Test Report
       uses: actions/upload-artifact@v4

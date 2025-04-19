@@ -13,7 +13,7 @@ class QueryTests : AbstractDbTests() {
     @ParameterizedTest()
     @MethodSource("databaseContainers")
     fun `should query all heros`(connection: Connection) {
-        val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes")
+        val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes_$testId")
         heroes.shouldContainExactlyInAnyOrder(
             superman,
             batman,
@@ -24,7 +24,7 @@ class QueryTests : AbstractDbTests() {
     @ParameterizedTest
     @MethodSource("databaseContainers")
     fun `should query heros with condition`(connection: Connection) {
-        val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes WHERE age > :age", "age" to 80)
+        val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes_$testId WHERE age > :age", "age" to 80)
         heroes.shouldContainExactlyInAnyOrder(
             superman,
             batman,
@@ -36,7 +36,7 @@ class QueryTests : AbstractDbTests() {
     fun `should query specific columns`(connection: Connection) {
         val heroes =
             connection.query<SuperHero>(
-                "SELECT id, name FROM super_heroes WHERE name = :name",
+                "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
                 "name" to superman.name,
             )
         heroes.shouldContainExactlyInAnyOrder(
@@ -49,7 +49,7 @@ class QueryTests : AbstractDbTests() {
     fun `should handle empty result set`(connection: Connection) {
         val heroes =
             connection.query<SuperHero>(
-                "SELECT * FROM super_heroes WHERE name = :name",
+                "SELECT * FROM super_heroes_$testId WHERE name = :name",
                 "name" to "joker",
             )
         heroes.shouldBeEmpty()
@@ -60,7 +60,7 @@ class QueryTests : AbstractDbTests() {
     fun `should query with multiple conditions`(connection: Connection) {
         val heroes =
             connection.query<SuperHero>(
-                "SELECT * FROM super_heroes WHERE age BETWEEN :fromAge AND :toAge",
+                "SELECT * FROM super_heroes_$testId WHERE age BETWEEN :fromAge AND :toAge",
                 "fromAge" to 80,
                 "toAge" to 89,
             )
@@ -76,7 +76,7 @@ class QueryTests : AbstractDbTests() {
         data class SimpleClass(val superHeroName: String)
         val hero =
             connection.query<SimpleClass>(
-                "SELECT name as superHeroName FROM super_heroes WHERE id = :id",
+                "SELECT name as superHeroName FROM super_heroes_$testId WHERE id = :id",
                 "id" to superman.id,
             )
         hero.shouldContainOnly(
@@ -89,7 +89,7 @@ class QueryTests : AbstractDbTests() {
     fun `can use custom mapper`(connection: Connection) {
         val villain =
             connection.query<Villain>(
-                "SELECT id, name FROM super_heroes WHERE name = :name",
+                "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
                 ::createVillain,
                 "name" to superman.name,
             )

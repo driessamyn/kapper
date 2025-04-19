@@ -10,10 +10,10 @@ class SqlInjectionTest : AbstractDbTests() {
     @MethodSource("databaseContainers")
     fun `cannot inject SQL with parameter`(connection: Connection) {
         connection.execute(
-            "UPDATE super_heroes SET name = 'foo' WHERE name = :name;",
+            "UPDATE super_heroes_$testId SET name = 'foo' WHERE name = :name;",
             "name" to "bar; DROP TABLE super_heroes;",
         )
 
-        connection.query<SuperHero>("SELECT * FROM super_heroes").shouldNotBeEmpty()
+        connection.query<SuperHero>("SELECT * FROM super_heroes_$testId").shouldNotBeEmpty()
     }
 }

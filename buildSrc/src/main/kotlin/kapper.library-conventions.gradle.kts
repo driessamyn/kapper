@@ -89,6 +89,8 @@ tasks.register<Test>("integrationTest") {
     systemProperties(
         "junit.jupiter.execution.parallel.enabled" to "false",
     )
+
+    systemProperty("db", System.getProperty("db", ""))
 }
 
 tasks.named<Test>("test") {

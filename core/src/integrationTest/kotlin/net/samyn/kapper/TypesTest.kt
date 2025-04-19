@@ -21,7 +21,7 @@ class TypesTest : AbstractDbTests() {
         val result =
             connection.execute(
                 """
-                INSERT INTO types_test (
+                INSERT INTO types_test_$testId (
                     t_uuid,
                     t_char,
                     t_varchar,
@@ -91,7 +91,7 @@ class TypesTest : AbstractDbTests() {
 
         val selectResult =
             connection.querySingle<TypeTest>(
-                "SELECT * FROM types_test where t_uuid = :uuid",
+                "SELECT * FROM types_test_$testId where t_uuid = :uuid",
                 "uuid" to testData.t_uuid,
             )
         selectResult.shouldBe(testData)

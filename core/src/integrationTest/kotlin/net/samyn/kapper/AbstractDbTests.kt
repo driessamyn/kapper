@@ -6,19 +6,20 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Named.named
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.testcontainers.containers.JdbcDatabaseContainer
+import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.use
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.toKotlinUuid
 
-@Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractDbTests {
     companion object {
@@ -59,18 +60,21 @@ abstract class AbstractDbTests {
                     ),
             )
 
-        @Container
-        val postgresql = PostgreSQLContainer("postgres:16")
+        private val postgresql by lazy {
+            PostgreSQLContainer("postgres:16").also { it.start() }
+        }
 
-        @Container
-        val mysql = MySQLContainer("mysql:8.4")
+        private val mysql by lazy {
+            MySQLContainer("mysql:8.4").also { it.start() }
+        }
 
 //        @Container
 //        val oracle = OracleContainer("gvenzl/oracle-free:23.4-slim-faststart")
-//
-//        @Container
-//        val msSqlServer =
-//            MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12").acceptLicense()
+
+        private val msSqlServer by lazy {
+            MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12")
+                .acceptLicense().also { it.start() }
+        }
 
         private val connections = ConcurrentHashMap<DbFlavour, Connection>()
 
@@ -85,18 +89,30 @@ abstract class AbstractDbTests {
                 DbFlavour.MYSQL to { getConnection(mysql) },
                 DbFlavour.SQLITE to { DriverManager.getConnection("jdbc:sqlite::memory:") },
 //                "Oracle" to oracle,
-//                "MSSQLServer" to msSqlServer,
-            )
-//        private val sqliteConnection =
-//            {
-//                Class.forName("org.sqlite.JDBC")
-//            }.let { DriverManager.getConnection("jdbc:sqlite::memory:") }
+//                DbFlavour.MSSQLSERVER to { getConnection(msSqlServer) },
+            ).filter {
+                // by default run against SQLite only
+                //  this allows parallel runs for different int tests.
+                when (System.getProperty("db", "").uppercase()) {
+                    "" -> it.key == DbFlavour.SQLITE || it.key == DbFlavour.POSTGRESQL
+                    "ALL" -> true
+                    else -> it.key == DbFlavour.valueOf(System.getProperty("db").uppercase())
+                }
+            }
 
         @JvmStatic
-        fun databaseContainers() =
-            connections.map {
-                arguments(named(it.key.toString(), it.value))
-            }
+        fun databaseContainers(): List<Arguments> {
+            println("--------------------------------")
+            println("Running tests against:")
+            val connections =
+                connections
+                    .map {
+                        println("   ${it.key}")
+                        arguments(named(it.key.toString(), it.value))
+                    }
+            println("--------------------------------")
+            return connections
+        }
     }
 
     private fun convertDbColumnType(
@@ -105,6 +121,8 @@ abstract class AbstractDbTests {
         suffix: String = "",
     ) = specialTypes[name]?.get(flavour) ?: (name + suffix)
 
+    @OptIn(ExperimentalUuidApi::class)
+    val testId = UUID.randomUUID().toKotlinUuid().toHexString()
     val superman = SuperHero(UUID.randomUUID(), "Superman", "superman@dc.com", 86)
     val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
     val spiderMan = SuperHero(UUID.randomUUID(), "Spider-man", "spider@marvel.com", 62)
@@ -129,7 +147,7 @@ abstract class AbstractDbTests {
         connection.createStatement().use { statement ->
             statement.execute(
                 """
-                CREATE TABLE super_heroes (
+                CREATE TABLE super_heroes_$testId (
                     id ${convertDbColumnType("UUID", dbFlavour)} PRIMARY KEY,
                     name VARCHAR(100),
                     email VARCHAR(100),
@@ -141,7 +159,7 @@ abstract class AbstractDbTests {
             )
             statement.execute(
                 """
-                INSERT INTO super_heroes (id, name, email, age) VALUES
+                INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
                     ('${superman.id}', '${superman.name}', '${superman.email}', ${superman.age}),
                     ('${batman.id}', '${batman.name}', '${batman.email}', ${batman.age}),
                     ('${spiderMan.id}', '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age});
@@ -151,7 +169,7 @@ abstract class AbstractDbTests {
             )
             statement.execute(
                 """
-                CREATE TABLE types_test (
+                CREATE TABLE types_test_$testId (
                     t_uuid ${convertDbColumnType("UUID", dbFlavour)},
                     t_char CHAR,
                     t_varchar VARCHAR(120),

@@ -14,14 +14,14 @@ class QuerySingleTests : AbstractDbTests() {
     @ParameterizedTest()
     @MethodSource("databaseContainers")
     fun `should query 1 heros`(connection: Connection) {
-        val hero = connection.querySingle<SuperHero>("SELECT * FROM super_heroes ORDER BY age DESC LIMIT 1")
+        val hero = connection.querySingle<SuperHero>("SELECT * FROM super_heroes_$testId ORDER BY age DESC LIMIT 1")
         hero.shouldBe(superman)
     }
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
     fun `should query hero with condition`(connection: Connection) {
-        val hero = connection.querySingle<SuperHero>("SELECT * FROM super_heroes WHERE age > :age", "age" to 85)
+        val hero = connection.querySingle<SuperHero>("SELECT * FROM super_heroes_$testId WHERE age > :age", "age" to 85)
         hero.shouldBe(superman)
     }
 
@@ -30,7 +30,7 @@ class QuerySingleTests : AbstractDbTests() {
     fun `should query specific columns`(connection: Connection) {
         val hero =
             connection.querySingle<SuperHero>(
-                "SELECT id, name FROM super_heroes WHERE name = :name",
+                "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
                 "name" to superman.name,
             )
         hero.shouldBe(SuperHero(superman.id, superman.name))
@@ -41,7 +41,7 @@ class QuerySingleTests : AbstractDbTests() {
     fun `should handle empty result set`(connection: Connection) {
         val hero =
             connection.querySingle<SuperHero>(
-                "SELECT * FROM super_heroes WHERE name = :name",
+                "SELECT * FROM super_heroes_$testId WHERE name = :name",
                 "name" to "joker",
             )
         hero.shouldBeNull()
@@ -53,7 +53,7 @@ class QuerySingleTests : AbstractDbTests() {
         val ex =
             shouldThrow<KapperResultException> {
                 connection.querySingle<SuperHero>(
-                    "SELECT * FROM super_heroes",
+                    "SELECT * FROM super_heroes_$testId",
                 )
             }
         ex.message.shouldContain("3")
@@ -64,7 +64,7 @@ class QuerySingleTests : AbstractDbTests() {
     fun `should query with multiple conditions`(connection: Connection) {
         val hero =
             connection.querySingle<SuperHero>(
-                "SELECT * FROM super_heroes WHERE age BETWEEN :fromAge AND :toAge",
+                "SELECT * FROM super_heroes_$testId WHERE age BETWEEN :fromAge AND :toAge",
                 "fromAge" to 86,
                 "toAge" to 89,
             )
@@ -76,7 +76,7 @@ class QuerySingleTests : AbstractDbTests() {
     fun `can use custom mapper`(connection: Connection) {
         val villain =
             connection.querySingle<Villain>(
-                "SELECT id, name FROM super_heroes WHERE name = :name",
+                "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
                 ::createVillain,
                 "name" to superman.name,
             )
