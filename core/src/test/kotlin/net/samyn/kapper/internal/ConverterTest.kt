@@ -159,6 +159,46 @@ class ConverterTest {
         }
     }
 
+    @Nested
+    inner class CharConverter {
+        @Test
+        fun `convert valid String to Char`() {
+            val charString = "A"
+            val char = convertChar(charString)
+            char.shouldBe('A')
+        }
+
+        @Test
+        fun `String too long for Char`() {
+            val charString = "AB"
+            shouldThrow<KapperParseException> {
+                convertChar(charString)
+            }
+        }
+
+        @Test
+        fun `convert valid CharArray to Char`() {
+            val charArray = charArrayOf('A')
+            val char = convertChar(charArray)
+            char.shouldBe('A')
+        }
+
+        @Test
+        fun `CharArray too long for Char`() {
+            val charArray = charArrayOf('A', 'B')
+            shouldThrow<KapperParseException> {
+                convertChar(charArray)
+            }
+        }
+
+        @Test
+        fun `throw exception when invalid type is converted to Char`() {
+            shouldThrow<KapperUnsupportedOperationException> {
+                convertChar(123) // Invalid input type
+            }
+        }
+    }
+
     private fun UUID.asBytes(): ByteArray {
         val b = ByteBuffer.wrap(ByteArray(16))
         b.putLong(mostSignificantBits)

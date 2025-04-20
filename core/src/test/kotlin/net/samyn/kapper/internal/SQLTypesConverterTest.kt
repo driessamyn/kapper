@@ -197,11 +197,11 @@ class SQLTypesConverterTest {
     }
 
     @Test
-    fun `char needs truncating`() {
+    fun `char needs converting`() {
         every { resultSet.getString(1) } returns "example"
         val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, 1, DbFlavour.UNKNOWN)
 
-        result.shouldBe('e')
+        result.shouldBe("example".toCharArray())
     }
 
     @Test

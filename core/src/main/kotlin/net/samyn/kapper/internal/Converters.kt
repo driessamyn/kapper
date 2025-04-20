@@ -78,6 +78,17 @@ internal fun convertUUID(value: Any): UUID =
             }
         }
 
+        is CharArray -> {
+            try {
+                UUID.fromString(String(value))
+            } catch (e: Exception) {
+                throw KapperParseException(
+                    "Cannot parse $value to UUID",
+                    e,
+                )
+            }
+        }
+
         is ByteArray -> {
             value.asUUID()
         }
@@ -87,6 +98,27 @@ internal fun convertUUID(value: Any): UUID =
                 "Cannot auto-convert from ${value.javaClass} to UUID",
             )
         }
+    }
+
+internal fun convertChar(value: Any): Char =
+    if (value is String) {
+        if (value.length > 1) {
+            throw KapperParseException(
+                "Cannot parse $value to Char (length > 1)",
+            )
+        }
+        value[0]
+    } else if (value is CharArray) {
+        if (value.size > 1) {
+            throw KapperParseException(
+                "Cannot parse $value to Char (size > 1)",
+            )
+        }
+        value[0]
+    } else {
+        throw KapperUnsupportedOperationException(
+            "Cannot auto-convert from ${value.javaClass} to Char",
+        )
     }
 
 fun ByteArray.asUUID(): UUID {

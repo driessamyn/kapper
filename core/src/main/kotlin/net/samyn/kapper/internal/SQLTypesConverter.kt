@@ -31,7 +31,7 @@ internal object SQLTypesConverter {
                 in listOf(JDBCType.BIT, JDBCType.BOOLEAN) -> resultSet.getBoolean(fieldIndex)
                 in
                 listOf(JDBCType.CHAR),
-                -> resultSet.getString(fieldIndex).toCharArray()[0]
+                -> resultSet.getString(fieldIndex).toCharArray()
                 in
                 listOf(
                     JDBCType.CLOB, JDBCType.LONGNVARCHAR, JDBCType.LONGVARCHAR,

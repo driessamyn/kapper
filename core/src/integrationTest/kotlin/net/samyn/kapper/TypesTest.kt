@@ -1,6 +1,7 @@
 package net.samyn.kapper
 
 import io.kotest.matchers.shouldBe
+import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Connection
@@ -14,6 +15,40 @@ import java.util.UUID
 import kotlin.random.Random
 
 class TypesTest : AbstractDbTests() {
+    override fun setupDatabase(connection: Connection) {
+        val dbFlavour = connection.getDbFlavour()
+        connection.createStatement().use { statement ->
+            statement.execute(
+                """
+                CREATE TABLE types_test_$testId (
+                    t_uuid ${convertDbColumnType("UUID", dbFlavour)},
+                    t_char CHAR,
+                    t_varchar VARCHAR(120),
+                    t_clob ${convertDbColumnType("CLOB", dbFlavour)},
+                    t_binary ${convertDbColumnType("BINARY", dbFlavour, "(16)")},
+                    t_varbinary ${convertDbColumnType("VARBINARY", dbFlavour, "(128)")},
+                    t_large_binary ${convertDbColumnType("BLOB", dbFlavour)},
+                    t_numeric NUMERIC(12,6),
+                    t_decimal DECIMAL(12,6),
+                    t_smallint SMALLINT,
+                    t_int INT,
+                    t_bigint BIGINT,
+                    t_float ${convertDbColumnType("FLOAT", dbFlavour, "(8)")},
+                    t_real ${convertDbColumnType("REAL", dbFlavour)},
+                    t_double DOUBLE PRECISION,
+                    t_date DATE,
+                    t_local_date DATE,
+                    t_local_time TIME,
+                    t_timestamp ${convertDbColumnType("TIMESTAMP", dbFlavour)},
+                    t_boolean ${convertDbColumnType("BOOLEAN", dbFlavour)}
+                )
+                """.trimIndent().also {
+                    println(it)
+                },
+            )
+        }
+    }
+
     @ParameterizedTest()
     @MethodSource("databaseContainers")
     fun `can insert and retreive the same types`(connection: Connection) {

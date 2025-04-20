@@ -20,6 +20,7 @@ internal class AutoConverter(
             LocalDateTime::class to ::convertLocalDateTime,
             LocalTime::class to ::convertLocalTime,
             Instant::class to ::convertInstant,
+            Char::class to ::convertChar,
         ),
 ) {
     fun convert(

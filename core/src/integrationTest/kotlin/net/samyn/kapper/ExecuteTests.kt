@@ -4,8 +4,6 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import net.samyn.kapper.internal.DbFlavour
-import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Connection
@@ -13,46 +11,30 @@ import java.sql.SQLException
 import java.util.UUID
 
 class ExecuteTests : AbstractDbTests() {
-    override fun setupDatabase(connection: Connection) {
-        connection.createStatement().use { statement ->
-            statement.execute(
-                """
-                CREATE TABLE super_heroes_$testId (
-                    id ${if (connection.getDbFlavour() == DbFlavour.MYSQL) "VARCHAR(36)" else "UUID"} PRIMARY KEY,
-                    name VARCHAR(100),
-                    email VARCHAR(100),
-                    age INT
-                );
-                """.trimIndent().also {
-                    println(it)
-                },
-            )
-        }
-    }
-
     @ParameterizedTest()
     @MethodSource("databaseContainers")
     fun `SQL Insert single`(connection: Connection) {
+        val supermanClone = superman.copy(id = UUID.randomUUID())
         val results =
             connection.execute(
                 """
                 INSERT INTO super_heroes_$testId(id, name, email, age) VALUES(:id, :name, :email, :age);
                 """.trimIndent(),
-                "id" to superman.id,
-                "name" to superman.name,
-                "email" to superman.email,
-                "age" to superman.age,
+                "id" to supermanClone.id,
+                "name" to supermanClone.name,
+                "email" to supermanClone.email,
+                "age" to supermanClone.age,
             )
 
         results.shouldBe(1)
 
-        connection.prepareStatement("SELECT name, email, age  FROM super_heroes_$testId WHERE id = '${superman.id}'").use { stmt ->
+        connection.prepareStatement("SELECT name, email, age  FROM super_heroes_$testId WHERE id = '${supermanClone.id}'").use { stmt ->
             val resultSet = stmt.executeQuery()
             assertSoftly(resultSet) {
                 next().shouldBe(true)
-                getString(1).shouldBe(superman.name)
-                getString(2).shouldBe(superman.email)
-                getInt(3).shouldBe(superman.age)
+                getString(1).shouldBe(supermanClone.name)
+                getString(2).shouldBe(supermanClone.email)
+                getInt(3).shouldBe(supermanClone.age)
             }
         }
     }
@@ -60,28 +42,29 @@ class ExecuteTests : AbstractDbTests() {
     @ParameterizedTest()
     @MethodSource("databaseContainers")
     fun `SQL Update single`(connection: Connection) {
+        val batmanClone = batman.copy(id = UUID.randomUUID())
         connection.createStatement().use { stmt ->
-            stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('${batman.id}', 'foo');")
+            stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('${batmanClone.id}', 'foo');")
         }
 
         val results =
             connection.execute(
                 "UPDATE super_heroes_$testId SET name = :name, email = :email, age = :age WHERE id = :id;",
-                "id" to batman.id,
-                "name" to batman.name,
-                "email" to batman.email,
-                "age" to batman.age,
+                "id" to batmanClone.id,
+                "name" to batmanClone.name,
+                "email" to batmanClone.email,
+                "age" to batmanClone.age,
             )
 
         results.shouldBe(1)
 
-        connection.prepareStatement("SELECT name, email, age FROM super_heroes_$testId WHERE id = '${batman.id}'").use { stmt ->
+        connection.prepareStatement("SELECT name, email, age FROM super_heroes_$testId WHERE id = '${batmanClone.id}'").use { stmt ->
             val resultSet = stmt.executeQuery()
             assertSoftly(resultSet) {
                 next().shouldBe(true)
-                getString(1).shouldBe(batman.name)
-                getString(2).shouldBe(batman.email)
-                getInt(3).shouldBe(batman.age)
+                getString(1).shouldBe(batmanClone.name)
+                getString(2).shouldBe(batmanClone.email)
+                getInt(3).shouldBe(batmanClone.age)
             }
         }
     }
@@ -110,19 +93,20 @@ class ExecuteTests : AbstractDbTests() {
     @ParameterizedTest()
     @MethodSource("databaseContainers")
     fun `SQL Delete single`(connection: Connection) {
+        val spidermanClone = spiderMan.copy(id = UUID.randomUUID())
         connection.createStatement().use { stmt ->
-            stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('${spiderMan.id}', 'foo');")
+            stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('${spidermanClone.id}', 'foo');")
         }
 
         val results =
             connection.execute(
                 "DELETE FROM super_heroes_$testId WHERE id = :id;",
-                "id" to spiderMan.id,
+                "id" to spidermanClone.id,
             )
 
         results.shouldBe(1)
 
-        connection.prepareStatement("SELECT * FROM super_heroes_$testId WHERE id = '${batman.id}'").use { stmt ->
+        connection.prepareStatement("SELECT * FROM super_heroes_$testId WHERE id = '${spidermanClone.id}'").use { stmt ->
             val resultSet = stmt.executeQuery()
             assertSoftly(resultSet) {
                 next().shouldBe(false)

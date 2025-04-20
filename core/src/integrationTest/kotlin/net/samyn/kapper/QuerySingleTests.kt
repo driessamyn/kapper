@@ -5,6 +5,8 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import net.samyn.kapper.internal.DbFlavour
+import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Connection
@@ -14,7 +16,13 @@ class QuerySingleTests : AbstractDbTests() {
     @ParameterizedTest()
     @MethodSource("databaseContainers")
     fun `should query 1 heros`(connection: Connection) {
-        val hero = connection.querySingle<SuperHero>("SELECT * FROM super_heroes_$testId ORDER BY age DESC LIMIT 1")
+        val sql =
+            if (DbFlavour.MSSQLSERVER == connection.getDbFlavour()) {
+                "SELECT TOP 1 * FROM super_heroes_$testId ORDER BY age DESC"
+            } else {
+                "SELECT * FROM super_heroes_$testId ORDER BY age DESC LIMIT 1"
+            }
+        val hero = connection.querySingle<SuperHero>(sql)
         hero.shouldBe(superman)
     }
 
@@ -81,7 +89,7 @@ class QuerySingleTests : AbstractDbTests() {
                 "name" to superman.name,
             )
         villain.shouldNotBeNull()
-        villain.id.shouldBe(superman.id.toString())
+        villain.id!!.lowercase().shouldBe(superman.id.toString().lowercase())
         villain.name.shouldBe(superman.name)
     }
 

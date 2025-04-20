@@ -16,6 +16,8 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.logging.Level
+import java.util.logging.Logger
 import kotlin.use
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.toKotlinUuid
@@ -32,11 +34,13 @@ abstract class AbstractDbTests {
                 "UUID" to
                     mapOf(
                         DbFlavour.MYSQL to "VARCHAR(36)",
+                        DbFlavour.MSSQLSERVER to "UNIQUEIDENTIFIER",
                     ),
                 "CLOB" to
                     mapOf(
                         DbFlavour.MYSQL to "TEXT",
                         DbFlavour.POSTGRESQL to "TEXT",
+                        DbFlavour.MSSQLSERVER to "NVARCHAR(MAX)",
                     ),
                 "BINARY" to
                     mapOf(
@@ -49,6 +53,7 @@ abstract class AbstractDbTests {
                 "BLOB" to
                     mapOf(
                         DbFlavour.POSTGRESQL to "BYTEA",
+                        DbFlavour.MSSQLSERVER to "VARBINARY(MAX)",
                     ),
                 "FLOAT" to
                     mapOf(
@@ -57,6 +62,14 @@ abstract class AbstractDbTests {
                 "REAL" to
                     mapOf(
                         DbFlavour.MYSQL to "FLOAT",
+                    ),
+                "BOOLEAN" to
+                    mapOf(
+                        DbFlavour.MSSQLSERVER to "BIT",
+                    ),
+                "TIMESTAMP" to
+                    mapOf(
+                        DbFlavour.MSSQLSERVER to "DATETIME",
                     ),
             )
 
@@ -73,7 +86,12 @@ abstract class AbstractDbTests {
 
         private val msSqlServer by lazy {
             MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12")
-                .acceptLicense().also { it.start() }
+                .acceptLicense()
+                .also {
+                    val logger = Logger.getLogger("com.microsoft.sqlserver.jdbc.internals.SQLServerConnection")
+                    logger.level = Level.SEVERE
+                    it.start()
+                }
         }
 
         private val connections = ConcurrentHashMap<DbFlavour, Connection>()
@@ -89,7 +107,7 @@ abstract class AbstractDbTests {
                 DbFlavour.MYSQL to { getConnection(mysql) },
                 DbFlavour.SQLITE to { DriverManager.getConnection("jdbc:sqlite::memory:") },
 //                "Oracle" to oracle,
-//                DbFlavour.MSSQLSERVER to { getConnection(msSqlServer) },
+                DbFlavour.MSSQLSERVER to { getConnection(msSqlServer) },
             ).filter {
                 // by default run against SQLite only
                 //  this allows parallel runs for different int tests.
@@ -115,7 +133,7 @@ abstract class AbstractDbTests {
         }
     }
 
-    private fun convertDbColumnType(
+    protected fun convertDbColumnType(
         name: String,
         flavour: DbFlavour,
         suffix: String = "",
@@ -163,37 +181,7 @@ abstract class AbstractDbTests {
                     ('${superman.id}', '${superman.name}', '${superman.email}', ${superman.age}),
                     ('${batman.id}', '${batman.name}', '${batman.email}', ${batman.age}),
                     ('${spiderMan.id}', '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age});
-                """.trimIndent().also {
-                    println(it)
-                },
-            )
-            statement.execute(
-                """
-                CREATE TABLE types_test_$testId (
-                    t_uuid ${convertDbColumnType("UUID", dbFlavour)},
-                    t_char CHAR,
-                    t_varchar VARCHAR(120),
-                    t_clob ${convertDbColumnType("CLOB", dbFlavour)},
-                    t_binary ${convertDbColumnType("BINARY", dbFlavour, "(16)")},
-                    t_varbinary ${convertDbColumnType("VARBINARY", dbFlavour, "(128)")},
-                    t_large_binary ${convertDbColumnType("BLOB", dbFlavour)},
-                    t_numeric NUMERIC(12,6),
-                    t_decimal DECIMAL(12,6),
-                    t_smallint SMALLINT,
-                    t_int INT,
-                    t_bigint BIGINT,
-                    t_float ${convertDbColumnType("FLOAT", dbFlavour, "(8)")},
-                    t_real ${convertDbColumnType("REAL", dbFlavour)},
-                    t_double DOUBLE PRECISION,
-                    t_date DATE,
-                    t_local_date DATE,
-                    t_local_time TIME,
-                    t_timestamp TIMESTAMP,
-                    t_boolean BOOLEAN
-                )
-                """.trimIndent().also {
-                    println(it)
-                },
+                """,
             )
         }
     }

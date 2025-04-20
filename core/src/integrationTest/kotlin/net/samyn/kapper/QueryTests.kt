@@ -95,7 +95,7 @@ class QueryTests : AbstractDbTests() {
             )
 
         villain.size.shouldBe(1)
-        villain.first().id.shouldBe(superman.id.toString())
+        villain.first().id!!.lowercase().shouldBe(superman.id.toString().lowercase())
         villain.first().name.shouldBe(superman.name)
     }
 
