@@ -11,7 +11,7 @@ mockk = "1.14.0"
 mysql-driver = "9.2.0"
 postgresql-driver = "42.7.5"
 slf4j = "2.0.17"
-sqlite = "3.44.1.0"
+sqlite = "3.49.1.0"
 test-containers = "1.20.6"
 
 [libraries]
