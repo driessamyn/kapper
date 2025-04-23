@@ -1,9 +1,10 @@
 package net.samyn.kapper
 
 import io.kotest.matchers.shouldBe
+import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.testcontainers.containers.JdbcDatabaseContainer
+import java.sql.Connection
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -14,89 +15,121 @@ import java.util.UUID
 import kotlin.random.Random
 
 class TypesTest : AbstractDbTests() {
+    override fun setupDatabase(connection: Connection) {
+        val dbFlavour = connection.getDbFlavour()
+        connection.createStatement().use { statement ->
+            statement.execute(
+                """
+                CREATE TABLE types_test_$testId (
+                    t_uuid ${convertDbColumnType("UUID", dbFlavour)},
+                    t_char CHAR,
+                    t_varchar ${convertDbColumnType("VARCHAR", dbFlavour, "(120)")},
+                    t_clob ${convertDbColumnType("CLOB", dbFlavour)},
+                    t_binary ${convertDbColumnType("BINARY", dbFlavour, "(16)")},
+                    t_varbinary ${convertDbColumnType("VARBINARY", dbFlavour, "(128)")},
+                    t_large_binary ${convertDbColumnType("BLOB", dbFlavour)},
+                    t_numeric NUMERIC(12,6),
+                    t_decimal DECIMAL(12,6),
+                    t_smallint ${convertDbColumnType("SMALLINT", dbFlavour)},
+                    t_int ${convertDbColumnType("INT", dbFlavour)},
+                    t_bigint ${convertDbColumnType("BIGINT", dbFlavour)},
+                    t_float ${convertDbColumnType("FLOAT", dbFlavour, "(8)")},
+                    t_real ${convertDbColumnType("REAL", dbFlavour)},
+                    t_double ${convertDbColumnType("DOUBLE PRECISION", dbFlavour)},
+                    t_date DATE,
+                    t_local_date DATE,
+                    t_local_time ${convertDbColumnType("TIME", dbFlavour)},
+                    t_timestamp ${convertDbColumnType("TIMESTAMP", dbFlavour)},
+                    t_boolean ${convertDbColumnType("BOOLEAN", dbFlavour)}
+                )
+                """.trimIndent().also {
+                    println(it)
+                },
+            )
+        }
+    }
+
     @ParameterizedTest()
     @MethodSource("databaseContainers")
-    fun `can insert and retreive the same types`(container: JdbcDatabaseContainer<*>) {
+    fun `can insert and retreive the same types`(connection: Connection) {
         val testData = createTestObject()
-        createConnection(container).use { connection ->
-            val result =
-                connection.execute(
-                    """
-                    INSERT INTO types_test (
-                        t_uuid,
-                        t_char,
-                        t_varchar,
-                        t_clob,
-                        t_binary,
-                        t_varbinary,
-                        t_large_binary,
-                        t_numeric,
-                        t_decimal,
-                        t_smallint,
-                        t_int,
-                        t_bigint,
-                        t_float,
-                        t_real,
-                        t_double,
-                        t_date,
-                        t_local_date,
-                        t_local_time,
-                        t_timestamp,
-                        t_boolean
-                    ) VALUES (
-                        :uuid,
-                        :char,
-                        :varchar,
-                        :clob,
-                        :binary,
-                        :varbinary,
-                        :large_binary,
-                        :numeric,  
-                        :decimal,
-                        :smallint,
-                        :int,
-                        :bigint,
-                        :float,
-                        :real,
-                        :double,
-                        :date,
-                        :local_date,
-                        :local_time,
-                        :timestamp,
-                        :boolean
-                      );
-                    """.trimIndent(),
-                    "uuid" to testData.t_uuid,
-                    "char" to testData.t_char,
-                    "varchar" to testData.t_varchar,
-                    "clob" to testData.t_clob,
-                    "binary" to testData.t_binary,
-                    "varbinary" to testData.t_varbinary,
-                    "large_binary" to testData.t_large_binary,
-                    "numeric" to testData.t_numeric,
-                    "decimal" to testData.t_decimal,
-                    "smallint" to testData.t_smallint,
-                    "int" to testData.t_int,
-                    "bigint" to testData.t_bigint,
-                    "float" to testData.t_float,
-                    "real" to testData.t_real,
-                    "double" to testData.t_double,
-                    "date" to testData.t_date,
-                    "local_date" to testData.t_local_date,
-                    "local_time" to testData.t_local_time,
-                    "timestamp" to testData.t_timestamp,
-                    "boolean" to testData.t_boolean,
-                )
+        val result =
+            connection.execute(
+                """
+                INSERT INTO types_test_$testId (
+                    t_uuid,
+                    t_char,
+                    t_varchar,
+                    t_clob,
+                    t_binary,   
+                    t_varbinary,
+                    t_large_binary,
+                    t_numeric,
+                    t_decimal,
+                    t_smallint,
+                    t_int,
+                    t_bigint,
+                    t_float,
+                    t_real,
+                    t_double,
+                    t_date,
+                    t_local_date,
+                    t_local_time,
+                    t_timestamp,
+                    t_boolean
+                ) VALUES (
+                    :uuid,
+                    :char,
+                    :varchar,
+                    :clob,
+                    :binary,
+                    :varbinary,
+                    :large_binary,
+                    :numeric,  
+                    :decimal,
+                    :smallint,
+                    :int,
+                    :bigint,
+                    :float,
+                    :real,
+                    :double,
+                    :date,
+                    :local_date,
+                    :local_time,
+                    :timestamp,
+                    :boolean
+                  )
+                """.trimIndent(),
+                "uuid" to testData.t_uuid,
+                "char" to testData.t_char,
+                "varchar" to testData.t_varchar,
+                "clob" to testData.t_clob,
+                "binary" to testData.t_binary,
+                "varbinary" to testData.t_varbinary,
+                "large_binary" to testData.t_large_binary,
+                "numeric" to testData.t_numeric,
+                "decimal" to testData.t_decimal,
+                "smallint" to testData.t_smallint,
+                "int" to testData.t_int,
+                "bigint" to testData.t_bigint,
+                "float" to testData.t_float,
+                "real" to testData.t_real,
+                "double" to testData.t_double,
+                "date" to testData.t_date,
+                "local_date" to testData.t_local_date,
+                "local_time" to testData.t_local_time,
+                "timestamp" to testData.t_timestamp,
+                "boolean" to testData.t_boolean,
+            )
 
-            result.shouldBe(1)
+        result.shouldBe(1)
 
-            val selectResult =
-                connection.querySingle<TypeTest>(
-                    "SELECT * FROM types_test where t_uuid = :uuid",
-                    "uuid" to testData.t_uuid,
-                )
-            selectResult.shouldBe(testData)
-        }
+        val selectResult =
+            connection.querySingle<TypeTest>(
+                "SELECT * FROM types_test_$testId where t_uuid = :uuid",
+                "uuid" to testData.t_uuid,
+            )
+        selectResult.shouldBe(testData)
     }
 
     data class TypeTest(

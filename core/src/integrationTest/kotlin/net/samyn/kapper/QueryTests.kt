@@ -6,111 +6,97 @@ import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.testcontainers.containers.JdbcDatabaseContainer
+import java.sql.Connection
 import java.sql.ResultSet
 
 class QueryTests : AbstractDbTests() {
     @ParameterizedTest()
     @MethodSource("databaseContainers")
-    fun `should query all heros`(container: JdbcDatabaseContainer<*>) {
-        createConnection(container).use { connection ->
-            val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes")
-            heroes.shouldContainExactlyInAnyOrder(
-                superman,
-                batman,
-                spiderMan,
+    fun `should query all heros`(connection: Connection) {
+        val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes_$testId")
+        heroes.shouldContainExactlyInAnyOrder(
+            superman,
+            batman,
+            spiderMan,
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("databaseContainers")
+    fun `should query heros with condition`(connection: Connection) {
+        val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes_$testId WHERE age > :age", "age" to 80)
+        heroes.shouldContainExactlyInAnyOrder(
+            superman,
+            batman,
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("databaseContainers")
+    fun `should query specific columns`(connection: Connection) {
+        val heroes =
+            connection.query<SuperHero>(
+                "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
+                "name" to superman.name,
             )
-        }
+        heroes.shouldContainExactlyInAnyOrder(
+            SuperHero(superman.id, superman.name),
+        )
     }
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    fun `should query heros with condition`(container: JdbcDatabaseContainer<*>) {
-        createConnection(container).use { connection ->
-            val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes WHERE age > :age", "age" to 80)
-            heroes.shouldContainExactlyInAnyOrder(
-                superman,
-                batman,
+    fun `should handle empty result set`(connection: Connection) {
+        val heroes =
+            connection.query<SuperHero>(
+                "SELECT * FROM super_heroes_$testId WHERE name = :name",
+                "name" to "joker",
             )
-        }
+        heroes.shouldBeEmpty()
     }
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    fun `should query specific columns`(container: JdbcDatabaseContainer<*>) {
-        createConnection(container).use { connection ->
-            val heroes =
-                connection.query<SuperHero>(
-                    "SELECT id, name FROM super_heroes WHERE name = :name",
-                    "name" to superman.name,
-                )
-            heroes.shouldContainExactlyInAnyOrder(
-                SuperHero(superman.id, superman.name),
+    fun `should query with multiple conditions`(connection: Connection) {
+        val heroes =
+            connection.query<SuperHero>(
+                "SELECT * FROM super_heroes_$testId WHERE age BETWEEN :fromAge AND :toAge",
+                "fromAge" to 80,
+                "toAge" to 89,
             )
-        }
+        heroes.shouldContainExactlyInAnyOrder(
+            superman,
+            batman,
+        )
     }
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    fun `should handle empty result set`(container: JdbcDatabaseContainer<*>) {
-        createConnection(container).use { connection ->
-            val heroes =
-                connection.query<SuperHero>(
-                    "SELECT * FROM super_heroes WHERE name = :name",
-                    "name" to "joker",
-                )
-            heroes.shouldBeEmpty()
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query with multiple conditions`(container: JdbcDatabaseContainer<*>) {
-        createConnection(container).use { connection ->
-            val heroes =
-                connection.query<SuperHero>(
-                    "SELECT * FROM super_heroes WHERE age BETWEEN :fromAge AND :toAge",
-                    "fromAge" to 80,
-                    "toAge" to 89,
-                )
-            heroes.shouldContainExactlyInAnyOrder(
-                superman,
-                batman,
-            )
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `support field labels`(container: JdbcDatabaseContainer<*>) {
+    fun `support field labels`(connection: Connection) {
         data class SimpleClass(val superHeroName: String)
-        createConnection(container).use { connection ->
-            val hero =
-                connection.query<SimpleClass>(
-                    "SELECT name as superHeroName FROM super_heroes WHERE id = :id",
-                    "id" to superman.id,
-                )
-            hero.shouldContainOnly(
-                SimpleClass(superman.name),
+        val hero =
+            connection.query<SimpleClass>(
+                "SELECT name as superHeroName FROM super_heroes_$testId WHERE id = :id",
+                "id" to superman.id,
             )
-        }
+        hero.shouldContainOnly(
+            SimpleClass(superman.name),
+        )
     }
 
     @ParameterizedTest
     @MethodSource("databaseContainers")
-    fun `can use custom mapper`(container: JdbcDatabaseContainer<*>) {
-        createConnection(container).use { connection ->
-            val villain =
-                connection.query<Villain>(
-                    "SELECT id, name FROM super_heroes WHERE name = :name",
-                    ::createVillain,
-                    "name" to superman.name,
-                )
+    fun `can use custom mapper`(connection: Connection) {
+        val villain =
+            connection.query<Villain>(
+                "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
+                ::createVillain,
+                "name" to superman.name,
+            )
 
-            villain.size.shouldBe(1)
-            villain.first().id.shouldBe(superman.id.toString())
-            villain.first().name.shouldBe(superman.name)
-        }
+        villain.size.shouldBe(1)
+        villain.first().id!!.shouldBe(superman.id.toString().lowercase().replace("-", ""))
+        villain.first().name.shouldBe(superman.name)
     }
 
     private fun createVillain(
@@ -118,7 +104,7 @@ class QueryTests : AbstractDbTests() {
         fields: Map<String, Field>,
     ): Villain =
         Villain().also {
-            it.id = resultSet.getString("id")
+            it.id = resultSet.getString("id").lowercase().replace("-", "")
             it.name = resultSet.getString("name")
         }
 }

@@ -31,7 +31,7 @@ internal class KapperImpl(
         return buildList {
             connection.executeQuery(queryFactory(sql), args).use { rs ->
                 try {
-                    val fields = rs.extractFields()
+                    val fields = rs.extractFields(connection.getDbFlavour())
                     while (rs.next()) {
                         add(mapper(rs, fields))
                     }

@@ -1,5 +1,6 @@
 package net.samyn.kapper
 
+import net.samyn.kapper.internal.DbFlavour
 import java.sql.JDBCType
 
 /**
@@ -7,5 +8,6 @@ import java.sql.JDBCType
  * @param columnIndex index of the column.
  * @param type JDBCType
  * @param typeName of the DB type as returned by the JDBC driver.
+ * @param dbFlavour the database flavour.
  */
-data class Field(val columnIndex: Int, val type: JDBCType, val typeName: String)
+data class Field(val columnIndex: Int, val type: JDBCType, val typeName: String, val dbFlavour: DbFlavour)

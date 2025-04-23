@@ -66,13 +66,33 @@ class DbFlavourTest {
                 "Oracle Database 18c",
                 "Oracle Database 19c",
                 "Oracle Database 21c",
+            ],
+    )
+    fun `when databaseProductName is oracle then getDbFlavour returns ORACLE`(value: String) {
+        every { connection.metaData.databaseProductName } returns value
+        connection.getDbFlavour() shouldBe DbFlavour.ORACLE
+    }
 
+    @ParameterizedTest
+    @ValueSource(
+        strings =
+            [
                 // Microsoft SQL Server variants
                 "Microsoft SQL Server",
                 "SQL Server",
                 "MS SQL Server",
                 "MSSQL",
+            ],
+    )
+    fun `when databaseProductName is sql server then getDbFlavour returns MSSQLSERVER`(value: String) {
+        every { connection.metaData.databaseProductName } returns value
+        connection.getDbFlavour() shouldBe DbFlavour.MSSQLSERVER
+    }
 
+    @ParameterizedTest
+    @ValueSource(
+        strings =
+            [
                 // IBM DB2 variants
                 "DB2",
                 "DB2/NT",

@@ -19,7 +19,7 @@ import kotlin.reflect.KClass
 class KotlinDataClassMapperTest {
     private val autoMapperMock = mockk<(Any, KClass<*>) -> Any>(relaxed = true)
     private val resultSet = mockk<ResultSet>(relaxed = true)
-    val sqlTypeConverterMock = mockk<(JDBCType, String, ResultSet, Int) -> Any?>(relaxed = true)
+    val sqlTypeConverterMock = mockk<(JDBCType, String, ResultSet, Int, DbFlavour) -> Any?>(relaxed = true)
 
     @ParameterizedTest
     @ValueSource(strings = ["email", "EMAIL", "eMail"])
@@ -27,18 +27,18 @@ class KotlinDataClassMapperTest {
         val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
         val fields =
             mapOf(
-                "id" to Field(1, JDBCType.BIT, "SomeType"),
-                "name" to Field(2, JDBCType.BIT, "SomeType"),
-                emailParam to Field(3, JDBCType.BIT, "SomeType"),
-                "age" to Field(4, JDBCType.BIT, "SomeType"),
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                emailParam to Field(3, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "age" to Field(4, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
             batman.id
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2), any()) } returns
             batman.name
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3), any()) } returns
             batman.email!!
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(4)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(4), any()) } returns
             batman.age!!
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
@@ -52,12 +52,12 @@ class KotlinDataClassMapperTest {
         val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
         val fields =
             mapOf(
-                "id" to Field(1, JDBCType.BIT, "SomeType"),
-                "name" to Field(2, JDBCType.BIT, "SomeType"),
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
             batman.id
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2), any()) } returns
             batman.name
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
@@ -70,21 +70,21 @@ class KotlinDataClassMapperTest {
     fun `should throw when too many columns`() {
         val fields =
             mapOf(
-                "id" to Field(1, JDBCType.BIT, "SomeType"),
-                "name" to Field(2, JDBCType.BIT, "SomeType"),
-                "email" to Field(3, JDBCType.BIT, "SomeType"),
-                "age" to Field(4, JDBCType.BIT, "SomeType"),
-                "foo" to Field(5, JDBCType.BIT, "SomeType"),
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "email" to Field(3, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "age" to Field(4, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "foo" to Field(5, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
             UUID.randomUUID()
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2), any()) } returns
             "joker"
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3), any()) } returns
             "joker@dc.com"
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(4)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(4), any()) } returns
             85
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(5)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(5), any()) } returns
             "bar"
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
@@ -100,15 +100,15 @@ class KotlinDataClassMapperTest {
         val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
         val fields =
             mapOf(
-                "name" to Field(1, JDBCType.BIT, "SomeType"),
-                "email" to Field(2, JDBCType.BIT, "SomeType"),
-                "age" to Field(3, JDBCType.BIT, "SomeType"),
+                "name" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "email" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "age" to Field(3, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
             batman.name
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2), any()) } returns
             batman.email!!
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3), any()) } returns
             batman.age!!
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
@@ -124,12 +124,12 @@ class KotlinDataClassMapperTest {
         every { autoMapperMock(any<Int>(), any<KClass<*>>()) } returns "Foo"
         val fields =
             mapOf(
-                "id" to Field(1, JDBCType.BIT, "SomeType"),
-                "name" to Field(2, JDBCType.BIT, "SomeType"),
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
             UUID.randomUUID()
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2), any()) } returns
             123
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
@@ -142,15 +142,15 @@ class KotlinDataClassMapperTest {
         val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
         val fields =
             mapOf(
-                "id" to Field(1, JDBCType.BIT, "SomeType"),
-                "name" to Field(2, JDBCType.BIT, "SomeType"),
-                "email" to Field(3, JDBCType.BIT, "SomeType"),
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "email" to Field(3, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
             batman.id
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2), any()) } returns
             batman.name
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3), any()) } returns
             null
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
@@ -175,11 +175,11 @@ class KotlinDataClassMapperTest {
     fun `should throw when no property found`() {
         val fields =
             mapOf(
-                "id" to Field(1, JDBCType.BIT, "SomeType"),
-                "name" to Field(2, JDBCType.BIT, "SomeType"),
-                "foo" to Field(1, JDBCType.BIT, "SomeType"),
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "foo" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
-        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1)) } returns
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
             UUID.randomUUID()
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)

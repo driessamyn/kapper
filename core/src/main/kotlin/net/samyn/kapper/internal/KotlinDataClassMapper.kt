@@ -14,7 +14,7 @@ import kotlin.reflect.full.primaryConstructor
 class KotlinDataClassMapper<T : Any>(
     private val clazz: Class<T>,
     val autoConverter: (Any, KClass<*>) -> Any = AutoConverter()::convert,
-    val sqlTypesConverter: (JDBCType, String, ResultSet, Int) -> Any? = SQLTypesConverter::convertSQLType,
+    val sqlTypesConverter: (JDBCType, String, ResultSet, Int, DbFlavour) -> Any? = SQLTypesConverter::convertSQLType,
 ) : Mapper<T> {
     private val constructor: KFunction<T> =
         clazz.kotlin.primaryConstructor
@@ -29,8 +29,8 @@ class KotlinDataClassMapper<T : Any>(
                     "Constructor for ${clazz.name} only has: ${properties.keys}",
             )
         } else if (columns.size < properties.size) {
-            val all = columns.map { it.name }
-            val missing = properties.filter { !it.value.isOptional && !all.contains(it.value.name) }
+            val all = columns.map { it.name.lowercase() }
+            val missing = properties.filter { !it.value.isOptional && !all.contains(it.key) }
             if (missing.isNotEmpty()) {
                 throw KapperMappingException("The following properties are non-optional and missing: ${missing.keys}")
             }
@@ -60,7 +60,13 @@ class KotlinDataClassMapper<T : Any>(
             fields.map { field ->
                 ColumnValue(
                     field.key,
-                    sqlTypesConverter(field.value.type, field.value.typeName, resultSet, field.value.columnIndex),
+                    sqlTypesConverter(
+                        field.value.type,
+                        field.value.typeName,
+                        resultSet,
+                        field.value.columnIndex,
+                        field.value.dbFlavour,
+                    ),
                 )
             },
         )

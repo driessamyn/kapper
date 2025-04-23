@@ -12,6 +12,10 @@ fun Connection.getDbFlavour(): DbFlavour {
         DbFlavour.MYSQL
     } else if (productName.contains("sqlite")) {
         DbFlavour.SQLITE
+    } else if (productName.contains("oracle")) {
+        DbFlavour.ORACLE
+    } else if (productName.contains("sql server") || productName.contains("mssql")) {
+        DbFlavour.MSSQLSERVER
     } else {
         DbFlavour.UNKNOWN
     }
@@ -21,5 +25,7 @@ enum class DbFlavour {
     POSTGRESQL,
     MYSQL,
     SQLITE,
+    ORACLE,
+    MSSQLSERVER,
     UNKNOWN,
 }
