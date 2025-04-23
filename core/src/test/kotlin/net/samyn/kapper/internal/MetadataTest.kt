@@ -1,6 +1,7 @@
 package net.samyn.kapper.internal
 
 import io.kotest.matchers.maps.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import net.samyn.kapper.Field
@@ -35,5 +36,19 @@ class MetadataTest {
                 "name" to Field(2, JDBCType.VARCHAR, "VARCHAR", DbFlavour.UNKNOWN),
             ),
         )
+    }
+
+    @Test
+    fun `when jdbcType returns JDBCType`() {
+        val jdbcType = JDBCType.INTEGER.vendorTypeNumber
+        val result = jdbcType.jdbcType()
+        result shouldBe JDBCType.INTEGER
+    }
+
+    @Test
+    fun `when jdbcType not known returns OTHER`() {
+        val jdbcType = 999
+        val result = jdbcType.jdbcType()
+        result shouldBe JDBCType.OTHER
     }
 }

@@ -7,6 +7,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.Date
 import java.util.UUID
 import kotlin.reflect.KClass
 
@@ -21,6 +22,10 @@ internal class AutoConverter(
             LocalTime::class to ::convertLocalTime,
             Instant::class to ::convertInstant,
             Char::class to ::convertChar,
+            Int::class to ::convertInt,
+            Long::class to ::convertLong,
+            Date::class to ::convertDate,
+            Boolean::class to ::convertBoolean,
         ),
 ) {
     fun convert(

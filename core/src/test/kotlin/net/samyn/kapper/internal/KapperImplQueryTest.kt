@@ -121,6 +121,20 @@ class KapperImplQueryTest {
     }
 
     @Test
+    fun `when query blank throw`() {
+        shouldThrow<IllegalArgumentException> {
+            kapper
+                .query(
+                    TestEntity::class.java,
+                    mockConnection,
+                    "",
+                    mockMapper,
+                    mapOf("id" to 3),
+                )
+        }
+    }
+
+    @Test
     fun `querySingle execute query`() {
         every { mockResultSet.next() } returns true andThen false
         val args = mapOf("id" to 1)

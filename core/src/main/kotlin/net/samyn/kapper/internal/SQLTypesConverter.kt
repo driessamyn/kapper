@@ -3,17 +3,20 @@
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.KapperUnsupportedOperationException
+import java.nio.ByteBuffer
 import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.Date
 import java.util.UUID
 
 // TODO: this could be more sophisticated by allowing type conversion hints.
-// TODO: check what hibernate does for these conversions.
 internal object SQLTypesConverter {
     fun convertSQLType(
         sqlType: JDBCType,
@@ -21,7 +24,7 @@ internal object SQLTypesConverter {
         resultSet: ResultSet,
         fieldIndex: Int,
         dbFlavour: DbFlavour,
-    ): Any {
+    ): Any? {
         val result =
             when (sqlType) {
                 JDBCType.ARRAY -> resultSet.getArray(fieldIndex)
@@ -31,7 +34,7 @@ internal object SQLTypesConverter {
                 in listOf(JDBCType.BIT, JDBCType.BOOLEAN) -> resultSet.getBoolean(fieldIndex)
                 in
                 listOf(JDBCType.CHAR),
-                -> resultSet.getString(fieldIndex).toCharArray()
+                -> resultSet.getString(fieldIndex)?.toCharArray()
                 in
                 listOf(
                     JDBCType.CLOB, JDBCType.LONGNVARCHAR, JDBCType.LONGVARCHAR,
@@ -53,19 +56,22 @@ internal object SQLTypesConverter {
                     JDBCType.TIME,
                     JDBCType.TIME_WITH_TIMEZONE,
                 ),
-                -> resultSet.getTime(fieldIndex).toLocalTime()
+                -> resultSet.getTime(fieldIndex)?.toLocalTime()
                 in
                 listOf(
                     JDBCType.TIMESTAMP,
                     JDBCType.TIMESTAMP_WITH_TIMEZONE,
                 ),
-                -> resultSet.getTimestamp(fieldIndex).toInstant()
+                -> convertTimestamp(resultSet, fieldIndex, sqlTypeName)
 
                 // includes: DATALINK, DISTINCT, OTHER, REF, REF_CURSOR, STRUCT, NULL
                 else -> {
                     // use name if type is
                     when (sqlTypeName.lowercase()) {
-                        "uuid" -> UUID.fromString(resultSet.getString(fieldIndex))
+                        "uuid" -> resultSet.getString(fieldIndex)?.let { UUID.fromString(it) }
+                        // oracle types
+                        "binary_float" -> resultSet.getFloat(fieldIndex)
+                        "binary_double" -> resultSet.getDouble(fieldIndex)
                         else ->
                             throw KapperUnsupportedOperationException("Conversion from type $sqlType is not supported")
                     }
@@ -73,6 +79,18 @@ internal object SQLTypesConverter {
             }
         return result
     }
+
+    private fun convertTimestamp(
+        resultSet: ResultSet,
+        fieldIndex: Int,
+        sqlTypeName: String,
+    ): Any? =
+        when (sqlTypeName.uppercase()) {
+            "DATE" -> {
+                resultSet.getTimestamp(fieldIndex)?.toLocalDateTime()
+            }
+            else -> resultSet.getTimestamp(fieldIndex)?.toInstant()
+        }
 
     fun PreparedStatement.setParameter(
         index: Int,
@@ -90,18 +108,27 @@ internal object SQLTypesConverter {
             is String -> setString(index, value)
             is ByteArray -> setBytes(index, value)
             is Boolean -> setBoolean(index, value)
-            is UUID -> {
-                if (DbFlavour.MYSQL == dbFlavour) {
-                    setString(index, value.toString())
-                } else {
-                    setObject(index, value)
+            is UUID ->
+                when (dbFlavour) {
+                    DbFlavour.MYSQL -> setString(index, value.toString())
+                    DbFlavour.ORACLE -> setBytes(index, value.toBytes())
+                    else -> setObject(index, value)
                 }
-            }
             is Instant -> setTimestamp(index, Timestamp.from(value))
             is Date -> setDate(index, java.sql.Date(value.time))
+            is LocalDate -> setDate(index, java.sql.Date.valueOf(value))
+            is LocalDateTime -> setTimestamp(index, Timestamp.from(value.atZone(java.time.ZoneOffset.systemDefault()).toInstant()))
+            is LocalTime -> setTime(index, java.sql.Time.valueOf(value))
             else -> setObject(index, value)
         }
     }
+}
+
+fun UUID.toBytes(): ByteArray {
+    val buffer = ByteBuffer.wrap(ByteArray(16))
+    buffer.putLong(this.mostSignificantBits)
+    buffer.putLong(this.leastSignificantBits)
+    return buffer.array()
 }
 
 val formatters =
@@ -131,10 +158,10 @@ fun convertDate(
     resultSet: ResultSet,
     fieldIndex: Int,
     dbFlavour: DbFlavour,
-): Date {
+): Date? {
     when (dbFlavour) {
         DbFlavour.SQLITE -> {
-            val date = resultSet.getObject(fieldIndex)
+            val date = resultSet.getObject(fieldIndex) ?: return null
             if (date is Long) {
                 return Date(date)
             }
@@ -172,6 +199,6 @@ fun convertDate(
             }
             throw KapperUnsupportedOperationException("Conversion from type ${date.javaClass} to Date is not supported")
         }
-        else -> return Date(resultSet.getDate(fieldIndex).time)
+        else -> return resultSet.getDate(fieldIndex)?.let { Date(it.time) }
     }
 }

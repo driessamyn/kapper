@@ -23,22 +23,22 @@ class TypesTest : AbstractDbTests() {
                 CREATE TABLE types_test_$testId (
                     t_uuid ${convertDbColumnType("UUID", dbFlavour)},
                     t_char CHAR,
-                    t_varchar VARCHAR(120),
+                    t_varchar ${convertDbColumnType("VARCHAR", dbFlavour, "(120)")},
                     t_clob ${convertDbColumnType("CLOB", dbFlavour)},
                     t_binary ${convertDbColumnType("BINARY", dbFlavour, "(16)")},
                     t_varbinary ${convertDbColumnType("VARBINARY", dbFlavour, "(128)")},
                     t_large_binary ${convertDbColumnType("BLOB", dbFlavour)},
                     t_numeric NUMERIC(12,6),
                     t_decimal DECIMAL(12,6),
-                    t_smallint SMALLINT,
-                    t_int INT,
-                    t_bigint BIGINT,
+                    t_smallint ${convertDbColumnType("SMALLINT", dbFlavour)},
+                    t_int ${convertDbColumnType("INT", dbFlavour)},
+                    t_bigint ${convertDbColumnType("BIGINT", dbFlavour)},
                     t_float ${convertDbColumnType("FLOAT", dbFlavour, "(8)")},
                     t_real ${convertDbColumnType("REAL", dbFlavour)},
-                    t_double DOUBLE PRECISION,
+                    t_double ${convertDbColumnType("DOUBLE PRECISION", dbFlavour)},
                     t_date DATE,
                     t_local_date DATE,
-                    t_local_time TIME,
+                    t_local_time ${convertDbColumnType("TIME", dbFlavour)},
                     t_timestamp ${convertDbColumnType("TIMESTAMP", dbFlavour)},
                     t_boolean ${convertDbColumnType("BOOLEAN", dbFlavour)}
                 )
@@ -98,7 +98,7 @@ class TypesTest : AbstractDbTests() {
                     :local_time,
                     :timestamp,
                     :boolean
-                  );
+                  )
                 """.trimIndent(),
                 "uuid" to testData.t_uuid,
                 "char" to testData.t_char,

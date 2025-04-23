@@ -4,6 +4,7 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Connection
@@ -18,7 +19,7 @@ class ExecuteTests : AbstractDbTests() {
         val results =
             connection.execute(
                 """
-                INSERT INTO super_heroes_$testId(id, name, email, age) VALUES(:id, :name, :email, :age);
+                INSERT INTO super_heroes_$testId(id, name, email, age) VALUES(:id, :name, :email, :age)
                 """.trimIndent(),
                 "id" to supermanClone.id,
                 "name" to supermanClone.name,
@@ -28,15 +29,19 @@ class ExecuteTests : AbstractDbTests() {
 
         results.shouldBe(1)
 
-        connection.prepareStatement("SELECT name, email, age  FROM super_heroes_$testId WHERE id = '${supermanClone.id}'").use { stmt ->
-            val resultSet = stmt.executeQuery()
-            assertSoftly(resultSet) {
-                next().shouldBe(true)
-                getString(1).shouldBe(supermanClone.name)
-                getString(2).shouldBe(supermanClone.email)
-                getInt(3).shouldBe(supermanClone.age)
+        connection.prepareStatement(
+            "SELECT name, email, age  FROM super_heroes_$testId " +
+                "WHERE id = ${convertUUIDString(supermanClone.id, connection.getDbFlavour())}",
+        )
+            .use { stmt ->
+                val resultSet = stmt.executeQuery()
+                resultSet.next().shouldBe(true)
+                assertSoftly(resultSet) {
+                    getString(1).shouldBe(supermanClone.name)
+                    getString(2).shouldBe(supermanClone.email)
+                    getInt(3).shouldBe(supermanClone.age)
+                }
             }
-        }
     }
 
     @ParameterizedTest()
@@ -44,12 +49,15 @@ class ExecuteTests : AbstractDbTests() {
     fun `SQL Update single`(connection: Connection) {
         val batmanClone = batman.copy(id = UUID.randomUUID())
         connection.createStatement().use { stmt ->
-            stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('${batmanClone.id}', 'foo');")
+            stmt.execute(
+                "INSERT INTO super_heroes_$testId(id, name) " +
+                    "VALUES(${convertUUIDString(batmanClone.id, connection.getDbFlavour())}, 'foo')",
+            )
         }
 
         val results =
             connection.execute(
-                "UPDATE super_heroes_$testId SET name = :name, email = :email, age = :age WHERE id = :id;",
+                "UPDATE super_heroes_$testId SET name = :name, email = :email, age = :age WHERE id = :id",
                 "id" to batmanClone.id,
                 "name" to batmanClone.name,
                 "email" to batmanClone.email,
@@ -58,15 +66,19 @@ class ExecuteTests : AbstractDbTests() {
 
         results.shouldBe(1)
 
-        connection.prepareStatement("SELECT name, email, age FROM super_heroes_$testId WHERE id = '${batmanClone.id}'").use { stmt ->
-            val resultSet = stmt.executeQuery()
-            assertSoftly(resultSet) {
-                next().shouldBe(true)
-                getString(1).shouldBe(batmanClone.name)
-                getString(2).shouldBe(batmanClone.email)
-                getInt(3).shouldBe(batmanClone.age)
+        connection.prepareStatement(
+            "SELECT name, email, age FROM super_heroes_$testId " +
+                "WHERE id = ${convertUUIDString(batmanClone.id, connection.getDbFlavour())}",
+        )
+            .use { stmt ->
+                val resultSet = stmt.executeQuery()
+                assertSoftly(resultSet) {
+                    next().shouldBe(true)
+                    getString(1).shouldBe(batmanClone.name)
+                    getString(2).shouldBe(batmanClone.email)
+                    getInt(3).shouldBe(batmanClone.age)
+                }
             }
-        }
     }
 
     @ParameterizedTest()
@@ -76,13 +88,16 @@ class ExecuteTests : AbstractDbTests() {
         val name = "foo-${UUID.randomUUID()}"
         connection.createStatement().use { stmt ->
             ids.forEach {
-                stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('$it', '$name');")
+                stmt.execute(
+                    "INSERT INTO super_heroes_$testId(id, name) " +
+                        "VALUES(${convertUUIDString(it, connection.getDbFlavour())}, '$name')",
+                )
             }
         }
 
         val results =
             connection.execute(
-                "UPDATE super_heroes_$testId SET name = :newName WHERE name = :name;",
+                "UPDATE super_heroes_$testId SET name = :newName WHERE name = :name",
                 "name" to name,
                 "newName" to "bar",
             )
@@ -95,23 +110,30 @@ class ExecuteTests : AbstractDbTests() {
     fun `SQL Delete single`(connection: Connection) {
         val spidermanClone = spiderMan.copy(id = UUID.randomUUID())
         connection.createStatement().use { stmt ->
-            stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('${spidermanClone.id}', 'foo');")
+            stmt.execute(
+                "INSERT INTO super_heroes_$testId(id, name) " +
+                    "VALUES(${convertUUIDString(spidermanClone.id, connection.getDbFlavour())}, 'foo')",
+            )
         }
 
         val results =
             connection.execute(
-                "DELETE FROM super_heroes_$testId WHERE id = :id;",
+                "DELETE FROM super_heroes_$testId WHERE id = :id",
                 "id" to spidermanClone.id,
             )
 
         results.shouldBe(1)
 
-        connection.prepareStatement("SELECT * FROM super_heroes_$testId WHERE id = '${spidermanClone.id}'").use { stmt ->
-            val resultSet = stmt.executeQuery()
-            assertSoftly(resultSet) {
-                next().shouldBe(false)
+        connection.prepareStatement(
+            "SELECT * FROM super_heroes_$testId " +
+                "WHERE id = ${convertUUIDString(spidermanClone.id, connection.getDbFlavour())}",
+        )
+            .use { stmt ->
+                val resultSet = stmt.executeQuery()
+                assertSoftly(resultSet) {
+                    next().shouldBe(false)
+                }
             }
-        }
     }
 
     @ParameterizedTest()
@@ -121,13 +143,16 @@ class ExecuteTests : AbstractDbTests() {
         val name = "bar-${UUID.randomUUID()}"
         connection.createStatement().use { stmt ->
             ids.forEach {
-                stmt.execute("INSERT INTO super_heroes_$testId(id, name) VALUES('$it', '$name');")
+                stmt.execute(
+                    "INSERT INTO super_heroes_$testId(id, name) " +
+                        "VALUES(${convertUUIDString(it, connection.getDbFlavour())}, '$name')",
+                )
             }
         }
 
         val results =
             connection.execute(
-                "DELETE FROM super_heroes_$testId WHERE name = :name;",
+                "DELETE FROM super_heroes_$testId WHERE name = :name",
                 "name" to name,
             )
 
@@ -141,7 +166,7 @@ class ExecuteTests : AbstractDbTests() {
             val results =
                 connection.execute(
                     """
-                    INSERT INTO super_heroes_$testId(id, name, email) VALUES(:id, :name, :email);
+                    INSERT INTO super_heroes_$testId(id, name, email) VALUES(:id, :name, :email)
                     """.trimIndent(),
                     "id" to UUID.randomUUID(),
                     "name" to "thor",
@@ -149,7 +174,7 @@ class ExecuteTests : AbstractDbTests() {
                 ) +
                     connection.execute(
                         """
-                        INSERT INTO super_heroes_$testId(id, name, email) VALUES(:id, :name, :email);
+                        INSERT INTO super_heroes_$testId(id, name, email) VALUES(:id, :name, :email)
                         """.trimIndent(),
                         "id" to UUID.randomUUID(),
                         "name" to "thor",
@@ -168,7 +193,7 @@ class ExecuteTests : AbstractDbTests() {
                 repeat(2) {
                     connection.execute(
                         """
-                        INSERT INTO super_heroes_$testId(id, name, email) VALUES(:id, :name, :email);
+                        INSERT INTO super_heroes_$testId(id, name, email) VALUES(:id, :name, :email)
                         """.trimIndent(),
                         "id" to id,
                         "name" to "thor",

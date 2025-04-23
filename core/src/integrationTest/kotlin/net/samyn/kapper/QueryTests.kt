@@ -95,7 +95,7 @@ class QueryTests : AbstractDbTests() {
             )
 
         villain.size.shouldBe(1)
-        villain.first().id!!.lowercase().shouldBe(superman.id.toString().lowercase())
+        villain.first().id!!.shouldBe(superman.id.toString().lowercase().replace("-", ""))
         villain.first().name.shouldBe(superman.name)
     }
 
@@ -104,7 +104,7 @@ class QueryTests : AbstractDbTests() {
         fields: Map<String, Field>,
     ): Villain =
         Villain().also {
-            it.id = resultSet.getString("id")
+            it.id = resultSet.getString("id").lowercase().replace("-", "")
             it.name = resultSet.getString("name")
         }
 }

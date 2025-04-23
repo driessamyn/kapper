@@ -21,10 +21,13 @@ import java.sql.Time
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.Date
-import java.util.TimeZone
 import java.util.UUID
 
 class SQLTypesConverterTest {
@@ -56,6 +59,23 @@ class SQLTypesConverterTest {
                     named("DATE", Date.from(Instant.now())),
                     { i: Int, v: Date -> statement.setDate(i, java.sql.Date(v.time)) },
                 ),
+                arguments(
+                    named("LOCALDATE", LocalDate.now()),
+                    { i: Int, v: LocalDate -> statement.setDate(i, java.sql.Date.valueOf(v)) },
+                ),
+                arguments(
+                    named("LOCALDATETIME", LocalDateTime.now()),
+                    {
+                            i: Int,
+                            v: LocalDateTime,
+                        ->
+                        statement.setTimestamp(i, Timestamp.from(v.atZone(ZoneOffset.systemDefault()).toInstant()))
+                    },
+                ),
+                arguments(
+                    named("LOCALTIME", LocalTime.now()),
+                    { i: Int, v: LocalTime -> statement.setTime(i, Time.valueOf(v)) },
+                ),
             )
 
         private val uuid = UUID.randomUUID()
@@ -70,6 +90,7 @@ class SQLTypesConverterTest {
                     DbFlavour.POSTGRESQL,
                 ),
                 arguments(named("UUID", uuid), statement::setString, uuid.toString(), DbFlavour.MYSQL),
+                arguments(named("UUID", uuid), statement::setBytes, uuid.toBytes(), DbFlavour.ORACLE),
             )
 
         @JvmStatic
@@ -205,12 +226,46 @@ class SQLTypesConverterTest {
     }
 
     @Test
+    fun `char can return null`() {
+        every { resultSet.getString(1) } returns null
+        val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, 1, DbFlavour.UNKNOWN)
+
+        result.shouldBe(null)
+    }
+
+    @Test
     fun `uuid needs parsing`() {
         val id = UUID.randomUUID()
         every { resultSet.getString(2) } returns id.toString()
         val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, 2, DbFlavour.UNKNOWN)
 
         result.shouldBe(id)
+    }
+
+    @Test
+    fun `uuid supports null`() {
+        every { resultSet.getString(2) } returns null
+        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, 2, DbFlavour.UNKNOWN)
+
+        result.shouldBe(null)
+    }
+
+    @Test
+    fun `binary_float needs parsing`() {
+        val f = 123.45F
+        every { resultSet.getFloat(2) } returns f
+        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "binary_float", resultSet, 2, DbFlavour.UNKNOWN)
+
+        result.shouldBe(f)
+    }
+
+    @Test
+    fun `binary_double needs parsing`() {
+        val d = 123.45
+        every { resultSet.getDouble(2) } returns d
+        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "binary_double", resultSet, 2, DbFlavour.UNKNOWN)
+
+        result.shouldBe(d)
     }
 
     @Test
@@ -223,6 +278,14 @@ class SQLTypesConverterTest {
     }
 
     @Test
+    fun `time supports null`() {
+        every { resultSet.getTime(3) } returns null
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME, "time", resultSet, 3, DbFlavour.UNKNOWN)
+
+        result.shouldBe(null)
+    }
+
+    @Test
     fun `time with zone needs converting`() {
         val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
         every { resultSet.getTime(4) } returns Time.valueOf(time)
@@ -232,21 +295,28 @@ class SQLTypesConverterTest {
     }
 
     @Test
-    fun `timestamp needs converting`() {
-        val timestamp = Instant.now()
-        every { resultSet.getTimestamp(5) } returns Timestamp.from(timestamp)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP, "timestamp", resultSet, 5, DbFlavour.UNKNOWN)
+    fun `time with zone supports null`() {
+        every { resultSet.getTime(4) } returns null
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME_WITH_TIMEZONE, "time", resultSet, 4, DbFlavour.UNKNOWN)
 
-        result.shouldBe(timestamp)
+        result.shouldBe(null)
     }
 
     @Test
-    fun `timestamp with zone needs converting`() {
+    fun `timestamp as DATE needs converting`() {
         val timestamp = Instant.now()
         every { resultSet.getTimestamp(6) } returns Timestamp.from(timestamp)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "timestamp", resultSet, 6, DbFlavour.UNKNOWN)
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "DATE", resultSet, 6, DbFlavour.UNKNOWN)
 
-        result.shouldBe(timestamp)
+        result.shouldBe(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault()))
+    }
+
+    @Test
+    fun `timestamp as DATE supports null`() {
+        every { resultSet.getTimestamp(6) } returns null
+        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "DATE", resultSet, 6, DbFlavour.UNKNOWN)
+
+        result.shouldBe(null)
     }
 
     @Test
@@ -256,6 +326,14 @@ class SQLTypesConverterTest {
         val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
 
         result.shouldBe(Date(date))
+    }
+
+    @Test
+    fun `sqlite long date supports null`() {
+        every { resultSet.getObject(7) } returns null
+        val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
+
+        result.shouldBe(null)
     }
 
     @ParameterizedTest
@@ -284,7 +362,7 @@ class SQLTypesConverterTest {
         ],
     )
     fun `sqlite string date needs converting`(format: String) {
-        val df = SimpleDateFormat(format).also { it.timeZone = TimeZone.getTimeZone("CET") }
+        val df = SimpleDateFormat(format)
         val date = df.format(Date.from(Instant.now()))
         every { resultSet.getObject(7) } returns date
         val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)

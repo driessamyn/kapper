@@ -12,15 +12,16 @@ import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.oracle.OracleContainer
 import java.sql.Connection
 import java.sql.DriverManager
+import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.random.Random
 import kotlin.use
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.toKotlinUuid
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractDbTests {
@@ -28,50 +29,6 @@ abstract class AbstractDbTests {
         init {
             Class.forName("org.sqlite.JDBC")
         }
-
-        val specialTypes =
-            mapOf(
-                "UUID" to
-                    mapOf(
-                        DbFlavour.MYSQL to "VARCHAR(36)",
-                        DbFlavour.MSSQLSERVER to "UNIQUEIDENTIFIER",
-                    ),
-                "CLOB" to
-                    mapOf(
-                        DbFlavour.MYSQL to "TEXT",
-                        DbFlavour.POSTGRESQL to "TEXT",
-                        DbFlavour.MSSQLSERVER to "NVARCHAR(MAX)",
-                    ),
-                "BINARY" to
-                    mapOf(
-                        DbFlavour.POSTGRESQL to "BYTEA",
-                    ),
-                "VARBINARY" to
-                    mapOf(
-                        DbFlavour.POSTGRESQL to "BYTEA",
-                    ),
-                "BLOB" to
-                    mapOf(
-                        DbFlavour.POSTGRESQL to "BYTEA",
-                        DbFlavour.MSSQLSERVER to "VARBINARY(MAX)",
-                    ),
-                "FLOAT" to
-                    mapOf(
-                        DbFlavour.POSTGRESQL to "NUMERIC",
-                    ),
-                "REAL" to
-                    mapOf(
-                        DbFlavour.MYSQL to "FLOAT",
-                    ),
-                "BOOLEAN" to
-                    mapOf(
-                        DbFlavour.MSSQLSERVER to "BIT",
-                    ),
-                "TIMESTAMP" to
-                    mapOf(
-                        DbFlavour.MSSQLSERVER to "DATETIME",
-                    ),
-            )
 
         private val postgresql by lazy {
             PostgreSQLContainer("postgres:16").also { it.start() }
@@ -81,13 +38,18 @@ abstract class AbstractDbTests {
             MySQLContainer("mysql:8.4").also { it.start() }
         }
 
-//        @Container
-//        val oracle = OracleContainer("gvenzl/oracle-free:23.4-slim-faststart")
+        private val oracle by lazy {
+            OracleContainer("gvenzl/oracle-free:23-slim-faststart")
+                // pfff, this container is sloooow
+                .withStartupTimeout(Duration.ofMinutes(2))
+                .also { it.start() }
+        }
 
         private val msSqlServer by lazy {
             MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12")
                 .acceptLicense()
                 .also {
+                    // pfff, this container is noisy
                     val logger = Logger.getLogger("com.microsoft.sqlserver.jdbc.internals.SQLServerConnection")
                     logger.level = Level.SEVERE
                     it.start()
@@ -106,10 +68,10 @@ abstract class AbstractDbTests {
                 DbFlavour.POSTGRESQL to { getConnection(postgresql) },
                 DbFlavour.MYSQL to { getConnection(mysql) },
                 DbFlavour.SQLITE to { DriverManager.getConnection("jdbc:sqlite::memory:") },
-//                "Oracle" to oracle,
                 DbFlavour.MSSQLSERVER to { getConnection(msSqlServer) },
+                DbFlavour.ORACLE to { getConnection(oracle) },
             ).filter {
-                // by default run against SQLite only
+                // by default run against SQLite and PG only
                 //  this allows parallel runs for different int tests.
                 when (System.getProperty("db", "").uppercase()) {
                     "" -> it.key == DbFlavour.SQLITE || it.key == DbFlavour.POSTGRESQL
@@ -133,14 +95,7 @@ abstract class AbstractDbTests {
         }
     }
 
-    protected fun convertDbColumnType(
-        name: String,
-        flavour: DbFlavour,
-        suffix: String = "",
-    ) = specialTypes[name]?.get(flavour) ?: (name + suffix)
-
-    @OptIn(ExperimentalUuidApi::class)
-    val testId = UUID.randomUUID().toKotlinUuid().toHexString()
+    val testId = randomUpperCaseString(10) // pfff, Oracle has a limit of 30 chars for table names
     val superman = SuperHero(UUID.randomUUID(), "Superman", "superman@dc.com", 86)
     val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
     val spiderMan = SuperHero(UUID.randomUUID(), "Spider-man", "spider@marvel.com", 62)
@@ -169,18 +124,19 @@ abstract class AbstractDbTests {
                     id ${convertDbColumnType("UUID", dbFlavour)} PRIMARY KEY,
                     name VARCHAR(100),
                     email VARCHAR(100),
-                    age INT
-                );
+                    age ${convertDbColumnType("INT", dbFlavour)}
+                )
                 """.trimIndent().also {
+                    println("------------ $dbFlavour --------------")
                     println(it)
                 },
             )
             statement.execute(
                 """
                 INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
-                    ('${superman.id}', '${superman.name}', '${superman.email}', ${superman.age}),
-                    ('${batman.id}', '${batman.name}', '${batman.email}', ${batman.age}),
-                    ('${spiderMan.id}', '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age});
+                    (${convertUUIDString(superman.id, dbFlavour)}, '${superman.name}', '${superman.email}', ${superman.age}),
+                    (${convertUUIDString(batman.id, dbFlavour)}, '${batman.name}', '${batman.email}', ${batman.age}),
+                    (${convertUUIDString(spiderMan.id, dbFlavour)}, '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age});
                 """,
             )
         }
@@ -192,4 +148,12 @@ abstract class AbstractDbTests {
         var id: String? = null
         var name: String? = null
     }
+}
+
+fun randomUpperCaseString(size: Int): String {
+    val charPool = ('A'..'Z') + ('0'..'9')
+    return (1..size)
+        .map { Random.nextInt(0, charPool.size) }
+        .map(charPool::get)
+        .joinToString("")
 }

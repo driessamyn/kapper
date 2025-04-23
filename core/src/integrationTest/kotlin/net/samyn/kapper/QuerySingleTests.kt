@@ -19,6 +19,8 @@ class QuerySingleTests : AbstractDbTests() {
         val sql =
             if (DbFlavour.MSSQLSERVER == connection.getDbFlavour()) {
                 "SELECT TOP 1 * FROM super_heroes_$testId ORDER BY age DESC"
+            } else if (DbFlavour.ORACLE == connection.getDbFlavour()) {
+                "SELECT * FROM super_heroes_$testId ORDER BY age DESC FETCH FIRST 1 ROWS ONLY"
             } else {
                 "SELECT * FROM super_heroes_$testId ORDER BY age DESC LIMIT 1"
             }
@@ -89,7 +91,7 @@ class QuerySingleTests : AbstractDbTests() {
                 "name" to superman.name,
             )
         villain.shouldNotBeNull()
-        villain.id!!.lowercase().shouldBe(superman.id.toString().lowercase())
+        villain.id!!.shouldBe(superman.id.toString().lowercase().replace("-", ""))
         villain.name.shouldBe(superman.name)
     }
 
@@ -98,7 +100,7 @@ class QuerySingleTests : AbstractDbTests() {
         fields: Map<String, Field>,
     ): Villain =
         Villain().also {
-            it.id = resultSet.getString("id")
+            it.id = resultSet.getString("id").lowercase().replace("-", "")
             it.name = resultSet.getString("name")
         }
 }
