@@ -158,47 +158,50 @@ fun convertDate(
     resultSet: ResultSet,
     fieldIndex: Int,
     dbFlavour: DbFlavour,
-): Date? {
+): Date? =
     when (dbFlavour) {
         DbFlavour.SQLITE -> {
             val date = resultSet.getObject(fieldIndex) ?: return null
-            if (date is Long) {
-                return Date(date)
+            when (date) {
+                is Long -> Date(date)
+                is String -> convertSQliteDate(date)
+                else -> throw KapperUnsupportedOperationException("Conversion from type ${date.javaClass} to Date is not supported")
             }
-            if (date is String) {
-                // https://sqlite.org/lang_datefunc.html#tmval
-                if (date[2] == ':') {
-                    // time formats
-                    when (date.length) {
-                        5 -> return formatters["HH:mm"]!!.parse(date)
-                        6 -> return formatters["HH:mm'Z'"]!!.parse(date)
-                        8 -> return formatters["HH:mm:ss"]!!.parse(date)
-                        9 -> return formatters["HH:mm:ss'Z'"]!!.parse(date)
-                        12 -> return formatters["HH:mm:ss.SSS"]!!.parse(date)
-                        13 -> return formatters["HH:mm:ss.SSS'Z'"]!!.parse(date)
-                    }
-                } else if (date.length > 10 && date[10] == 'T') {
-                    when (date.length) {
-                        16 -> return formatters["yyyy-MM-dd'T'HH:mm"]!!.parse(date)
-                        17 -> return formatters["yyyy-MM-dd'T'HH:mm'Z'"]!!.parse(date)
-                        19 -> return formatters["yyyy-MM-dd'T'HH:mm:ss"]!!.parse(date)
-                        20 -> return formatters["yyyy-MM-dd'T'HH:mm:ss'Z'"]!!.parse(date)
-                        23 -> return formatters["yyyy-MM-dd'T'HH:mm:ss.SSS"]!!.parse(date)
-                        24 -> return formatters["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"]!!.parse(date)
-                    }
-                }
-                when (date.length) {
-                    10 -> return formatters["yyyy-MM-dd"]!!.parse(date)
-                    16 -> return formatters["yyyy-MM-dd HH:mm"]!!.parse(date)
-                    17 -> return formatters["yyyy-MM-dd HH:mm'Z'"]!!.parse(date)
-                    19 -> return formatters["yyyy-MM-dd HH:mm:ss"]!!.parse(date)
-                    20 -> return formatters["yyyy-MM-dd HH:mm:ss'Z'"]!!.parse(date)
-                    23 -> return formatters["yyyy-MM-dd HH:mm:ss.SSS"]!!.parse(date)
-                    24 -> return formatters["yyyy-MM-dd HH:mm:ss.SSS'Z'"]!!.parse(date)
-                }
-            }
-            throw KapperUnsupportedOperationException("Conversion from type ${date.javaClass} to Date is not supported")
         }
-        else -> return resultSet.getDate(fieldIndex)?.let { Date(it.time) }
+        else -> resultSet.getDate(fieldIndex)?.let { Date(it.time) }
     }
-}
+
+private fun convertSQliteDate(date: String): Date? =
+    when {
+        date[2] == ':' ->
+            when (date.length) {
+                5 -> formatters["HH:mm"]!!.parse(date)
+                6 -> formatters["HH:mm'Z'"]!!.parse(date)
+                8 -> formatters["HH:mm:ss"]!!.parse(date)
+                9 -> formatters["HH:mm:ss'Z'"]!!.parse(date)
+                12 -> formatters["HH:mm:ss.SSS"]!!.parse(date)
+                13 -> formatters["HH:mm:ss.SSS'Z'"]!!.parse(date)
+                else -> null
+            }
+        date.length > 10 && date[10] == 'T' ->
+            when (date.length) {
+                16 -> formatters["yyyy-MM-dd'T'HH:mm"]!!.parse(date)
+                17 -> formatters["yyyy-MM-dd'T'HH:mm'Z'"]!!.parse(date)
+                19 -> formatters["yyyy-MM-dd'T'HH:mm:ss"]!!.parse(date)
+                20 -> formatters["yyyy-MM-dd'T'HH:mm:ss'Z'"]!!.parse(date)
+                23 -> formatters["yyyy-MM-dd'T'HH:mm:ss.SSS"]!!.parse(date)
+                24 -> formatters["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"]!!.parse(date)
+                else -> null
+            }
+        else ->
+            when (date.length) {
+                10 -> formatters["yyyy-MM-dd"]!!.parse(date)
+                16 -> formatters["yyyy-MM-dd HH:mm"]!!.parse(date)
+                17 -> formatters["yyyy-MM-dd HH:mm'Z'"]!!.parse(date)
+                19 -> formatters["yyyy-MM-dd HH:mm:ss"]!!.parse(date)
+                20 -> formatters["yyyy-MM-dd HH:mm:ss'Z'"]!!.parse(date)
+                23 -> formatters["yyyy-MM-dd HH:mm:ss.SSS"]!!.parse(date)
+                24 -> formatters["yyyy-MM-dd HH:mm:ss.SSS'Z'"]!!.parse(date)
+                else -> null
+            }
+    } ?: throw KapperUnsupportedOperationException("Cannot convert $date to Date")

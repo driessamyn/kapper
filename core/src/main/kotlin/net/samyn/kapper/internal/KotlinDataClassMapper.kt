@@ -30,7 +30,7 @@ class KotlinDataClassMapper<T : Any>(
             )
         } else if (columns.size < properties.size) {
             val all = columns.map { it.name.lowercase() }
-            val missing = properties.filter { !it.value.isOptional && !all.contains(it.value.name) }
+            val missing = properties.filter { !it.value.isOptional && !all.contains(it.key) }
             if (missing.isNotEmpty()) {
                 throw KapperMappingException("The following properties are non-optional and missing: ${missing.keys}")
             }
