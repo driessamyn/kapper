@@ -36,6 +36,7 @@ sonar {
         property("sonar.organization", "driessamyn")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/kover/report.xml")
+        property("sonar.coverage.exclusions", "benchmark/**")
         property("sonar.junit.reportPaths", "**/build/test-results/*/")
     }
 }
