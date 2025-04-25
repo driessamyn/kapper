@@ -14,7 +14,7 @@ This is the philosophy behind Kapper...</p>
 <br clear="left" />
 
 Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library written in Kotlin, targeting the JVM ecosystem.
-It embraces SQL rathe than abstracting it away, providing a simple, intuitive API for executing queries and mapping results.
+It embraces SQL rather than abstracting it away, providing a simple, intuitive API for executing queries and mapping results.
 
 ## The Kapper Philosophy
 
@@ -41,8 +41,10 @@ Kapper also means hairdresser in Dutch, but I have yet to come up with a reason 
 - **Simple API**: Kapper provides a familiar set of methods for executing SQL queries, mapping results to Kotlin data classes, and updating/inserting data.
 - **Extensibility**: The Kapper API is implemented as extension functions on the `java.sql.Connection` interface, allowing seamless integration with existing JDBC code.
 - **Lightweight**: Kapper has minimal external dependencies, focusing on providing core functionality without bloat.
+- **Fast**: Kapper's extension design means that it is possible to match "raw" JDBC performance, while its [auto-mapper equals or outperforms other ORMs](./benchmark/README.md).
+- **Supported DBs**: PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server.
 
-Kapper is in early development phase and while it is functional, breaking API changes may be made until its first stable release.
+![Kapper performance](./img/kapper-benchmark.png)
 
 Snapshot releases are published from the main branch to [GitHub Packages](packages/2353016).
 Stable releases will be published to Maven Central.
@@ -356,9 +358,31 @@ See [Kapper-Example](https://github.com/driessamyn/kapper-examples) for addition
 
 ## Database support
 
-Kapper's integration tests currently cover Postgresql and MySQL.
-Other DBs will be added.
+Kapper's integration tests currently cover Postgresql, MySQL, SQLite, Oracle and MS SQL Server.
 If you need support for another DB, and/or find an issue with a particular DB, feel free to [open an issue](kapper/issues) or, even better, submit a pull request. 
+
+The integration tests by default execute against Postgresql, SQLite, but the `-Ddb` property can be used to specify other DB targets.
+E.g.:
+
+```shell
+./gradlew integrationTest -Ddb=oracle
+```
+
+Or to run against _all_ supported DBs:
+
+```shell
+./gradlew integrationTest -Ddb=all
+``` 
+
+## Performance
+
+Kapper is designed to be fast and lightweight, with performance comparable to raw JDBC.
+This repository contains a [benchmark suite](./benchmark) that compares Kapper's performance against other popular ORMs like Hibernate and Ktorm.
+The benchmark suite is designed to be extensible and can be used to add new benchmarks or modify existing ones.
+Two Kapper benchmarks are included: with auto-mapping and with a custom mapper.
+In Kapper 1.3, the _"cost"_ of auto-mapping is in the small single digit microsecond range.
+
+More details can be found [here](./benchmark/README.md), and the benchmark results are published in [kapper-benchmark-results](https://github.com/driessamyn/kapper-benchmark-results/).
 
 # External content
 
@@ -366,26 +390,27 @@ If you need support for another DB, and/or find an issue with a particular DB, f
 - [Dev.to - Coroutine support in Kapper 1.1](https://dev.to/driessamyn/coroutine-support-in-kapper-11-45h9)
 - [Dev.to - Announcing Kapper 1.2: Cleaner Transactions with Less Boilerplate](https://dev.to/driessamyn/announcing-kapper-12-cleaner-transactions-with-less-boilerplate-2dbi)
 - [Dev.to - Kapper 1.3 Supports Flows](https://dev.to/driessamyn/kapper-13-supports-flows-more-kotlin-goodness-47f0)
+- [Dev.to - Kapper benchmarks - how does Kapper 1.3 compare to the competition?](https://dev.to/driessamyn/kapper-benchmarks-how-does-kapper-13-compare-to-the-competition-1m4d)
 
 ## Roadmap
 
-Kapper is in its early stages of development.
-The following will be worked on in the next few releases:
+The following items were part of the v1 roadmap and are planned for future releases.
+Items will be ticked off as they are implemented.
 
 - [x] Create a benchmark suite to validate performance.
+- [x] Create transaction syntax sugar.
 - [x] Add co-routine support.
 - [x] Add flow support.
-- [ ] Improve and additional support for date/time conversion.
-- [ ] Increase Java API compatibility tests & examples.
-- [ ] Improve user documentation.
+- [x] Add MS SQL Server, Oracle and SQLite integration tests.
+- [ ] Support auto-mapping for Java records.
 - [ ] Cache query parsing.
 - [ ] Custom SQL type conversion.
-- [ ] Bulk operations support
-- [x] Add MS SQL Server, Oracle and SQLite integration tests.
-- [ ] Tests & examples in other JVM languages.
-- [x] Create transaction syntax sugar.
+- [ ] Improve support for date/time conversion.
 - [ ] Support DTO argument for `execute`.
 - [ ] Add support for non-blocking JDBC drivers.
+- [ ] Bulk operations support
+- [ ] Improve user documentation.
+- [ ] Tests & examples in other JVM languages.
 
 Anything else you think is missing, or you want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
 
