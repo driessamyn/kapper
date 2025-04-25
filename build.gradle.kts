@@ -25,7 +25,7 @@ subprojects {
     version = projectVersion
 }
 
-tasks.build {
+tasks.check {
     dependsOn(":koverHtmlReport")
     dependsOn(":koverXmlReport")
 }

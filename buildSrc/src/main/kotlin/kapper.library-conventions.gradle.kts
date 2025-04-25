@@ -112,7 +112,6 @@ tasks.named<Test>("test") {
 
 tasks.check {
     dependsOn(tasks.ktlintCheck)
-    dependsOn("integrationTest")
     dependsOn(tasks.koverVerify)
 }
 
