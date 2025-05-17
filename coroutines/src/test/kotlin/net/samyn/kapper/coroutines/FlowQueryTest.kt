@@ -11,8 +11,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import net.samyn.kapper.Field
+import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperQueryException
-import net.samyn.kapper.createMapper
+import net.samyn.kapper.Mapper
 import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.executeQuery
@@ -62,14 +63,16 @@ class FlowQueryTest {
 
     @Test
     fun `when query with automapper emit each row as a flow item`() {
-        runBlocking {
-            mockkStatic("net.samyn.kapper.MapperFactoryKt") {
-                every { createMapper(Hero::class.java).createInstance(any(), any()) } returns result
-                connection.queryAsFlow<Hero>(
-                    queryTemplate,
-                    "id" to 1,
-                ).toList() shouldBe listOf(result)
+        val mapper =
+            mockk<Mapper<Hero>> {
+                every { createInstance(any(), any()) } returns result
             }
+        Kapper.mapperRegistry.registerIfAbsent(Hero::class.java, mapper)
+        runBlocking {
+            connection.queryAsFlow<Hero>(
+                queryTemplate,
+                "id" to 1,
+            ).toList() shouldBe listOf(result)
         }
     }
 

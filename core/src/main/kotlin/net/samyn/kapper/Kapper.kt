@@ -28,6 +28,9 @@ interface Kapper {
         val instance: Kapper by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
             createInstance()
         }.also { logger.info("Kapper instance created") }
+
+        @JvmStatic
+        val mapperRegistry: MapperRegistry = MapperRegistry()
     }
 
     /**
@@ -45,14 +48,14 @@ interface Kapper {
         sql: String,
         args: Args,
     ): List<T> {
-        val autoMapper =
+        val mapper =
             try {
-                createMapper(clazz)::createInstance
+                mapperRegistry.get(clazz)
             } catch (e: Exception) {
                 logger.error("Error creating instance of $clazz", e)
-                throw KapperMappingException("Error creating auto-mapper for $clazz", e)
+                throw KapperMappingException("Error creating mapper for $clazz", e)
             }
-        return query(clazz, connection, sql, autoMapper, args.toMap())
+        return query(clazz, connection, sql, mapper::createInstance, args.toMap())
     }
 
     /**
@@ -88,14 +91,14 @@ interface Kapper {
         sql: String,
         args: Map<String, Any?>,
     ): T? {
-        val autoMapper =
+        val mapper =
             try {
-                createMapper(clazz)
+                mapperRegistry.get(clazz)
             } catch (e: Exception) {
                 logger.error("Error creating instance of $clazz", e)
                 throw KapperMappingException("Error creating auto-mapper for $clazz", e)
             }
-        return querySingle(clazz, connection, sql, autoMapper::createInstance, args.toMap())
+        return querySingle(clazz, connection, sql, mapper::createInstance, args.toMap())
     }
 
     /**

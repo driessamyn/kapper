@@ -4,8 +4,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import net.samyn.kapper.Field
+import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperQueryException
-import net.samyn.kapper.createMapper
 import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.executeQuery
@@ -48,7 +48,7 @@ inline fun <reified T : Any> Connection.queryAsFlow(
 ): Flow<T> =
     queryAsFlow(
         sql,
-        createMapper(T::class.java)::createInstance,
+        Kapper.mapperRegistry.get(T::class.java)::createInstance,
         *args,
     )
 
