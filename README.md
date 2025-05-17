@@ -103,8 +103,47 @@ ds.getConnection().use { connection ->
 ```
 
 Kapper does not maintain a mapping between classes and DB tables or entities. 
-Instead, it can either map to a given class if the constructor arguments match the DB fields, or a mapping lambda can be passed in.
+Instead, it can either auto-map to a given class if the constructor arguments match the DB fields, a custom mapper can be provided, or a mapping lambda can be passed in.
 This means Kapper provides a strongly typed mapping, but still allows rows-to-object mapping with lambdas or mapper functions for more flexibility or advanced used cases.
+
+Example of registering an custom mapper class:
+
+```kotlin
+data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
+
+// Custom mapper
+class SuperHeroMapper : Mapper<SuperHero> {
+    override fun createInstance(
+        resultSet: ResultSet,
+        fields: Map<String, Field>,
+    ) = SuperHero(
+        id = UUID.fromString(resultSet.getString("id")),
+        name = resultSet.getString("name"),
+        email = resultSet.getString("email"),
+        age = resultSet.getInt("age"),
+    )
+}
+
+Kapper.mapperRegistry.registerIfAbsent<SuperHero>(SuperHeroMapper())
+
+val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes")
+```
+
+Or using a mapper lambda:
+
+```kotlin
+val heroes = connection.query<SuperHero>(
+    "SELECT * FROM super_heroes",
+    { resultSet, _ -> 
+        Superhero(
+            id = UUID.fromString(resultSet.getString("id")),
+            name = resultSet.getString("name"),
+            email = resultSet.getString("email"),
+            age = resultSet.getInt("age"),
+        ) 
+    }
+)
+```
 
 Further examples and documentation are explored below and in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/), or check out the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo for more extended examples and documentation,
 including [a comparison with Hibernate and Ktorm](https://github.com/driessamyn/kapper-examples/tree/release-1.0-article?tab=readme-ov-file#comparison-with-orms).

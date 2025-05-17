@@ -1,5 +1,6 @@
 package net.samyn.kapper;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,42 @@ class KapperJavaApiTest {
 
     private final AutoCloseable mocks;
 
-    record TestEntity(int id, String name) { }
+   class TestEntity {
+       private final int id;
+       private final String name;
+
+       public TestEntity(int id, String name) {
+           this.id = id;
+           this.name = name;
+       }
+
+       public int id() {
+           return id;
+       }
+
+       public String name() {
+           return name;
+       }
+
+       @Override
+       public boolean equals(Object o) {
+           if (this == o) return true;
+           if (o == null || getClass() != o.getClass()) return false;
+           TestEntity that = (TestEntity) o;
+           return id == that.id && java.util.Objects.equals(name, that.name);
+       }
+
+       @Override
+       public int hashCode() {
+           return java.util.Objects.hash(id, name);
+       }
+
+       @Override
+       public String toString() {
+           return "TestEntity{id=" + id + ", name='" + name + "'}";
+       }
+   }
+    record AutomappedTestEntity(int id, String name) { }
 
     KapperJavaApiTest() {
         mocks = MockitoAnnotations.openMocks(this);
@@ -84,6 +120,50 @@ class KapperJavaApiTest {
 
         @Test
         void testQueryWithCustomMapper() throws Exception {
+            class TestEntityMapper implements Mapper<TestEntity> {
+                @NotNull
+                @Override
+                public TestEntity createInstance(@NotNull ResultSet resultSet, @NotNull Map<String, Field> fields) {
+                    try {
+                        return new TestEntity(
+                                resultSet.getInt("id"),
+                                resultSet.getString("name")
+                        );
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+            Kapper.getMapperRegistry().registerIfAbsent(TestEntity.class, new TestEntityMapper());
+
+            // Setup result set behavior
+            when(mockResultSet.next()).thenReturn(true, true, false);
+            when(mockResultSet.getInt("id")).thenReturn(1, 2);
+            when(mockResultSet.getString("name")).thenReturn("Test1", "Test2");
+
+            Map<String, Object> args = Map.of("id", 1);
+
+            List<TestEntity> result = Kapper.getInstance().query(
+                    TestEntity.class,
+                    mockConnection,
+                    "SELECT * FROM test_table where id = :id",
+                    args
+            );
+
+            // Assertions
+            assertEquals(2, result.size());
+            assertEquals(new TestEntity(1, "Test1"), result.get(0));
+            assertEquals(new TestEntity(2, "Test2"), result.get(1));
+
+            // Verify interactions
+            verify(mockStatement).setInt(1, 1);
+            verify(mockStatement).close();
+            verify(mockResultSet).close();
+        }
+
+        @Test
+        void testQueryWithMapperFunc() throws Exception {
             // Setup result set behavior
             when(mockResultSet.next()).thenReturn(true, true, false);
             when(mockResultSet.getInt("id")).thenReturn(1, 2);
@@ -132,7 +212,7 @@ class KapperJavaApiTest {
             // Kapper currently doesn't support auto-mapping to Java record classes, so expect to throw.
             assertThrows(KapperMappingException.class, () -> {
                 kapper.query(
-                        TestEntity.class,
+                        AutomappedTestEntity.class,
                         mockConnection,
                         "SELECT * FROM test_table where id = :id",
                         args
