@@ -8,7 +8,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
+import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -16,6 +16,12 @@ import java.sql.Connection
 import java.sql.ResultSet
 
 class KapperInstanceTest {
+    private val fooMapper = mockk<Mapper<Foo>>()
+
+    init {
+        Kapper.mapperRegistry.registerIfAbsent(Foo::class.java, fooMapper)
+    }
+
     @Test
     fun `createInstance should return a new Kapper instance`() {
         val k1 = Kapper.createInstance()
@@ -33,33 +39,30 @@ class KapperInstanceTest {
     data class Foo(val id: Int, val name: String)
 
     @Test
-    fun `query default implementation assumes auto-mapper`() {
+    fun `query default implementation assumes registered mapper`() {
         val k = mockk<Kapper>(relaxed = true)
-        val autoMapper = slot<(ResultSet, Map<String, Field>) -> Foo>()
-        // call original from interface so we can capture the auto-mapper that is used
+        val mapper = slot<(ResultSet, Map<String, Field>) -> Foo>()
+        // call original from interface so we can capture the mapper that is used
         every { k.query<Foo>(any(), any(), any(), any()) } answers { callOriginal() }
-        every { k.query(any(), any(), any(), capture(autoMapper), any()) } returns emptyList()
+        every { k.query(any(), any(), any(), capture(mapper), any()) } returns emptyList()
         val connection = mockk<Connection>(relaxed = true)
         val queryTemplate = "FOO"
         k.query(Foo::class.java, connection, queryTemplate, emptyMap())
-        val expectedAutoMapper = createMapper(Foo::class.java)::createInstance
+        verify { k.query(Foo::class.java, connection, queryTemplate, mapper.captured, emptyMap()) }
         // slightly dodgy equality check, but signature is internal to the std lib. String should validate the function and the owner
-        autoMapper.captured.toString() shouldBe expectedAutoMapper.toString()
-        verify { k.query(Foo::class.java, connection, queryTemplate, autoMapper.captured, emptyMap()) }
+        mapper.captured.toString() shouldBe fooMapper::createInstance.toString()
     }
 
     @Test
-    fun `query default implementation throws when auto-mapper cannot be created`() {
+    fun `query default implementation throws when mapper cannot be created`() {
         val k = mockk<Kapper>(relaxed = true)
         every { k.query<Foo>(any(), any(), any(), any()) } answers { callOriginal() }
-//        every { k.query(any(), any(), any(), any<(ResultSet, Map<String, Field>) -> Foo>(), any()) } returns emptyList()
         val ex = RuntimeException("test")
-        mockkStatic("net.samyn.kapper.MapperFactoryKt") {
-            every { createMapper(Foo::class.java) } throws ex
+        mockkObject(Kapper.mapperRegistry) {
+            every { Kapper.mapperRegistry.get(Foo::class.java) } throws ex
             shouldThrow<Exception> {
                 k.query(Foo::class.java, mockk<Connection>(relaxed = true), "FOO", emptyMap())
             }.cause!! should {
-                // Need to figure out why this is wrapped in an invocation exception
                 it.shouldBeInstanceOf<KapperMappingException>()
                 it.cause shouldBe ex
             }
@@ -67,19 +70,18 @@ class KapperInstanceTest {
     }
 
     @Test
-    fun `querySingle default implementation assumes auto-mapper`() {
+    fun `querySingle default implementation assumes registered mapper`() {
         val k = mockk<Kapper>(relaxed = true)
-        val autoMapper = slot<(ResultSet, Map<String, Field>) -> Foo>()
+        val mapper = slot<(ResultSet, Map<String, Field>) -> Foo>()
         // call original from interface so we can capture the auto-mapper that is used
         every { k.querySingle<Foo>(any(), any(), any(), any()) } answers { callOriginal() }
-        every { k.querySingle(any(), any(), any(), capture(autoMapper), any()) } returns Foo(1, "foo")
+        every { k.querySingle(any(), any(), any(), capture(mapper), any()) } returns Foo(1, "foo")
         val connection = mockk<Connection>(relaxed = true)
         val queryTemplate = "FOO"
         k.querySingle(Foo::class.java, connection, queryTemplate, emptyMap())
-        val expectedAutoMapper = createMapper(Foo::class.java)::createInstance
+        verify { k.querySingle(Foo::class.java, connection, queryTemplate, mapper.captured, emptyMap()) }
         // slightly dodgy equality check, but signature is internal to the std lib. String should validate the function and the owner
-        autoMapper.captured.toString() shouldBe expectedAutoMapper.toString()
-        verify { k.querySingle(Foo::class.java, connection, queryTemplate, autoMapper.captured, emptyMap()) }
+        mapper.captured.toString() shouldBe fooMapper::createInstance.toString()
     }
 
     @Test
@@ -88,8 +90,8 @@ class KapperInstanceTest {
         every { k.querySingle<Foo>(any(), any(), any(), any()) } answers { callOriginal() }
         every { k.querySingle(any(), any(), any(), any<(ResultSet, Map<String, Field>) -> Foo>(), any()) } returns Foo(1, "foo")
         val ex = RuntimeException("test")
-        mockkStatic("net.samyn.kapper.MapperFactoryKt") {
-            every { createMapper(Foo::class.java) } throws ex
+        mockkObject(Kapper.mapperRegistry) {
+            every { Kapper.mapperRegistry.get(Foo::class.java) } throws ex
             shouldThrow<Exception> {
                 k.querySingle(Foo::class.java, mockk<Connection>(relaxed = true), "FOO", emptyMap())
             }.cause!! should {
