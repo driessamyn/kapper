@@ -36,7 +36,7 @@ jobs:
         run: git ls-files . --exclude-standard --others
       - name: Print version
         run: ./gradlew printSemVersion --info
-      - name: Print Changelog
-        run: ./gradlew printChangeLog
+#      - name: Print Changelog
+#        run: ./gradlew printChangeLog
       - name: Publish package
         run: ./gradlew deployGithub --info
