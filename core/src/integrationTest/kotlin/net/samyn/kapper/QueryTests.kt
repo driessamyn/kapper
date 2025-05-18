@@ -10,7 +10,7 @@ import java.sql.Connection
 import java.sql.ResultSet
 
 class QueryTests : AbstractDbTests() {
-    @ParameterizedTest()
+    @ParameterizedTest
     @MethodSource("databaseContainers")
     fun `should query all heros`(connection: Connection) {
         val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes_$testId")
@@ -81,6 +81,32 @@ class QueryTests : AbstractDbTests() {
             )
         hero.shouldContainOnly(
             SimpleClass(superman.name),
+        )
+    }
+
+    @ParameterizedTest()
+    @MethodSource("databaseContainers")
+    fun `can use custom registered mapper`(connection: Connection) {
+        data class SuperHero2(val name: String, val email: String? = null, val age: Int? = null)
+
+        class SuperHeroMapper : Mapper<SuperHero2> {
+            override fun createInstance(
+                resultSet: ResultSet,
+                fields: Map<String, Field>,
+            ) = SuperHero2(
+                name = resultSet.getString("name"),
+                email = resultSet.getString("email"),
+                age = resultSet.getInt("age"),
+            )
+        }
+
+        Kapper.mapperRegistry.registerIfAbsent<SuperHero2>(SuperHeroMapper())
+
+        val heroes = connection.query<SuperHero2>("SELECT * FROM super_heroes_$testId")
+        heroes.shouldContainExactlyInAnyOrder(
+            SuperHero2(superman.name, superman.email, superman.age),
+            SuperHero2(spiderMan.name, spiderMan.email, spiderMan.age),
+            SuperHero2(batman.name, batman.email, batman.age),
         )
     }
 
