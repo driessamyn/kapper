@@ -1,10 +1,13 @@
 @file:JvmSynthetic
 
-package net.samyn.kapper.internal
+package net.samyn.kapper.internal.automapper
 
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
 import net.samyn.kapper.Mapper
+import net.samyn.kapper.internal.AutoConverter
+import net.samyn.kapper.internal.DbFlavour
+import net.samyn.kapper.internal.SQLTypesConverter
 import java.sql.JDBCType
 import java.sql.ResultSet
 import kotlin.reflect.KClass
@@ -20,7 +23,7 @@ class KotlinDataClassMapper<T : Any>(
         clazz.kotlin.primaryConstructor
             ?: throw KapperMappingException("No primary constructor found for ${clazz.name}")
     private val properties =
-        constructor.parameters.associateBy { it.name?.lowercase() }
+        constructor.parameters.associateBy { it.name.normalisedColumnName() }
 
     private fun createInstance(columns: List<ColumnValue>): T {
         if (columns.size > properties.size) {
@@ -29,25 +32,22 @@ class KotlinDataClassMapper<T : Any>(
                     "Constructor for ${clazz.name} only has: ${properties.keys}",
             )
         } else if (columns.size < properties.size) {
-            val all = columns.map { it.name.lowercase() }
+            val all = columns.map { it.name.normalisedColumnName() }
             val missing = properties.filter { !it.value.isOptional && !all.contains(it.key) }
             if (missing.isNotEmpty()) {
                 throw KapperMappingException("The following properties are non-optional and missing: ${missing.keys}")
             }
         }
         val args =
-            columns.associate {
-                val prop =
-                    properties[it.name.lowercase()]
-                        ?: throw KapperMappingException("No property found for ${it.name}")
-                if (it.value == null) {
-                    prop to null
-                } else if (it.value::class != prop.type.classifier) {
-                    prop to autoConverter(it.value, prop.type.classifier as KClass<*>)
-                } else {
-                    prop to it.value
+            columns.mapNotNull {
+                val prop = properties[it.name.normalisedColumnName()]
+                when {
+                    prop == null -> null
+                    it.value == null -> prop to null
+                    it.value::class != prop.type.classifier -> prop to autoConverter(it.value, prop.type.classifier as KClass<*>)
+                    else -> prop to it.value
                 }
-            }
+            }.toMap()
         val instance = constructor.callBy(args)
         return instance
     }

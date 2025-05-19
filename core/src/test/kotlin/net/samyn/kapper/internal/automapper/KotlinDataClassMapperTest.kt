@@ -1,4 +1,4 @@
-package net.samyn.kapper.internal
+package net.samyn.kapper.internal.automapper
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
+import net.samyn.kapper.internal.DbFlavour
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -22,7 +23,7 @@ class KotlinDataClassMapperTest {
     val sqlTypeConverterMock = mockk<(JDBCType, String, ResultSet, Int, DbFlavour) -> Any?>(relaxed = true)
 
     @ParameterizedTest
-    @ValueSource(strings = ["email", "EMAIL", "eMail"])
+    @ValueSource(strings = ["email", "EMAIL", "eMail", "e-mail", "e_mail"])
     fun `should map to super hero case insensitive`(emailParam: String) {
         val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
         val fields =
@@ -172,22 +173,28 @@ class KotlinDataClassMapperTest {
     }
 
     @Test
-    fun `should throw when no property found`() {
+    fun `should skip when no property found`() {
+        val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
         val fields =
             mapOf(
                 "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
                 "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
-                "foo" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "email" to Field(3, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "extra" to Field(4, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
             )
         every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(1), any()) } returns
-            UUID.randomUUID()
+            batman.id
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(2), any()) } returns
+            batman.name
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(3), any()) } returns
+            batman.email!!
+        every { sqlTypeConverterMock(any<JDBCType>(), any<String>(), any<ResultSet>(), eq<Int>(4), any()) } returns
+            1234
 
         val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoMapperMock, sqlTypeConverterMock)
-        val ex =
-            shouldThrow<KapperMappingException> {
-                kotlinDataClassMapper.createInstance(resultSet, fields)
-            }
-        ex.message.shouldContain("foo")
+        val instance = kotlinDataClassMapper.createInstance(resultSet, fields)
+
+        instance.shouldBe(batman.copy(age = null))
     }
 
     data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
