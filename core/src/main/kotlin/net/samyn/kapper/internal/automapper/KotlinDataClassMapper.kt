@@ -6,18 +6,19 @@ import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
 import net.samyn.kapper.Mapper
 import net.samyn.kapper.internal.AutoConverter
-import net.samyn.kapper.internal.DbFlavour
-import net.samyn.kapper.internal.SQLTypesConverter
-import java.sql.JDBCType
+import net.samyn.kapper.internal.autoConverter
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.primaryConstructor
 
+/**
+ * Automatically map database records to Kotlin data classes.
+ */
 class KotlinDataClassMapper<T : Any>(
-    private val clazz: Class<T>,
-    val autoConverter: (Any, KClass<*>) -> Any = AutoConverter()::convert,
-    val sqlTypesConverter: (JDBCType, String, ResultSet, Int, DbFlavour) -> Any? = SQLTypesConverter::convertSQLType,
+    clazz: Class<T>,
+    private val typesConverter: AutoConverter = autoConverter,
+    private val fieldsConverter: FieldsConverter = FieldsConverter(),
 ) : Mapper<T> {
     private val constructor: KFunction<T> =
         clazz.kotlin.primaryConstructor
@@ -26,30 +27,28 @@ class KotlinDataClassMapper<T : Any>(
         constructor.parameters.associateBy { it.name.normalisedColumnName() }
 
     private fun createInstance(columns: List<ColumnValue>): T {
-        if (columns.size > properties.size) {
-            throw KapperMappingException(
-                "Too many tokens provided in the template: ${columns.map { it.name }}. " +
-                    "Constructor for ${clazz.name} only has: ${properties.keys}",
-            )
-        } else if (columns.size < properties.size) {
-            val all = columns.map { it.name.normalisedColumnName() }
-            val missing = properties.filter { !it.value.isOptional && !all.contains(it.key) }
-            if (missing.isNotEmpty()) {
-                throw KapperMappingException("The following properties are non-optional and missing: ${missing.keys}")
+        val args = mutableMapOf<kotlin.reflect.KParameter, Any?>()
+        val missing = mutableListOf<String>()
+        val normalisedColumns = columns.associateBy { it.name.normalisedColumnName() }
+        for ((name, prop) in properties) {
+            if (!normalisedColumns.containsKey(name)) {
+                if (!prop.isOptional) missing.add(name)
+                continue
             }
-        }
-        val args =
-            columns.mapNotNull {
-                val prop = properties[it.name.normalisedColumnName()]
+            val value = normalisedColumns[name]?.value
+            args[prop] =
                 when {
-                    prop == null -> null
-                    it.value == null -> prop to null
-                    it.value::class != prop.type.classifier -> prop to autoConverter(it.value, prop.type.classifier as KClass<*>)
-                    else -> prop to it.value
+                    value == null -> null
+                    value::class != prop.type.classifier -> {
+                        typesConverter.convert(value, (prop.type.classifier as KClass<*>).java)
+                    }
+                    else -> value
                 }
-            }.toMap()
-        val instance = constructor.callBy(args)
-        return instance
+        }
+        if (missing.isNotEmpty()) {
+            throw KapperMappingException("The following properties are non-optional and missing: $missing")
+        }
+        return constructor.callBy(args)
     }
 
     override fun createInstance(
@@ -57,20 +56,7 @@ class KotlinDataClassMapper<T : Any>(
         fields: Map<String, Field>,
     ): T {
         return createInstance(
-            fields.map { field ->
-                ColumnValue(
-                    field.key,
-                    sqlTypesConverter(
-                        field.value.type,
-                        field.value.typeName,
-                        resultSet,
-                        field.value.columnIndex,
-                        field.value.dbFlavour,
-                    ),
-                )
-            },
+            fieldsConverter.convert(resultSet, fields),
         )
     }
-
-    data class ColumnValue(val name: String, val value: Any?)
 }

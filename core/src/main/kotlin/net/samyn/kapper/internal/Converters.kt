@@ -227,6 +227,8 @@ internal fun convertBoolean(value: Any): Boolean =
         }
     }
 
+internal fun convertString(value: Any): String = value.toString()
+
 fun ByteArray.asUUID(): UUID {
     val b = ByteBuffer.wrap(this)
     return UUID(b.getLong(), b.getLong())
