@@ -16,9 +16,22 @@ class IntConverterTest {
     }
 
     @Test
+    fun `convert valid java Float to Int`() {
+        val float = java.lang.Float.valueOf(123F)
+        val intValue = convertInt(float)
+        intValue.shouldBe(123)
+    }
+
+    @Test
     fun `throw exception when invalid type is converted to Int`() {
         shouldThrow<KapperUnsupportedOperationException> {
             convertInt(Date()) // Invalid input type
         }
+    }
+
+    @Test
+    fun `convert valid Integer to Int`() {
+        val intValue = java.lang.Integer.valueOf(123)
+        intValue.shouldBe(123)
     }
 }

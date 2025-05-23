@@ -60,4 +60,11 @@ class CharConverterTest {
             convertChar(123) // Invalid input type
         }
     }
+
+    @Test
+    fun `convert valid Character to Char`() {
+        val charObject = java.lang.Character.valueOf('A')
+        val char = convertChar(charObject)
+        char.shouldBe('A')
+    }
 }

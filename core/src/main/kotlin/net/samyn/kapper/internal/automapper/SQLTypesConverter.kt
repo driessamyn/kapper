@@ -25,54 +25,47 @@ fun interface SQLTypesConverter {
     ): Any?
 }
 
+private val BINARY_TYPES = listOf(JDBCType.BINARY, JDBCType.BLOB, JDBCType.LONGVARBINARY, JDBCType.VARBINARY)
+private val BOOLEAN_TYPES = listOf(JDBCType.BIT, JDBCType.BOOLEAN)
+private val CHAR_TYPES = listOf(JDBCType.CHAR)
+private val STRING_TYPES =
+    listOf(
+        JDBCType.CLOB, JDBCType.LONGNVARCHAR, JDBCType.LONGVARCHAR,
+        JDBCType.NCHAR, JDBCType.NCLOB, JDBCType.NVARCHAR, JDBCType.ROWID, JDBCType.SQLXML, JDBCType.VARCHAR,
+    )
+private val DATE_TYPES = listOf(JDBCType.DATE)
+private val FLOAT_TYPES = listOf(JDBCType.DECIMAL, JDBCType.FLOAT, JDBCType.NUMERIC, JDBCType.REAL)
+private val INTEGER_TYPES = listOf(JDBCType.INTEGER, JDBCType.SMALLINT, JDBCType.TINYINT)
+private val TIME_TYPES = listOf(JDBCType.TIME, JDBCType.TIME_WITH_TIMEZONE)
+private val TIMESTAMP_TYPES = listOf(JDBCType.TIMESTAMP, JDBCType.TIMESTAMP_WITH_TIMEZONE)
+
 val sqlTypesConverter =
     SQLTypesConverter { field, resultSet ->
         when (field.type) {
             JDBCType.ARRAY -> resultSet.getArray(field.columnIndex)
             JDBCType.BIGINT -> resultSet.getLong(field.columnIndex)
-            in listOf(JDBCType.BINARY, JDBCType.BLOB, JDBCType.LONGVARBINARY, JDBCType.VARBINARY),
-            -> resultSet.getBytes(field.columnIndex)
+            in BINARY_TYPES -> resultSet.getBytes(field.columnIndex)
 
-            in listOf(JDBCType.BIT, JDBCType.BOOLEAN) -> resultSet.getBoolean(field.columnIndex)
-            in
-            listOf(JDBCType.CHAR),
-            -> resultSet.getString(field.columnIndex)?.toCharArray()
+            in BOOLEAN_TYPES -> resultSet.getBoolean(field.columnIndex)
+            in CHAR_TYPES -> resultSet.getString(field.columnIndex)?.toCharArray()
 
-            in
-            listOf(
-                JDBCType.CLOB, JDBCType.LONGNVARCHAR, JDBCType.LONGVARCHAR,
-                JDBCType.NCHAR, JDBCType.NCLOB, JDBCType.NVARCHAR, JDBCType.ROWID, JDBCType.SQLXML, JDBCType.VARCHAR,
-            ),
-            -> resultSet.getString(field.columnIndex)
+            in STRING_TYPES -> resultSet.getString(field.columnIndex)
 
-            in listOf(JDBCType.DATE),
-            -> convertDate(resultSet, field.columnIndex, field.dbFlavour)
+            in DATE_TYPES -> convertDate(resultSet, field.columnIndex, field.dbFlavour)
 
-            in listOf(JDBCType.DECIMAL, JDBCType.FLOAT, JDBCType.NUMERIC, JDBCType.REAL),
-            -> resultSet.getFloat(field.columnIndex)
+            in FLOAT_TYPES -> resultSet.getFloat(field.columnIndex)
 
             JDBCType.DOUBLE ->
                 resultSet.getDouble(field.columnIndex)
 
-            in listOf(JDBCType.INTEGER, JDBCType.SMALLINT, JDBCType.TINYINT),
-            -> resultSet.getInt(field.columnIndex)
+            in INTEGER_TYPES -> resultSet.getInt(field.columnIndex)
 
             JDBCType.JAVA_OBJECT,
             -> resultSet.getObject(field.columnIndex)
 
-            in
-            listOf(
-                JDBCType.TIME,
-                JDBCType.TIME_WITH_TIMEZONE,
-            ),
-            -> resultSet.getTime(field.columnIndex)?.toLocalTime()
+            in TIME_TYPES -> resultSet.getTime(field.columnIndex)?.toLocalTime()
 
-            in
-            listOf(
-                JDBCType.TIMESTAMP,
-                JDBCType.TIMESTAMP_WITH_TIMEZONE,
-            ),
-            -> convertTimestamp(resultSet, field.columnIndex, field.typeName)
+            in TIMESTAMP_TYPES -> convertTimestamp(resultSet, field.columnIndex, field.typeName)
 
             // includes: DATALINK, DISTINCT, OTHER, REF, REF_CURSOR, STRUCT, NULL
             else -> {
@@ -140,27 +133,29 @@ fun UUID.toBytes(): ByteArray {
 }
 
 val formatters =
-    mapOf(
-        "yyyy-MM-dd" to SimpleDateFormat("yyyy-MM-dd"),
-        "yyyy-MM-dd HH:mm" to SimpleDateFormat("yyyy-MM-dd HH:mm"),
-        "yyyy-MM-dd HH:mm:ss" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
-        "yyyy-MM-dd HH:mm:ss.SSS" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
-        "yyyy-MM-dd'T'HH:mm" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm"),
-        "yyyy-MM-dd'T'HH:mm:ss" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"),
-        "yyyy-MM-dd'T'HH:mm:ss.SSS" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"),
-        "HH:mm" to SimpleDateFormat("HH:mm"),
-        "HH:mm:ss" to SimpleDateFormat("HH:mm:ss"),
-        "HH:mm:ss.SSS" to SimpleDateFormat("HH:mm:ss.SSS"),
-        "HH:mm'Z'" to SimpleDateFormat("HH:mm'Z'"),
-        "HH:mm:ss'Z'" to SimpleDateFormat("HH:mm:ss'Z'"),
-        "HH:mm:ss.SSS'Z'" to SimpleDateFormat("HH:mm:ss.SSS'Z'"),
-        "yyyy-MM-dd HH:mm'Z'" to SimpleDateFormat("yyyy-MM-dd HH:mm'Z'"),
-        "yyyy-MM-dd HH:mm:ss'Z'" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'"),
-        "yyyy-MM-dd HH:mm:ss.SSS'Z'" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'"),
-        "yyyy-MM-dd'T'HH:mm'Z'" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"),
-        "yyyy-MM-dd'T'HH:mm:ss'Z'" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"),
-        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
-    )
+    listOf(
+        "yyyy-MM-dd",
+        "yyyy-MM-dd HH:mm",
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "HH:mm",
+        "HH:mm:ss",
+        "HH:mm:ss.SSS",
+        "HH:mm'Z'",
+        "HH:mm:ss'Z'",
+        "HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd HH:mm'Z'",
+        "yyyy-MM-dd HH:mm:ss'Z'",
+        "yyyy-MM-dd HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+    ).associateWith {
+        SimpleDateFormat(it)
+    }
 
 fun convertDate(
     resultSet: ResultSet,
@@ -182,7 +177,7 @@ fun convertDate(
 fun convertSQliteDate(date: String): Date =
     try {
         when {
-            date[2] == ':' ->
+            date.length > 2 && date[2] == ':' ->
                 when (date.length) {
                     5 -> formatters["HH:mm"]!!.parse(date)
                     6 -> formatters["HH:mm'Z'"]!!.parse(date)

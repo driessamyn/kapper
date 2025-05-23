@@ -130,6 +130,14 @@ class TypesTest : AbstractDbTests() {
                 "uuid" to testData.t_uuid,
             )
         selectResult.shouldBe(testData)
+
+        // also check we can map to a Java Record
+        val selectResultRecord =
+            connection.querySingle<JavaRecordTypeTest>(
+                "SELECT * FROM types_test_$testId where t_uuid = :uuid",
+                "uuid" to testData.t_uuid,
+            )
+        selectResultRecord.shouldBe(JavaRecordTypeTest.from(testData))
     }
 
     data class TypeTest(

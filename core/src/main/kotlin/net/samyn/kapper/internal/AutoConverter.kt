@@ -28,14 +28,35 @@ private val converters: Map<Class<*>, (Any) -> Any> =
         Instant::class.java to ::convertInstant,
         Char::class.java to ::convertChar,
         Int::class.java to ::convertInt,
+        java.lang.Integer::class.java to ::convertInt,
         Long::class.java to ::convertLong,
         Date::class.java to ::convertDate,
         Boolean::class.java to ::convertBoolean,
         String::class.java to ::convertString,
     )
 
+fun convertToPrimitive(wrapper: Any): Any {
+    return when (wrapper.javaClass) {
+        java.lang.Integer::class.java -> (wrapper as Number).toInt()
+        java.lang.Long::class.java -> (wrapper as Number).toLong()
+        java.lang.Double::class.java -> (wrapper as Number).toDouble()
+        java.lang.Float::class.java -> (wrapper as Number).toFloat()
+        java.lang.Boolean::class.java -> (wrapper as Boolean)
+        java.lang.Byte::class.java -> (wrapper as Number).toByte()
+        java.lang.Short::class.java -> (wrapper as Number).toShort()
+        java.lang.Character::class.java -> (wrapper as Char)
+        else -> throw KapperUnsupportedOperationException(
+            "Cannot auto-convert from ${wrapper.javaClass} to primitive type",
+        )
+    }
+}
+
 val autoConverter =
     AutoConverter { value, target ->
+        if (!converters.containsKey(target) && target.isPrimitive && !value.javaClass.isPrimitive) {
+            // convert from java type to primitive type here
+            return@AutoConverter convertToPrimitive(value)
+        }
         // Kover considers this not covered, which I think is a bug.
         //  https://github.com/Kotlin/kotlinx-kover/issues/729
         converters[target]?.invoke(value) ?: throw KapperUnsupportedOperationException(
