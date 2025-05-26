@@ -5,7 +5,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
-import net.samyn.kapper.internal.SQLTypesConverter.setParameter
+import net.samyn.kapper.internal.automapper.setParameter
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated

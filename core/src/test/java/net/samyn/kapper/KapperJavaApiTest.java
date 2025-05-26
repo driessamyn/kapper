@@ -67,7 +67,8 @@ class KapperJavaApiTest {
            return "TestEntity{id=" + id + ", name='" + name + "'}";
        }
    }
-    record AutomappedTestEntity(int id, String name) { }
+
+    public record AutomappedTestEntity(int id, String name) { }
 
     KapperJavaApiTest() {
         mocks = MockitoAnnotations.openMocks(this);
@@ -115,9 +116,6 @@ class KapperJavaApiTest {
 
     @Nested
     class QueryTests {
-        // NOTE: Kapper currently doesn't support auto-mapping to Java classes
-        //  this will be added later.
-
         @Test
         void testQueryWithCustomMapper() throws Exception {
             class TestEntityMapper implements Mapper<TestEntity> {
@@ -201,23 +199,23 @@ class KapperJavaApiTest {
 
         @Test
         void testQueryWithAutoMapperForRecord() throws Exception {
-            // Setup result set behavior
             when(mockResultSet.next()).thenReturn(true, true, false);
-            when(mockResultSet.getInt("id")).thenReturn(1, 2);
-            when(mockResultSet.getString("name")).thenReturn("Test1", "Test2");
+            when(mockResultSet.getInt(1)).thenReturn(1, 2);
+            when(mockResultSet.getString(2)).thenReturn("Test1", "Test2");
 
             Map<String, Object> args = Map.of("id", 1);
 
             var kapper = Kapper.getInstance();
-            // Kapper currently doesn't support auto-mapping to Java record classes, so expect to throw.
-            assertThrows(KapperMappingException.class, () -> {
-                kapper.query(
-                        AutomappedTestEntity.class,
-                        mockConnection,
-                        "SELECT * FROM test_table where id = :id",
-                        args
-                );
-            });
+            var result = kapper.query(
+                    AutomappedTestEntity.class,
+                    mockConnection,
+                    "SELECT * FROM test_table where id = :id",
+                    args
+            );
+
+            assertEquals(2, result.size());
+            assertEquals(new AutomappedTestEntity(1, "Test1"), result.get(0));
+            assertEquals(new AutomappedTestEntity(2, "Test2"), result.get(1));
         }
     }
 

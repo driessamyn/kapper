@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.mockk
-import net.samyn.kapper.internal.KotlinDataClassMapper
+import net.samyn.kapper.internal.automapper.KotlinDataClassMapper
 import org.junit.jupiter.api.Test
 import java.sql.ResultSet
 

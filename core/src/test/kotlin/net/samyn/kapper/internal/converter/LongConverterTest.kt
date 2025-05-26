@@ -20,4 +20,10 @@ class LongConverterTest {
             convertLong("") // Invalid input type
         }
     }
+
+    @Test
+    fun `convert valid Long to Long`() {
+        val longValue = java.lang.Long.valueOf(123)
+        longValue.shouldBe(123)
+    }
 }

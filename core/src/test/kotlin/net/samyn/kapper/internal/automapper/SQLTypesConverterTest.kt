@@ -1,12 +1,13 @@
-package net.samyn.kapper.internal
+package net.samyn.kapper.internal.automapper
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import net.samyn.kapper.Field
 import net.samyn.kapper.KapperUnsupportedOperationException
-import net.samyn.kapper.internal.SQLTypesConverter.setParameter
+import net.samyn.kapper.internal.DbFlavour
 import org.junit.jupiter.api.Named.named
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -36,7 +37,7 @@ class SQLTypesConverterTest {
         val resultSet = mockk<ResultSet>(relaxed = true)
 
         @JvmStatic
-        fun parameterTests() =
+        fun parameterSetTests() =
             listOf(
                 arguments(named("BYTE", "test".toByteArray()[0]), statement::setByte),
                 arguments(named("SHORT", (123).toShort()), statement::setShort),
@@ -167,7 +168,7 @@ class SQLTypesConverterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("parameterTests")
+    @MethodSource("parameterSetTests")
     fun `should map values correctly`(
         value: Any?,
         expectedSetter: (Int, Any?) -> Unit,
@@ -189,7 +190,7 @@ class SQLTypesConverterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("parameterTests")
+    @MethodSource("parameterSetTests")
     fun `should handle null values correctly`(
         value: Any?,
         expectedSetter: (Int, Any?) -> Unit,
@@ -205,134 +206,162 @@ class SQLTypesConverterTest {
         sqlTypeName: String,
         expectedGetter: (Int) -> Any,
     ) {
-        SQLTypesConverter.convertSQLType(jdbcType, sqlTypeName, resultSet, 1, DbFlavour.UNKNOWN)
+        val field = Field(1, jdbcType, sqlTypeName, DbFlavour.UNKNOWN)
+        sqlTypesConverter.convert(field, resultSet)
         verify { expectedGetter(1) }
     }
 
     @ParameterizedTest
     @MethodSource("convertSQLTypeUnsupportedTests")
     fun `unsupported SQL types throws`(jdbcType: JDBCType) {
+        val field = Field(1, jdbcType, jdbcType.toString(), DbFlavour.UNKNOWN)
         assertThrows<KapperUnsupportedOperationException> {
-            SQLTypesConverter.convertSQLType(jdbcType, jdbcType.toString(), resultSet, 1, DbFlavour.UNKNOWN)
+            sqlTypesConverter.convert(field, resultSet)
         }
     }
 
     @Test
     fun `char needs converting`() {
+        val field = Field(1, JDBCType.CHAR, "CHAR", DbFlavour.UNKNOWN)
         every { resultSet.getString(1) } returns "example"
-        val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, 1, DbFlavour.UNKNOWN)
+        val result = sqlTypesConverter.convert(field, resultSet)
 
         result.shouldBe("example".toCharArray())
     }
 
     @Test
     fun `char can return null`() {
+        val field = Field(1, JDBCType.CHAR, "CHAR", DbFlavour.UNKNOWN)
         every { resultSet.getString(1) } returns null
-        val result = SQLTypesConverter.convertSQLType(JDBCType.CHAR, "CHAR", resultSet, 1, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(null)
     }
 
     @Test
     fun `uuid needs parsing`() {
+        val field = Field(2, JDBCType.OTHER, "UUID", DbFlavour.UNKNOWN)
         val id = UUID.randomUUID()
         every { resultSet.getString(2) } returns id.toString()
-        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, 2, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(id)
     }
 
     @Test
     fun `uuid supports null`() {
+        val field = Field(2, JDBCType.OTHER, "UUID", DbFlavour.UNKNOWN)
         every { resultSet.getString(2) } returns null
-        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "UUID", resultSet, 2, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(null)
     }
 
     @Test
     fun `binary_float needs parsing`() {
+        val field = Field(2, JDBCType.OTHER, "binary_float", DbFlavour.UNKNOWN)
         val f = 123.45F
         every { resultSet.getFloat(2) } returns f
-        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "binary_float", resultSet, 2, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(f)
     }
 
     @Test
     fun `binary_double needs parsing`() {
+        val field = Field(2, JDBCType.OTHER, "binary_double", DbFlavour.UNKNOWN)
         val d = 123.45
         every { resultSet.getDouble(2) } returns d
-        val result = SQLTypesConverter.convertSQLType(JDBCType.OTHER, "binary_double", resultSet, 2, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(d)
     }
 
     @Test
     fun `time needs converting`() {
+        val field = Field(3, JDBCType.TIME, "time", DbFlavour.UNKNOWN)
         val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
         every { resultSet.getTime(3) } returns Time.valueOf(time)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME, "time", resultSet, 3, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(time)
     }
 
     @Test
     fun `time supports null`() {
+        val field = Field(3, JDBCType.TIME, "time", DbFlavour.UNKNOWN)
         every { resultSet.getTime(3) } returns null
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME, "time", resultSet, 3, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(null)
     }
 
     @Test
     fun `time with zone needs converting`() {
+        val field = Field(4, JDBCType.TIME_WITH_TIMEZONE, "time", DbFlavour.UNKNOWN)
         val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
         every { resultSet.getTime(4) } returns Time.valueOf(time)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME_WITH_TIMEZONE, "time", resultSet, 4, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(time)
     }
 
     @Test
     fun `time with zone supports null`() {
+        val field = Field(4, JDBCType.TIME_WITH_TIMEZONE, "time", DbFlavour.UNKNOWN)
         every { resultSet.getTime(4) } returns null
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIME_WITH_TIMEZONE, "time", resultSet, 4, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(null)
     }
 
     @Test
     fun `timestamp as DATE needs converting`() {
+        val field = Field(6, JDBCType.TIMESTAMP, "DATE", DbFlavour.UNKNOWN)
         val timestamp = Instant.now()
         every { resultSet.getTimestamp(6) } returns Timestamp.from(timestamp)
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "DATE", resultSet, 6, DbFlavour.UNKNOWN)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault()))
     }
 
     @Test
     fun `timestamp as DATE supports null`() {
+        val field = Field(6, JDBCType.TIMESTAMP, "DATE", DbFlavour.UNKNOWN)
         every { resultSet.getTimestamp(6) } returns null
-        val result = SQLTypesConverter.convertSQLType(JDBCType.TIMESTAMP_WITH_TIMEZONE, "DATE", resultSet, 6, DbFlavour.UNKNOWN)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(null)
+    }
 
+    @Test
+    fun `timestamp as other supports null`() {
+        val field = Field(6, JDBCType.TIMESTAMP, "DATETIME", DbFlavour.UNKNOWN)
+        every { resultSet.getTimestamp(6) } returns null
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(null)
+    }
+
+    @Test
+    fun `timestamp with timezone as DATE needs converting`() {
+        val field = Field(6, JDBCType.TIMESTAMP_WITH_TIMEZONE, "DATE", DbFlavour.UNKNOWN)
+        val timestamp = Instant.now()
+        every { resultSet.getTimestamp(6) } returns Timestamp.from(timestamp)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(LocalDateTime.ofInstant(timestamp, ZoneId.systemDefault()))
+    }
+
+    @Test
+    fun `timestamp with timezone as DATE supports null`() {
+        val field = Field(6, JDBCType.TIMESTAMP_WITH_TIMEZONE, "DATE", DbFlavour.UNKNOWN)
+        every { resultSet.getTimestamp(6) } returns null
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(null)
     }
 
     @Test
     fun `sqlite long date needs converting`() {
+        val field = Field(7, JDBCType.DATE, "DATE", DbFlavour.SQLITE)
         val date = Instant.now().toEpochMilli()
         every { resultSet.getObject(7) } returns date
-        val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(Date(date))
     }
 
     @Test
     fun `sqlite long date supports null`() {
+        val field = Field(7, JDBCType.DATE, "DATE", DbFlavour.SQLITE)
         every { resultSet.getObject(7) } returns null
-        val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         result.shouldBe(null)
     }
 
@@ -362,27 +391,45 @@ class SQLTypesConverterTest {
         ],
     )
     fun `sqlite string date needs converting`(format: String) {
+        val field = Field(7, JDBCType.DATE, "DATE", DbFlavour.SQLITE)
         val df = SimpleDateFormat(format)
         val date = df.format(Date.from(Instant.now()))
         every { resultSet.getObject(7) } returns date
-        val result = SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
-
+        val result = sqlTypesConverter.convert(field, resultSet)
         df.format(result).shouldBe(date)
     }
 
-    @Test
-    fun `sqlite invalid date throws`() {
-        every { resultSet.getObject(7) } returns "Thu Aug 08 17:26:32 GMT+08:00 2013"
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "FF:PP",
+            "Thu Aug 08 17:26:32 GMT+08:00 2013",
+            "17:26:32+08:00zz",
+            "2001-01-31T17:26:32+08:00zz",
+            "2001-01-31 17:26:32+08:00zz",
+        ],
+    )
+    fun `sqlite invalid date throws`(input: String) {
+        val field = Field(7, JDBCType.DATE, "DATE", DbFlavour.SQLITE)
+        every { resultSet.getObject(7) } returns input
         shouldThrow<KapperUnsupportedOperationException> {
-            SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
+            sqlTypesConverter.convert(field, resultSet)
         }
     }
 
     @Test
     fun `sqlite invalid date type throws`() {
+        val field = Field(7, JDBCType.DATE, "DATE", DbFlavour.SQLITE)
         every { resultSet.getObject(7) } returns 123
         shouldThrow<KapperUnsupportedOperationException> {
-            SQLTypesConverter.convertSQLType(JDBCType.DATE, "DATE", resultSet, 7, DbFlavour.SQLITE)
+            sqlTypesConverter.convert(field, resultSet)
         }
+    }
+
+    @Test
+    fun `when convertDate null, return null`() {
+        every { resultSet.getDate(1) } returns null
+        val result = convertDate(resultSet, 1, DbFlavour.UNKNOWN)
+        result.shouldBe(null)
     }
 }

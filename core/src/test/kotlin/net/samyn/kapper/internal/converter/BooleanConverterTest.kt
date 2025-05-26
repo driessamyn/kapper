@@ -58,4 +58,10 @@ class BooleanConverterTest {
             convertBoolean(Date()) // Invalid input type
         }
     }
+
+    @Test
+    fun `convert valid Boolean to Bool`() {
+        val bool = convertBoolean(java.lang.Boolean.TRUE)
+        bool.shouldBe(true)
+    }
 }

@@ -148,31 +148,36 @@ internal fun convertUUID(value: Any): UUID =
     }
 
 internal fun convertChar(value: Any): Char =
-    if (value is String) {
-        if (value.length != 1) {
-            throw KapperParseException(
-                "Cannot parse $value to Char (length != 1)",
+    when (value) {
+        is java.lang.Character -> value as Char
+        is String -> {
+            if (value.length != 1) {
+                throw KapperParseException(
+                    "Cannot parse $value to Char (length != 1)",
+                )
+            }
+            value[0]
+        }
+        is CharArray -> {
+            if (value.size != 1) {
+                throw KapperParseException(
+                    "Cannot parse $value to Char (size != 1)",
+                )
+            }
+            value[0]
+        }
+        else -> {
+            throw KapperUnsupportedOperationException(
+                "Cannot auto-convert from ${value.javaClass} to Char",
             )
         }
-        value[0]
-    } else if (value is CharArray) {
-        if (value.size != 1) {
-            throw KapperParseException(
-                "Cannot parse $value to Char (size != 1)",
-            )
-        }
-        value[0]
-    } else {
-        throw KapperUnsupportedOperationException(
-            "Cannot auto-convert from ${value.javaClass} to Char",
-        )
     }
 
 internal fun convertInt(value: Any): Int =
     when (value) {
-        is Float -> {
-            value.toInt()
-        }
+        is java.lang.Integer -> value.toInt()
+        is java.lang.Float -> value.toInt()
+        is Float -> value.toInt()
 
         else -> {
             throw KapperUnsupportedOperationException(
@@ -183,9 +188,8 @@ internal fun convertInt(value: Any): Int =
 
 internal fun convertLong(value: Any): Long =
     when (value) {
-        is Float -> {
-            value.toLong()
-        }
+        is java.lang.Long -> value.toLong()
+        is Float -> value.toLong()
 
         else -> {
             throw KapperUnsupportedOperationException(
@@ -196,6 +200,7 @@ internal fun convertLong(value: Any): Long =
 
 internal fun convertBoolean(value: Any): Boolean =
     when (value) {
+        is java.lang.Boolean -> value as Boolean
         is String -> {
             value == "1" || value.toBoolean()
         }
@@ -226,6 +231,8 @@ internal fun convertBoolean(value: Any): Boolean =
             )
         }
     }
+
+internal fun convertString(value: Any): String = value.toString()
 
 fun ByteArray.asUUID(): UUID {
     val b = ByteBuffer.wrap(this)
