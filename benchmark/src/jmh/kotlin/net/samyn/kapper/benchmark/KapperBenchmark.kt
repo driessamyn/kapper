@@ -3,6 +3,7 @@ package net.samyn.kapper.benchmark
 import net.samyn.kapper.benchmark.hibernate.HibernateStrategy
 import net.samyn.kapper.benchmark.jdbc.JDBCStrategy
 import net.samyn.kapper.benchmark.kapper.KapperNoAutomapStrategy
+import net.samyn.kapper.benchmark.kapper.KapperRecordStrategy
 import net.samyn.kapper.benchmark.kapper.KapperStrategy
 import net.samyn.kapper.benchmark.ktorm.KtormStrategy
 import net.samyn.kapper.benchmark.setup.DatabaseConfig
@@ -27,7 +28,7 @@ open class KapperBenchmark {
         @Param("SQLITE", "POSTGRESQL")
         private lateinit var databaseType: String
 
-        @Param("JDBC", "KAPPER", "KAPPER-NO-AUTOMAP", "HIBERNATE", "KTORM")
+        @Param("JDBC", "KAPPER", "KAPPER-RECORD", "KAPPER-NO-AUTOMAP", "HIBERNATE", "HIBERNATE-RECORD", "KTORM")
         private lateinit var library: String
 
         @Param("10_000")
@@ -49,8 +50,11 @@ open class KapperBenchmark {
                 when (library) {
                     "JDBC" -> JDBCStrategy()
                     "KAPPER" -> KapperStrategy()
+                    "KAPPER-RECORD" -> KapperRecordStrategy()
                     "KAPPER-NO-AUTOMAP" -> KapperNoAutomapStrategy()
                     "HIBERNATE" -> HibernateStrategy()
+//                    "HIBERNATE-RECORD" -> HibernateRecordStrategy()
+                    "HIBERNATE-RECORD" -> throw NotImplementedError("Hibernate doesn't properly support records yet")
                     "KTORM" -> KtormStrategy()
                     else -> throw IllegalArgumentException("Unknown ORM type: $library")
                 }

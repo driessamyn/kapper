@@ -1,52 +1,36 @@
 package net.samyn.kapper.benchmark.hibernate
 
 import net.samyn.kapper.benchmark.BenchmarkStrategy
-import net.samyn.kapper.internal.DbFlavour
-import net.samyn.kapper.internal.getDbFlavour
-import org.hibernate.SessionFactory
-import org.hibernate.cfg.AvailableSettings
-import org.hibernate.cfg.Configuration
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider
 import java.sql.Connection
 import java.util.UUID
 
-class HibernateStrategy : BenchmarkStrategy {
-    private var sessionFactory: SessionFactory? = null
-
-    private fun getSessionFactory(connection: Connection): SessionFactory {
-        if (sessionFactory == null) {
-            SingleConnectionProvider.setConnection(connection)
-            sessionFactory =
-                Configuration()
-                    .addAnnotatedClass(SuperHeroEntity::class.java)
-                    .addAnnotatedClass(VillainEntity::class.java)
-                    .addAnnotatedClass(SuperHeroBattleEntity::class.java)
-                    .setProperty(
-                        AvailableSettings.CONNECTION_PROVIDER,
-                        SingleConnectionProvider::class.java.name,
-                    )
-                    .setProperty(AvailableSettings.SHOW_SQL, false)
-                    .setProperty(AvailableSettings.FORMAT_SQL, false).also {
-                        if (connection.getDbFlavour() == DbFlavour.SQLITE) {
-                            it.setProperty("hibernate.type.preferred_uuid_jdbc_type", "VARCHAR")
-                        }
-                    }
-                    .buildSessionFactory()
-        }
-        return sessionFactory!!
-    }
-
+class HibernateStrategy : HibernateBaseStrategy(), BenchmarkStrategy {
     override fun findHeroById(
         connection: Connection,
         id: UUID,
     ): Any? {
-        return getSessionFactory(connection).openSession().use {
+        return getSessionFactory(
+            connection,
+            listOf(
+                SuperHeroEntity::class.java,
+                VillainEntity::class.java,
+                SuperHeroBattleEntity::class.java,
+            ),
+        ).openSession().use {
             it.find(SuperHeroEntity::class.java, id)
         }
     }
 
     override fun find100Heroes(connection: Connection): List<Any> {
-        return getSessionFactory(connection).openSession().use {
+        return getSessionFactory(
+            connection,
+            listOf(
+                SuperHeroEntity::class.java,
+                VillainEntity::class.java,
+                SuperHeroBattleEntity::class.java,
+            ),
+        ).openSession().use {
             it.createQuery("FROM SuperHeroEntity", SuperHeroEntity::class.java)
                 .setMaxResults(100).list()
         }
@@ -59,7 +43,14 @@ class HibernateStrategy : BenchmarkStrategy {
         email: String,
         age: Int,
     ) {
-        getSessionFactory(connection).openSession().use {
+        getSessionFactory(
+            connection,
+            listOf(
+                SuperHeroEntity::class.java,
+                VillainEntity::class.java,
+                SuperHeroBattleEntity::class.java,
+            ),
+        ).openSession().use {
             it.transaction.begin()
             it.merge(SuperHeroEntity(id, name, email, age))
             it.transaction.commit()
@@ -73,7 +64,14 @@ class HibernateStrategy : BenchmarkStrategy {
         email: String,
         age: Int,
     ) {
-        getSessionFactory(connection).openSession().use {
+        getSessionFactory(
+            connection,
+            listOf(
+                SuperHeroEntity::class.java,
+                VillainEntity::class.java,
+                SuperHeroBattleEntity::class.java,
+            ),
+        ).openSession().use {
             it.transaction.begin()
             it.merge(SuperHeroEntity(id, name, email, age))
             it.transaction.commit()
@@ -84,7 +82,14 @@ class HibernateStrategy : BenchmarkStrategy {
         connection: Connection,
         heroId: UUID,
     ): List<Any> {
-        return getSessionFactory(connection).openSession().use {
+        return getSessionFactory(
+            connection,
+            listOf(
+                SuperHeroEntity::class.java,
+                VillainEntity::class.java,
+                SuperHeroBattleEntity::class.java,
+            ),
+        ).openSession().use {
             it.createSelectionQuery(
                 """
             SELECT b FROM SuperHeroBattleEntity b 

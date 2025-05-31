@@ -9,7 +9,7 @@ iterations=5
 time_on_iteration="5s"
 warmup_time="2s"
 databases="SQLITE,POSTGRESQL"
-libraries="JDBC,KAPPER,KAPPER-NO-AUTOMAP,HIBERNATE,KTORM"
+libraries="JDBC,KAPPER,KAPPER-RECORD,KAPPER-NO-AUTOMAP,HIBERNATE,KTORM"
 rows=1000
 
 # Parse options

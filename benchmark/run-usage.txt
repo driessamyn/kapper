@@ -1,10 +1,10 @@
 ./run.sh usage:
 b) # Benchmark mode [thrpt, avgt, sample, ss] (default: avgt).
-f)  # Forks (default: 3).
-i)  # Number of measurement iterations to do (default: 5).
-r)  # Time on each iteration (default: 5s).
-w)  # Time to spend on warmup (default: 2s).
+f) # Forks (default: 3).
+i) # Number of measurement iterations to do (default: 5).
+r) # Time on each iteration (default: 5s).
+w) # Time to spend on warmup (default: 2s).
 d) # Databases type [SQLITE, POSTGRES] (default: SQLITE,POSTGRESQL).
-l)  # Libraries [JDBC, KAPPER, KAPPER-NO-AUTOMAP, HIBERNATE, KTORM] (default: JDBC,KAPPER,KAPPER-NO-AUTOMAP,HIBERNATE,KTORM).
+l) # Libraries [JDBC,KAPPER,KAPPER-RECORD,KAPPER-NO-AUTOMAP,HIBERNATE,KTORM] (default: JDBC,KAPPER,KAPPER-RECORD,KAPPER-NO-AUTOMAP,HIBERNATE,HIBERNATE-RECORD,KTORM).
 j) # Number of rows to insert during test setup (default: 1000).
 h | *) # Display help.
