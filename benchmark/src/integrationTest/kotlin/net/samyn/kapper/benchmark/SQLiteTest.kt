@@ -6,6 +6,8 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.benchmark.hibernate.HibernateStrategy
 import net.samyn.kapper.benchmark.jdbc.JDBCStrategy
+import net.samyn.kapper.benchmark.kapper.KapperNoAutomapStrategy
+import net.samyn.kapper.benchmark.kapper.KapperRecordStrategy
 import net.samyn.kapper.benchmark.kapper.KapperStrategy
 import net.samyn.kapper.benchmark.kapper.SuperHero
 import net.samyn.kapper.benchmark.ktorm.KtormStrategy
@@ -31,8 +33,11 @@ class SQLiteTest {
         fun strategies() =
             mapOf(
                 "Kapper" to KapperStrategy(),
+                "Kapper-No-Automap" to KapperNoAutomapStrategy(),
+                "Kapper-Record" to KapperRecordStrategy(),
                 "JDBC" to JDBCStrategy(),
                 "Hibernate" to HibernateStrategy(),
+//                "Hibernate-Record" to HibernateRecordStrategy(),
                 "Ktorm" to KtormStrategy(),
             ).map { arguments(named(it.key, it.value)) }
     }

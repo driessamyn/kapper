@@ -103,7 +103,7 @@ ds.getConnection().use { connection ->
 ```
 
 Kapper does not maintain a mapping between classes and DB tables or entities. 
-Instead, it can either auto-map to a given class if the constructor arguments match the DB fields, a custom mapper can be provided, or a mapping lambda can be passed in.
+Instead, it can either auto-map to a given data class or record, if the constructor arguments match the DB fields, a custom mapper can be provided, or a mapping lambda can be passed in.
 This means Kapper provides a strongly typed mapping, but still allows rows-to-object mapping with lambdas or mapper functions for more flexibility or advanced used cases.
 
 Example of registering an custom mapper class:
@@ -148,9 +148,34 @@ val heroes = connection.query<SuperHero>(
 Further examples and documentation are explored below and in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/), or check out the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo for more extended examples and documentation,
 including [a comparison with Hibernate and Ktorm](https://github.com/driessamyn/kapper-examples/tree/release-1.0-article?tab=readme-ov-file#comparison-with-orms).
 
-## How to use Kapper
+### Auto-mapping to Java Record Classes
 
-### Import dependencies
+Kapper supports automatic mapping of SQL query results to Java record classes, in addition to Kotlin data classes.
+If you use Java records as your DTOs, Kapper will match the column names in your result set to the record's component names and instantiate the record automatically.
+
+For example, given the following Java record:
+
+```java
+public record SuperHeroRecord(UUID id, String name, String email, Integer age) {}
+```
+
+You can query and map results just as you would with a Kotlin data class:
+
+```kotlin
+val heroes: List<SuperHeroRecord> = connection.query<SuperHeroRecord>("SELECT * FROM super_heroes")
+```
+
+#### Handling Default Values, Nullables, and Extra Fields
+
+Kapper's auto-mapping is flexible:
+- If a database field is missing, Kapper will use the default value for that property in a Kotlin data class, or `null` for nullable fields in both Kotlin data classes and Java records.
+- If the database returns extra columns that are not present in your data class or record, Kapper will simply ignore them.
+
+This allows you to evolve your database schema and DTOs independently, and makes it easy to work with partial queries or legacy tables.
+
+### How to use Kapper
+
+#### Import dependencies
 
 Stable versions of Kapper are published to [Maven Central](https://central.sonatype.com/artifact/net.samyn/kapper/versions).
 To use this in your project, simply add the following dependency to your `build.gradle.kts` (or the Groovy equivalent in `build.gradle`):
@@ -190,9 +215,9 @@ repositories {
 }
 ```
 
-### Basic usage
+#### Basic usage
 
-#### Queries
+##### Queries
 
 Kapper can auto-map the results of a SQL query to a data class:
 
@@ -247,7 +272,7 @@ val batman =
     }
 ```
 
-#### Execute
+##### Execute
 
 Kapper provides an `execute` function to execute SQL statements that do not return a result set, such as `INSERT`, `UPDATE`, or `DELETE` statements.
 
@@ -289,7 +314,7 @@ datasource.connection.use {
 }
 ```
 
-### DB Transactions
+#### DB Transactions
 
 Kapper provides extension functions to make working with transactions easier.
 
