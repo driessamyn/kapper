@@ -165,6 +165,8 @@ You can query and map results just as you would with a Kotlin data class:
 val heroes: List<SuperHeroRecord> = connection.query<SuperHeroRecord>("SELECT * FROM super_heroes")
 ```
 
+Additional Java examples can be found in the [Kapper-Example](https://github.com/driessamyn/kapper-examples#java-examples)
+
 #### Handling Default Values, Nullables, and Extra Fields
 
 Kapper's auto-mapping is flexible:
@@ -451,7 +453,8 @@ Kapper is designed to be fast and lightweight, with performance comparable to ra
 This repository contains a [benchmark suite](./benchmark) that compares Kapper's performance against other popular ORMs like Hibernate and Ktorm.
 The benchmark suite is designed to be extensible and can be used to add new benchmarks or modify existing ones.
 Two Kapper benchmarks are included: with auto-mapping and with a custom mapper.
-In Kapper 1.3, the _"cost"_ of auto-mapping is in the small single digit microsecond range.
+In the current version of Kapper the _"cost"_ of auto-mapping in the small single digit _microsecond_ range.
+Manual mapping is always the fastest and recommended for performance-critical applications or queries.
 
 More details can be found [here](./benchmark/README.md), and the benchmark results are published in [kapper-benchmark-results](https://github.com/driessamyn/kapper-benchmark-results/).
 
@@ -473,15 +476,15 @@ Items will be ticked off as they are implemented.
 - [x] Add co-routine support.
 - [x] Add flow support.
 - [x] Add MS SQL Server, Oracle and SQLite integration tests.
-- [ ] Support auto-mapping for Java records.
+- [x] Support auto-mapping for Java records.
+- [x] Tests & examples in other JVM languages.
 - [ ] Cache query parsing.
 - [ ] Custom SQL type conversion.
 - [ ] Improve support for date/time conversion.
 - [ ] Support DTO argument for `execute`.
 - [ ] Add support for non-blocking JDBC drivers.
 - [ ] Bulk operations support
-- [ ] Improve user documentation.
-- [ ] Tests & examples in other JVM languages.
+- [ ] Improve user documentation / docs website.
 
 Anything else you think is missing, or you want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
 
