@@ -2,8 +2,7 @@ package net.samyn.kapper
 
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.getDbFlavour
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.api.Test
 import java.sql.Connection
 import java.time.Instant
 import java.time.LocalDate
@@ -49,9 +48,8 @@ class TypesTest : AbstractDbTests() {
         }
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `can insert and retreive the same types`(connection: Connection) {
+    @Test
+    fun `can insert and retreive the same types`() {
         val testData = createTestObject()
         val result =
             connection.execute(

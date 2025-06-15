@@ -4,15 +4,12 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
-import java.sql.Connection
+import org.junit.jupiter.api.Test
 import java.sql.ResultSet
 
 class QueryTests : AbstractDbTests() {
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query all heros`(connection: Connection) {
+    @Test
+    fun `should query all heros`() {
         val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes_$testId")
         heroes.shouldContainExactlyInAnyOrder(
             superman,
@@ -21,9 +18,8 @@ class QueryTests : AbstractDbTests() {
         )
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query heros with condition`(connection: Connection) {
+    @Test
+    fun `should query heros with condition`() {
         val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes_$testId WHERE age > :age", "age" to 80)
         heroes.shouldContainExactlyInAnyOrder(
             superman,
@@ -31,9 +27,8 @@ class QueryTests : AbstractDbTests() {
         )
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query specific columns`(connection: Connection) {
+    @Test
+    fun `should query specific columns`() {
         val heroes =
             connection.query<SuperHero>(
                 "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
@@ -44,9 +39,8 @@ class QueryTests : AbstractDbTests() {
         )
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should handle empty result set`(connection: Connection) {
+    @Test
+    fun `should handle empty result set`() {
         val heroes =
             connection.query<SuperHero>(
                 "SELECT * FROM super_heroes_$testId WHERE name = :name",
@@ -55,9 +49,8 @@ class QueryTests : AbstractDbTests() {
         heroes.shouldBeEmpty()
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query with multiple conditions`(connection: Connection) {
+    @Test
+    fun `should query with multiple conditions`() {
         val heroes =
             connection.query<SuperHero>(
                 "SELECT * FROM super_heroes_$testId WHERE age BETWEEN :fromAge AND :toAge",
@@ -70,9 +63,8 @@ class QueryTests : AbstractDbTests() {
         )
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `support field labels`(connection: Connection) {
+    @Test
+    fun `support field labels`() {
         data class SimpleClass(val superHeroName: String)
         val hero =
             connection.query<SimpleClass>(
@@ -84,9 +76,8 @@ class QueryTests : AbstractDbTests() {
         )
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `can use custom registered mapper`(connection: Connection) {
+    @Test
+    fun `can use custom registered mapper`() {
         data class SuperHero2(val name: String, val email: String? = null, val age: Int? = null)
 
         class SuperHeroMapper : Mapper<SuperHero2> {
@@ -110,9 +101,8 @@ class QueryTests : AbstractDbTests() {
         )
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `can use custom mapper`(connection: Connection) {
+    @Test
+    fun `can use custom mapper`() {
         val villain =
             connection.query<Villain>(
                 "SELECT id, name FROM super_heroes_$testId WHERE name = :name",

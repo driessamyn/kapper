@@ -7,15 +7,12 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.getDbFlavour
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
-import java.sql.Connection
+import org.junit.jupiter.api.Test
 import java.sql.ResultSet
 
 class QuerySingleTests : AbstractDbTests() {
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `should query 1 heros`(connection: Connection) {
+    @Test
+    fun `should query 1 heros`() {
         val sql =
             if (DbFlavour.MSSQLSERVER == connection.getDbFlavour()) {
                 "SELECT TOP 1 * FROM super_heroes_$testId ORDER BY age DESC"
@@ -28,16 +25,14 @@ class QuerySingleTests : AbstractDbTests() {
         hero.shouldBe(superman)
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query hero with condition`(connection: Connection) {
+    @Test
+    fun `should query hero with condition`() {
         val hero = connection.querySingle<SuperHero>("SELECT * FROM super_heroes_$testId WHERE age > :age", "age" to 85)
         hero.shouldBe(superman)
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query specific columns`(connection: Connection) {
+    @Test
+    fun `should query specific columns`() {
         val hero =
             connection.querySingle<SuperHero>(
                 "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
@@ -46,9 +41,8 @@ class QuerySingleTests : AbstractDbTests() {
         hero.shouldBe(SuperHero(superman.id, superman.name))
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should handle empty result set`(connection: Connection) {
+    @Test
+    fun `should handle empty result set`() {
         val hero =
             connection.querySingle<SuperHero>(
                 "SELECT * FROM super_heroes_$testId WHERE name = :name",
@@ -57,9 +51,8 @@ class QuerySingleTests : AbstractDbTests() {
         hero.shouldBeNull()
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should throw when larger than one result`(connection: Connection) {
+    @Test
+    fun `should throw when larger than one result`() {
         val ex =
             shouldThrow<KapperResultException> {
                 connection.querySingle<SuperHero>(
@@ -69,9 +62,8 @@ class QuerySingleTests : AbstractDbTests() {
         ex.message.shouldContain("3")
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `should query with multiple conditions`(connection: Connection) {
+    @Test
+    fun `should query with multiple conditions`() {
         val hero =
             connection.querySingle<SuperHero>(
                 "SELECT * FROM super_heroes_$testId WHERE age BETWEEN :fromAge AND :toAge",
@@ -81,9 +73,8 @@ class QuerySingleTests : AbstractDbTests() {
         hero.shouldBe(superman)
     }
 
-    @ParameterizedTest
-    @MethodSource("databaseContainers")
-    fun `can use custom mapper`(connection: Connection) {
+    @Test
+    fun `can use custom mapper`() {
         val villain =
             connection.querySingle<Villain>(
                 "SELECT id, name FROM super_heroes_$testId WHERE name = :name",
