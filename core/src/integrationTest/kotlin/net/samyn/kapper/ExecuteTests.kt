@@ -5,16 +5,13 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.getDbFlavour
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
-import java.sql.Connection
+import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import java.util.UUID
 
 class ExecuteTests : AbstractDbTests() {
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `SQL Insert single`(connection: Connection) {
+    @Test
+    fun `SQL Insert single`() {
         val supermanClone = superman.copy(id = UUID.randomUUID())
         val results =
             connection.execute(
@@ -44,9 +41,8 @@ class ExecuteTests : AbstractDbTests() {
             }
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `SQL Update single`(connection: Connection) {
+    @Test
+    fun `SQL Update single`() {
         val batmanClone = batman.copy(id = UUID.randomUUID())
         connection.createStatement().use { stmt ->
             stmt.execute(
@@ -81,9 +77,8 @@ class ExecuteTests : AbstractDbTests() {
             }
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `SQL Update multiple`(connection: Connection) {
+    @Test
+    fun `SQL Update multiple`() {
         val ids = listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID())
         val name = "foo-${UUID.randomUUID()}"
         connection.createStatement().use { stmt ->
@@ -105,9 +100,8 @@ class ExecuteTests : AbstractDbTests() {
         results.shouldBe(ids.size)
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `SQL Delete single`(connection: Connection) {
+    @Test
+    fun `SQL Delete single`() {
         val spidermanClone = spiderMan.copy(id = UUID.randomUUID())
         connection.createStatement().use { stmt ->
             stmt.execute(
@@ -136,9 +130,8 @@ class ExecuteTests : AbstractDbTests() {
             }
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `SQL Delete multiple`(connection: Connection) {
+    @Test
+    fun `SQL Delete multiple`() {
         val ids = listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID())
         val name = "bar-${UUID.randomUUID()}"
         connection.createStatement().use { stmt ->
@@ -159,9 +152,8 @@ class ExecuteTests : AbstractDbTests() {
         results.shouldBe(ids.size)
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `with TX completes`(connection: Connection) {
+    @Test
+    fun `with TX completes`() {
         connection.withTransaction {
             val results =
                 connection.execute(
@@ -184,9 +176,8 @@ class ExecuteTests : AbstractDbTests() {
         }
     }
 
-    @ParameterizedTest()
-    @MethodSource("databaseContainers")
-    fun `with TX rolls back`(connection: Connection) {
+    @Test
+    fun `with TX rolls back`() {
         val id = UUID.randomUUID()
         shouldThrow<SQLException> {
             connection.withTransaction {

@@ -6,8 +6,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Named.named
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.Parameter
+import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MySQLContainer
@@ -21,10 +24,14 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.random.Random
-import kotlin.use
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ParameterizedClass
+@MethodSource("databaseContainers")
 abstract class AbstractDbTests {
+    @Parameter
+    protected lateinit var connection: Connection
+
     companion object {
         init {
             Class.forName("org.sqlite.JDBC")
