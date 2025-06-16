@@ -4,6 +4,7 @@ import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import org.junit.jupiter.api.Test
 import java.sql.JDBCType

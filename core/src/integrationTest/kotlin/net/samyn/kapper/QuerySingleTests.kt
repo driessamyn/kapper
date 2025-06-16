@@ -5,7 +5,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.api.Test
 import java.sql.ResultSet

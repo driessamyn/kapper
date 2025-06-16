@@ -2,6 +2,7 @@
 
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import java.sql.JDBCType
 import java.sql.ResultSet

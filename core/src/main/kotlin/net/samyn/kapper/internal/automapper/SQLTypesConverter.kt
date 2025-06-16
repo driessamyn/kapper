@@ -2,9 +2,9 @@
 
 package net.samyn.kapper.internal.automapper
 
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperUnsupportedOperationException
-import net.samyn.kapper.internal.DbFlavour
 import java.nio.ByteBuffer
 import java.sql.JDBCType
 import java.sql.PreparedStatement

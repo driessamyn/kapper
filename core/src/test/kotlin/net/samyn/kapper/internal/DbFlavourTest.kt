@@ -3,6 +3,7 @@ package net.samyn.kapper.internal
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import net.samyn.kapper.DbFlavour
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.sql.Connection

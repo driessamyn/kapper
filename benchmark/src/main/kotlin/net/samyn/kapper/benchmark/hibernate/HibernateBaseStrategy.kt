@@ -1,6 +1,6 @@
 package net.samyn.kapper.benchmark.hibernate
 
-import net.samyn.kapper.internal.DbFlavour
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.internal.getDbFlavour
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.AvailableSettings

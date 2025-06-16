@@ -3,7 +3,7 @@ package net.samyn.kapper.internal.automapper;
 import net.samyn.kapper.Field;
 import net.samyn.kapper.KapperMappingException;
 import net.samyn.kapper.internal.AutoConverter;
-import net.samyn.kapper.internal.DbFlavour;
+import net.samyn.kapper.DbFlavour;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
