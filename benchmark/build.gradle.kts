@@ -1,6 +1,6 @@
 plugins {
     id("kapper.library-conventions")
-    id "me.champeau.jmh" version "0.7.2"
+    id("me.champeau.jmh") version "0.7.2"
 }
 
 dependencies {
@@ -21,19 +21,25 @@ dependencies {
     implementation(libs.test.containers.postgresql)
     implementation(libs.sqlite.jdbc)
 
+    // to support mapper tests (stubbing out ResultSet)
+    implementation(libs.mockk)
+
     runtimeOnly(libs.postgresql.driver)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     integrationTestImplementation(libs.bundles.test)
     integrationTestRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 jmh {
-    benchmarkMode = ['avgt']
-    failOnError = true
-    warmup = '1s'
-    warmupBatchSize = 1
-    warmupIterations = 1
-    iterations = 1
-    timeOnIteration = '1s'
-    fork = 1
+    benchmarkMode.set(listOf("avgt"))
+    failOnError.set(true)
+    warmup.set("1s")
+    warmupBatchSize.set(1)
+    warmupIterations.set(1)
+    iterations.set(1)
+    timeOnIteration.set("1s")
+    fork.set(1)
 }
