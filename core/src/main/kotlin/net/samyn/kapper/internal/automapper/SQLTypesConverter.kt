@@ -76,7 +76,9 @@ val sqlTypesConverter =
                     "binary_float" -> resultSet.getFloat(field.columnIndex)
                     "binary_double" -> resultSet.getDouble(field.columnIndex)
                     else ->
-                        throw KapperUnsupportedOperationException("Conversion from type ${field.typeName} is not supported")
+                        throw KapperUnsupportedOperationException(
+                            "Conversion of field[${field.columnIndex}] from type ${field.typeName} is not supported",
+                        )
                 }
             }
         }

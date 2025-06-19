@@ -21,9 +21,6 @@ dependencies {
     implementation(libs.test.containers.postgresql)
     implementation(libs.sqlite.jdbc)
 
-    // to support mapper tests (stubbing out ResultSet)
-    implementation(libs.mockk)
-
     runtimeOnly(libs.postgresql.driver)
 
     testImplementation(libs.bundles.test)
@@ -36,10 +33,31 @@ dependencies {
 jmh {
     benchmarkMode.set(listOf("avgt"))
     failOnError.set(true)
-    warmup.set("1s")
+    warmup.set("5s")
     warmupBatchSize.set(1)
     warmupIterations.set(1)
-    iterations.set(1)
-    timeOnIteration.set("1s")
-    fork.set(1)
+    fork.set(3)
+}
+
+tasks.register("jmhKapper") {
+    doFirst {
+        jmh {
+            includes.set(listOf(".*KapperBenchmark.*"))
+            iterations.set(1)
+            timeOnIteration.set("1s")
+        }
+    }
+    finalizedBy("jmh")
+}
+
+tasks.register("jmhMapper") {
+    doFirst {
+        jmh {
+            includes.set(listOf(".*MapperBenchmark.*"))
+            iterations.set(3)
+            timeOnIteration.set("2s")
+//            profilers.set(listOf("stack"))
+        }
+    }
+    finalizedBy("jmh")
 }
