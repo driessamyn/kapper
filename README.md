@@ -488,6 +488,16 @@ Items will be ticked off as they are implemented.
 
 Anything else you think is missing, or you want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
 
+## Sponsors
+
+[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/)
+
+Special thanks to the kind people from YourKit for supporting open source projects and providing us with licenses for their profilers.
+
+YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
+<a href="https://www.yourkit.com/dotnet-profiler/">YourKit .NET Profiler</a>,
+and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
+
 ## Contributing
 
 We welcome contributions to the Kapper! If you find any issues or have ideas for improvements, please feel free to [open an issue](kapper/issues) or submit a pull request.
