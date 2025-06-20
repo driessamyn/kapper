@@ -15,6 +15,7 @@ class QueryTests : AbstractDbTests() {
             superman,
             batman,
             spiderMan,
+            nullMan,
         )
     }
 
@@ -47,6 +48,18 @@ class QueryTests : AbstractDbTests() {
                 "name" to "joker",
             )
         heroes.shouldBeEmpty()
+    }
+
+    @Test
+    fun `should handle null columns`() {
+        val heroes =
+            connection.query<SuperHero>(
+                "SELECT * FROM super_heroes_$testId WHERE name = :name",
+                "name" to nullMan.name,
+            )
+        heroes.shouldContainExactlyInAnyOrder(
+            SuperHero(nullMan.id, nullMan.name),
+        )
     }
 
     @Test
@@ -98,6 +111,8 @@ class QueryTests : AbstractDbTests() {
             SuperHero2(superman.name, superman.email, superman.age),
             SuperHero2(spiderMan.name, spiderMan.email, spiderMan.age),
             SuperHero2(batman.name, batman.email, batman.age),
+            // age is null, so default JDBC behaviour is to set it to 0
+            SuperHero2(nullMan.name, nullMan.email, 0),
         )
     }
 
@@ -117,6 +132,7 @@ class QueryTests : AbstractDbTests() {
 
     private fun createVillain(
         resultSet: ResultSet,
+        @Suppress("UNUSED_PARAMETER")
         fields: Map<String, Field>,
     ): Villain =
         Villain().also {

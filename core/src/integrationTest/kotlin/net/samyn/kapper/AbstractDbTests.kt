@@ -106,6 +106,7 @@ abstract class AbstractDbTests {
     val superman = SuperHero(UUID.randomUUID(), "Superman", "superman@dc.com", 86)
     val batman = SuperHero(UUID.randomUUID(), "Batman", "batman@dc.com", 85)
     val spiderMan = SuperHero(UUID.randomUUID(), "Spider-man", "spider@marvel.com", 62)
+    val nullMan = SuperHero(UUID.randomUUID(), "null-man", null, null)
 
     @BeforeAll
     fun setup() {
@@ -143,7 +144,8 @@ abstract class AbstractDbTests {
                 INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
                     (${convertUUIDString(superman.id, dbFlavour)}, '${superman.name}', '${superman.email}', ${superman.age}),
                     (${convertUUIDString(batman.id, dbFlavour)}, '${batman.name}', '${batman.email}', ${batman.age}),
-                    (${convertUUIDString(spiderMan.id, dbFlavour)}, '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age});
+                    (${convertUUIDString(spiderMan.id, dbFlavour)}, '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age}),
+                    (${convertUUIDString(nullMan.id, dbFlavour)}, '${nullMan.name}', NULL, NULL);
                 """,
             )
         }

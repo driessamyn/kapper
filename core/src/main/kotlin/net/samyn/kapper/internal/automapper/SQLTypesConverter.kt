@@ -43,22 +43,22 @@ val sqlTypesConverter =
     SQLTypesConverter { field, resultSet ->
         when (field.type) {
             JDBCType.ARRAY -> resultSet.getArray(field.columnIndex)
-            JDBCType.BIGINT -> resultSet.getLong(field.columnIndex)
+            JDBCType.BIGINT -> resultSet.getNullableLong(field.columnIndex)
             in BINARY_TYPES -> resultSet.getBytes(field.columnIndex)
 
-            in BOOLEAN_TYPES -> resultSet.getBoolean(field.columnIndex)
+            in BOOLEAN_TYPES -> resultSet.getNullableBoolean(field.columnIndex)
             in CHAR_TYPES -> resultSet.getString(field.columnIndex)?.toCharArray()
 
             in STRING_TYPES -> resultSet.getString(field.columnIndex)
 
             in DATE_TYPES -> convertDate(resultSet, field.columnIndex, field.dbFlavour)
 
-            in FLOAT_TYPES -> resultSet.getFloat(field.columnIndex)
+            in FLOAT_TYPES -> resultSet.getNullableFloat(field.columnIndex)
 
             JDBCType.DOUBLE ->
-                resultSet.getDouble(field.columnIndex)
+                resultSet.getNullableDouble(field.columnIndex)
 
-            in INTEGER_TYPES -> resultSet.getInt(field.columnIndex)
+            in INTEGER_TYPES -> resultSet.getNullableInt(field.columnIndex)
 
             JDBCType.JAVA_OBJECT,
             -> resultSet.getObject(field.columnIndex)
@@ -73,14 +73,89 @@ val sqlTypesConverter =
                 when (field.typeName.lowercase()) {
                     "uuid" -> resultSet.getString(field.columnIndex)?.let { UUID.fromString(it) }
                     // oracle types
-                    "binary_float" -> resultSet.getFloat(field.columnIndex)
-                    "binary_double" -> resultSet.getDouble(field.columnIndex)
+                    "binary_float" -> resultSet.getNullableFloat(field.columnIndex)
+                    "binary_double" -> resultSet.getNullableDouble(field.columnIndex)
                     else ->
                         throw KapperUnsupportedOperationException("Conversion from type ${field.typeName} is not supported")
                 }
             }
         }
     }
+
+/**
+ * Returns the value of the specified column as an [Boolean], or `null` if the value is SQL `NULL`.
+ *
+ * NOTE: this does not align with general JDBC logic, which means NULL values are returned as 0.
+ * However, for the auto-mapper this seems more intuitive.
+ * This change will be documented in the user docs.
+ */
+fun ResultSet.getNullableBoolean(columnIndex: Int): Boolean? {
+    val dbValue = getBoolean(columnIndex)
+    if (wasNull()) {
+        return null
+    }
+    return dbValue
+}
+
+/**
+ * Returns the value of the specified column as an [Int], or `null` if the value is SQL `NULL`.
+ *
+ * NOTE: this does not align with general JDBC logic, which means NULL values are returned as 0.
+ * However, for the auto-mapper this seems more intuitive.
+ * This change will be documented in the user docs.
+ */
+fun ResultSet.getNullableInt(columnIndex: Int): Int? {
+    val dbValue = getInt(columnIndex)
+    if (wasNull()) {
+        return null
+    }
+    return dbValue
+}
+
+/**
+ * Returns the value of the specified column as an [Long], or `null` if the value is SQL `NULL`.
+ *
+ * NOTE: this does not align with general JDBC logic, which means NULL values are returned as 0.
+ * However, for the auto-mapper this seems more intuitive.
+ * This change will be documented in the user docs.
+ */
+fun ResultSet.getNullableLong(columnIndex: Int): Long? {
+    val dbValue = getLong(columnIndex)
+    if (wasNull()) {
+        return null
+    }
+    return dbValue
+}
+
+/**
+ * Returns the value of the specified column as an [Float], or `null` if the value is SQL `NULL`.
+ *
+ * NOTE: this does not align with general JDBC logic, which means NULL values are returned as 0.
+ * However, for the auto-mapper this seems more intuitive.
+ * This change will be documented in the user docs.
+ */
+fun ResultSet.getNullableFloat(columnIndex: Int): Float? {
+    val dbValue = getFloat(columnIndex)
+    if (wasNull()) {
+        return null
+    }
+    return dbValue
+}
+
+/**
+ * Returns the value of the specified column as an [Double], or `null` if the value is SQL `NULL`.
+ *
+ * NOTE: this does not align with general JDBC logic, which means NULL values are returned as 0.
+ * However, for the auto-mapper this seems more intuitive.
+ * This change will be documented in the user docs.
+ */
+fun ResultSet.getNullableDouble(columnIndex: Int): Double? {
+    val dbValue = getDouble(columnIndex)
+    if (wasNull()) {
+        return null
+    }
+    return dbValue
+}
 
 fun convertTimestamp(
     resultSet: ResultSet,
