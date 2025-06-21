@@ -14,14 +14,14 @@ class QuerySingleTests : AbstractDbTests() {
     fun `should query 1 heros`() {
         val sql =
             if (DbFlavour.MSSQLSERVER == connection.getDbFlavour()) {
-                "SELECT TOP 1 * FROM super_heroes_$testId ORDER BY age DESC"
+                "SELECT TOP 1 * FROM super_heroes_$testId ORDER BY name ASC"
             } else if (DbFlavour.ORACLE == connection.getDbFlavour()) {
-                "SELECT * FROM super_heroes_$testId ORDER BY age DESC FETCH FIRST 1 ROWS ONLY"
+                "SELECT * FROM super_heroes_$testId ORDER BY name ASC FETCH FIRST 1 ROWS ONLY"
             } else {
-                "SELECT * FROM super_heroes_$testId ORDER BY age DESC LIMIT 1"
+                "SELECT * FROM super_heroes_$testId ORDER BY name ASC LIMIT 1"
             }
         val hero = connection.querySingle<SuperHero>(sql)
-        hero.shouldBe(superman)
+        hero.shouldBe(batman)
     }
 
     @Test
@@ -58,7 +58,7 @@ class QuerySingleTests : AbstractDbTests() {
                     "SELECT * FROM super_heroes_$testId",
                 )
             }
-        ex.message.shouldContain("3")
+        ex.message.shouldContain("4")
     }
 
     @Test
