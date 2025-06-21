@@ -10,11 +10,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperQueryException
 import net.samyn.kapper.Mapper
-import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.executeQuery
 import net.samyn.kapper.internal.extractFields

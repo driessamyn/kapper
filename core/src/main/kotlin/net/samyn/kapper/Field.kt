@@ -1,6 +1,5 @@
 package net.samyn.kapper
 
-import net.samyn.kapper.internal.DbFlavour
 import java.sql.JDBCType
 
 /**

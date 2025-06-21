@@ -3,10 +3,10 @@ package net.samyn.kapper.coroutines
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperQueryException
-import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.executeQuery
 import net.samyn.kapper.internal.extractFields

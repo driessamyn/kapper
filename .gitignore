@@ -38,3 +38,6 @@ kotlin-compiler-*.salive
 
 # SonarQube
 .scannerwork/
+
+results.txt
+*.hprof

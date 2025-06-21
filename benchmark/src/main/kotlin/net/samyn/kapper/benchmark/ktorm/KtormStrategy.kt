@@ -1,8 +1,8 @@
 package net.samyn.kapper.benchmark.ktorm
 
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.benchmark.BenchmarkStrategy
 import net.samyn.kapper.benchmark.ISuperHero
-import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.getDbFlavour
 import org.ktorm.database.Database
 import org.ktorm.dsl.QueryRowSet

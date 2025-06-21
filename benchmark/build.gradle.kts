@@ -1,6 +1,6 @@
 plugins {
     id("kapper.library-conventions")
-    id "me.champeau.jmh" version "0.7.2"
+    id("me.champeau.jmh") version "0.7.2"
 }
 
 dependencies {
@@ -23,17 +23,41 @@ dependencies {
 
     runtimeOnly(libs.postgresql.driver)
 
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     integrationTestImplementation(libs.bundles.test)
     integrationTestRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 jmh {
-    benchmarkMode = ['avgt']
-    failOnError = true
-    warmup = '1s'
-    warmupBatchSize = 1
-    warmupIterations = 1
-    iterations = 1
-    timeOnIteration = '1s'
-    fork = 1
+    benchmarkMode.set(listOf("avgt"))
+    failOnError.set(true)
+    warmup.set("5s")
+    warmupBatchSize.set(1)
+    warmupIterations.set(1)
+    fork.set(3)
+}
+
+tasks.register("jmhKapper") {
+    doFirst {
+        jmh {
+            includes.set(listOf(".*KapperBenchmark.*"))
+            iterations.set(1)
+            timeOnIteration.set("1s")
+        }
+    }
+    finalizedBy("jmh")
+}
+
+tasks.register("jmhMapper") {
+    doFirst {
+        jmh {
+            includes.set(listOf(".*MapperBenchmark.*"))
+            iterations.set(3)
+            timeOnIteration.set("2s")
+//            profilers.set(listOf("stack"))
+        }
+    }
+    finalizedBy("jmh")
 }

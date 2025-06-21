@@ -2,6 +2,7 @@
 
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.DbFlavour
 import java.sql.Connection
 
 fun Connection.getDbFlavour(): DbFlavour {
@@ -19,13 +20,4 @@ fun Connection.getDbFlavour(): DbFlavour {
     } else {
         DbFlavour.UNKNOWN
     }
-}
-
-enum class DbFlavour {
-    POSTGRESQL,
-    MYSQL,
-    SQLITE,
-    ORACLE,
-    MSSQLSERVER,
-    UNKNOWN,
 }

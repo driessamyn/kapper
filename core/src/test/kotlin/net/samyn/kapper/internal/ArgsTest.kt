@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
 import io.mockk.verify
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.internal.automapper.setParameter
 import org.junit.jupiter.api.Test

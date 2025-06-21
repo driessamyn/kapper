@@ -1,6 +1,5 @@
 package net.samyn.kapper
 
-import net.samyn.kapper.internal.DbFlavour
 import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll

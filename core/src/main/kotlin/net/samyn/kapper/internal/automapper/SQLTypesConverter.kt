@@ -2,9 +2,9 @@
 
 package net.samyn.kapper.internal.automapper
 
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperUnsupportedOperationException
-import net.samyn.kapper.internal.DbFlavour
 import java.nio.ByteBuffer
 import java.sql.JDBCType
 import java.sql.PreparedStatement
@@ -76,7 +76,9 @@ val sqlTypesConverter =
                     "binary_float" -> resultSet.getFloat(field.columnIndex)
                     "binary_double" -> resultSet.getDouble(field.columnIndex)
                     else ->
-                        throw KapperUnsupportedOperationException("Conversion from type ${field.typeName} is not supported")
+                        throw KapperUnsupportedOperationException(
+                            "Conversion of field[${field.columnIndex}] from type ${field.typeName} is not supported",
+                        )
                 }
             }
         }

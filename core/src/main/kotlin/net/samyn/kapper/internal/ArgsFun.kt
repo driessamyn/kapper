@@ -3,6 +3,7 @@
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.Args
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.internal.automapper.setParameter
 import java.sql.PreparedStatement
