@@ -47,6 +47,8 @@ class ResultSetStub(
 
     private fun isNull(columnIndex: Int): Boolean = columnIndex in nullableColumns && (currentRow + columnIndex + random) % 2 != 0
 
+    override fun wasNull() = false
+
     override fun <T : Any?> unwrap(iface: Class<T>?): T {
         throw NotImplementedError()
     }
@@ -56,10 +58,6 @@ class ResultSetStub(
     }
 
     override fun close() = Unit
-
-    override fun wasNull(): Boolean {
-        throw NotImplementedError()
-    }
 
     override fun getString(columnLabel: String?): String {
         throw NotImplementedError()

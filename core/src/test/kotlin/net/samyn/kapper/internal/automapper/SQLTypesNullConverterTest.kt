@@ -3,8 +3,8 @@ package net.samyn.kapper.internal.automapper
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
-import net.samyn.kapper.internal.DbFlavour
 import org.junit.jupiter.api.Test
 import java.sql.JDBCType
 import java.sql.ResultSet
