@@ -11,7 +11,7 @@ dependencies {
 
     // other libraries to benchmark against
     implementation("org.hibernate.orm:hibernate-core:6.6.11.Final")
-    implementation("org.hibernate.orm:hibernate-community-dialects:6.4.1.Final")
+    implementation("org.hibernate.orm:hibernate-community-dialects:7.0.3.Final")
     implementation("org.ktorm:ktorm-core:4.1.1")
     implementation("org.ktorm:ktorm-support-postgresql:4.1.1")
     implementation("org.ktorm:ktorm-support-sqlite:4.1.1")
