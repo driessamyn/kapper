@@ -8,7 +8,7 @@ iterations=3
 time_on_iteration="2s"
 warmup_time="1s"
 warmup_iterations=2
-scenario="SIMPLE-DATACLASS,SIMPLE-RECORD,COMPLEX-DATACLASS,COMPLEX-RECORD"
+scenario="SIMPLE-NOREFLECTION,SIMPLE-DATACLASS,SIMPLE-RECORD,COMPLEX-DATACLASS,COMPLEX-RECORD"
 numberOfResults="1,1000"
 
 # Parse options

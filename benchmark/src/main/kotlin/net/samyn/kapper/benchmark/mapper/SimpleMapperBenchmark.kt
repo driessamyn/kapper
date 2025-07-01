@@ -7,6 +7,7 @@ import net.samyn.kapper.benchmark.SimpleRecord
 import net.samyn.kapper.internal.automapper.KotlinDataClassMapper
 import net.samyn.kapper.internal.automapper.RecordMapper
 import java.sql.JDBCType
+import java.sql.ResultSet
 import java.util.UUID
 
 abstract class AbstractSimpleMapperBenchmark<T : Any>(
@@ -34,9 +35,25 @@ class SimpleRecordMapperBenchmark(override val numberOfResults: Int) :
 class SimpleDataClassMapperBenchmark(override val numberOfResults: Int) :
     AbstractSimpleMapperBenchmark<SimpleDataClass>(numberOfResults, KotlinDataClassMapper(SimpleDataClass::class.java))
 
+class SimpleCustomMapperBenchmark(override val numberOfResults: Int) :
+    AbstractSimpleMapperBenchmark<SimpleDataClass>(numberOfResults, CustomSimpleMapper())
+
 data class SimpleDataClass(
     val id: UUID,
     val name: String,
     val email: String?,
     val age: Int?,
 )
+
+class CustomSimpleMapper : Mapper<SimpleDataClass> {
+    override fun createInstance(
+        resultSet: ResultSet,
+        fields: Map<String, Field>,
+    ): SimpleDataClass =
+        SimpleDataClass(
+            id = UUID.fromString(resultSet.getString(1)),
+            name = resultSet.getString(2)!!,
+            email = resultSet.getString(3),
+            age = resultSet.getInt(4),
+        )
+}

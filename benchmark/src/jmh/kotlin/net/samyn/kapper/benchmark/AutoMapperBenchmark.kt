@@ -3,6 +3,7 @@ package net.samyn.kapper.benchmark
 import net.samyn.kapper.benchmark.mapper.ComplexDataClassMapperBenchmark
 import net.samyn.kapper.benchmark.mapper.ComplexRecordMapperBenchmark
 import net.samyn.kapper.benchmark.mapper.MapperBenchmark
+import net.samyn.kapper.benchmark.mapper.SimpleCustomMapperBenchmark
 import net.samyn.kapper.benchmark.mapper.SimpleDataClassMapperBenchmark
 import net.samyn.kapper.benchmark.mapper.SimpleRecordMapperBenchmark
 import org.openjdk.jmh.annotations.Benchmark
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit
 open class AutoMapperBenchmark {
     @State(Scope.Thread)
     open class AutoMapperBenchmarkState {
-        @Param("SIMPLE-DATACLASS", "SIMPLE-RECORD", "COMPLEX-DATACLASS", "COMPLEX-RECORD")
+        @Param("SIMPLE-NOREFLECTION", "SIMPLE-DATACLASS", "SIMPLE-RECORD", "COMPLEX-DATACLASS", "COMPLEX-RECORD")
         private lateinit var scenario: String
 
         @Param("1", "100")
@@ -35,6 +36,7 @@ open class AutoMapperBenchmark {
                     ?: throw IllegalArgumentException("Invalid number of results: $numberOfResults")
             benchmarkStrategy =
                 when (scenario) {
+                    "SIMPLE-NOREFLECTION" -> SimpleCustomMapperBenchmark(resultsCount)
                     "SIMPLE-DATACLASS" -> SimpleDataClassMapperBenchmark(resultsCount)
                     "SIMPLE-RECORD" -> SimpleRecordMapperBenchmark(resultsCount)
                     "COMPLEX-DATACLASS" -> ComplexDataClassMapperBenchmark(resultsCount)
