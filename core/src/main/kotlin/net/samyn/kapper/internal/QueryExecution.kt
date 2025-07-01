@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.SQLType
 
 val logger: Logger = LoggerFactory.getLogger("net.samyn.kapper.coroutines.QueryExecution")
 
@@ -42,5 +43,39 @@ private class CloseableResultSet(
     override fun close() {
         resultSet.close()
         onClose()
+    }
+
+    override fun updateObject(
+        columnIndex: Int,
+        x: Any?,
+        targetSqlType: SQLType?,
+        scaleOrLength: Int,
+    ) {
+        resultSet.updateObject(columnIndex, x, targetSqlType, scaleOrLength)
+    }
+
+    override fun updateObject(
+        columnLabel: String?,
+        x: Any?,
+        targetSqlType: SQLType?,
+        scaleOrLength: Int,
+    ) {
+        resultSet.updateObject(columnLabel, x, targetSqlType, scaleOrLength)
+    }
+
+    override fun updateObject(
+        columnIndex: Int,
+        x: Any?,
+        targetSqlType: SQLType?,
+    ) {
+        resultSet.updateObject(columnIndex, x, targetSqlType)
+    }
+
+    override fun updateObject(
+        columnLabel: String?,
+        x: Any?,
+        targetSqlType: SQLType?,
+    ) {
+        resultSet.updateObject(columnLabel, x, targetSqlType)
     }
 }

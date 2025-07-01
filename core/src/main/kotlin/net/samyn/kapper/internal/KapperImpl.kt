@@ -71,4 +71,38 @@ internal class KapperImpl(
             return stmt.executeUpdate()
         }
     }
+
+    override fun <T : Any> execute(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        obj: T,
+        args: Map<String, (T) -> Any?>,
+    ): Int {
+        val query = queryFactory(sql)
+        connection.prepareStatement(query.sql).use { stmt ->
+            args.setParameters(query.tokens, stmt, obj, connection.getDbFlavour())
+            logger.debug("Executing prepared statement: {}", stmt)
+            return stmt.executeUpdate()
+        }
+    }
+
+    override fun <T : Any> executeAll(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        objects: Iterable<T>,
+        args: Map<String, (T) -> Any?>,
+    ): IntArray {
+        val query = queryFactory(sql)
+        connection.prepareStatement(query.sql).use { stmt ->
+            val dbFlavour = connection.getDbFlavour()
+            for (obj in objects) {
+                args.setParameters(query.tokens, stmt, obj, dbFlavour)
+                logger.debug("Adding to batch: {}", stmt)
+                stmt.addBatch()
+            }
+            return stmt.executeBatch()
+        }
+    }
 }

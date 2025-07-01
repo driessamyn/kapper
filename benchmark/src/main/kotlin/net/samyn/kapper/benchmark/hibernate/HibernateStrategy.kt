@@ -102,6 +102,34 @@ class HibernateStrategy : HibernateBaseStrategy(), BenchmarkStrategy {
         }
     }
 
+    override fun insertManyHeroes(connection: Connection) {
+        val heroes =
+            (1..100).map {
+                SuperHeroEntity(
+                    UUID.randomUUID(),
+                    "Hero$it",
+                    "hero$it@example.com",
+                    20 + (it % 30),
+                )
+            }
+        val sessionFactory =
+            getSessionFactory(
+                connection,
+                listOf(
+                    SuperHeroEntity::class.java,
+                    VillainEntity::class.java,
+                    SuperHeroBattleEntity::class.java,
+                ),
+            )
+        sessionFactory.openSession().use { session ->
+            session.transaction.begin()
+            for (hero in heroes) {
+                session.merge(hero)
+            }
+            session.transaction.commit()
+        }
+    }
+
     class SingleConnectionProvider : ConnectionProvider {
         companion object {
             // This is hacky, but allows us to re-use the same connection so to not influence the

@@ -52,33 +52,27 @@ class SQLiteTest {
     @ParameterizedTest
     @MethodSource("strategies")
     fun `when find by id return`(strategy: BenchmarkStrategy) {
-        measureTime {
+        measureAndLogTime {
             strategy.findHeroById(dbConfig.cachedConnection, heroId(1))
                 .shouldNotBeNull()
-        }.also {
-            logger.info("Time taken: $it")
         }
     }
 
     @ParameterizedTest
     @MethodSource("strategies")
     fun `when find 100 return`(strategy: BenchmarkStrategy) {
-        measureTime {
+        measureAndLogTime {
             strategy.find100Heroes(dbConfig.cachedConnection)
                 .size shouldBe 100
-        }.also {
-            logger.info("Time taken: $it")
         }
     }
 
     @ParameterizedTest
     @MethodSource("strategies")
     fun `when find batlles return`(strategy: BenchmarkStrategy) {
-        measureTime {
+        measureAndLogTime {
             strategy.findHeroBattles(dbConfig.cachedConnection, heroId(5))
                 .size.shouldBeGreaterThan(0)
-        }.also {
-            logger.info("Time taken: $it")
         }
     }
 
@@ -86,7 +80,7 @@ class SQLiteTest {
     @MethodSource("strategies")
     fun `can insert new hero`(strategy: BenchmarkStrategy) {
         val newId = UUID.randomUUID()
-        measureTime {
+        measureAndLogTime {
             strategy.insertNewHero(
                 dbConfig.cachedConnection,
                 newId,
@@ -94,8 +88,6 @@ class SQLiteTest {
                 "$newId@heroes.com",
                 30,
             )
-        }.also {
-            logger.info("Time taken: $it")
         }
 
         strategy.findHeroById(dbConfig.cachedConnection, newId).shouldNotBeNull()
@@ -105,7 +97,7 @@ class SQLiteTest {
     @MethodSource("strategies")
     fun `can update hero`(strategy: BenchmarkStrategy) {
         val heroId = heroId(10)
-        measureTime {
+        measureAndLogTime {
             strategy.changeHero(
                 dbConfig.cachedConnection,
                 heroId,
@@ -113,8 +105,6 @@ class SQLiteTest {
                 "$heroId@heroes.com",
                 35,
             )
-        }.also {
-            logger.info("Time taken: $it")
         }
 
         strategy.findHeroById(dbConfig.cachedConnection, heroId) should {
@@ -122,6 +112,23 @@ class SQLiteTest {
             it.age shouldBe 35
             it.email shouldBe "$heroId@heroes.com"
             it.name shouldBe "Changed Hero"
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("strategies")
+    fun `can bulk insert 100 heroes`(strategy: BenchmarkStrategy) {
+        val initialCount = dbConfig.cachedConnection.query<SuperHero>("SELECT * FROM super_heroes").size
+        measureAndLogTime {
+            strategy.insertManyHeroes(dbConfig.cachedConnection)
+        }
+        val afterCount = dbConfig.cachedConnection.query<SuperHero>("SELECT * FROM super_heroes").size
+        (afterCount - initialCount) shouldBe 100
+    }
+
+    private fun measureAndLogTime(block: () -> Unit) {
+        measureTime(block).also {
+            logger.info("Time taken: $it")
         }
     }
 }

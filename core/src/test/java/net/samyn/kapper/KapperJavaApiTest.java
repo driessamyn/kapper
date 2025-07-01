@@ -282,5 +282,64 @@ class KapperJavaApiTest {
             verify(mockStatement).setString(2, "Test1");
             verify(mockStatement).close();
         }
+
+        @Test
+        void testExecuteWithRecord() throws Exception {
+            // Setup statement behavior
+            when(mockStatement.executeUpdate()).thenReturn(1);
+
+            AutomappedTestEntity entity = new AutomappedTestEntity(1, "Test1");
+
+            int result = Kapper.getInstance().execute(
+                    AutomappedTestEntity.class,
+                    mockConnection,
+                    "INSERT INTO test_table(id, name) VALUES(:id, :name)",
+                    entity,
+                    Map.of(
+                            "id", AutomappedTestEntity::id,
+                            "name", AutomappedTestEntity::name
+                    )
+            );
+
+            // Assertions
+            assertEquals(1, result);
+
+            // Verify interactions
+            verify(mockStatement).setInt(1, 1);
+            verify(mockStatement).setString(2, "Test1");
+            verify(mockStatement).close();
+        }
+
+        @Test
+        void testExecuteAll() throws SQLException {
+            // Setup statement behavior
+            when(mockStatement.executeBatch()).thenReturn(new int[]{1,1});
+
+            var entities = List.of(
+                    new AutomappedTestEntity(1, "Test1"),
+                    new AutomappedTestEntity(2, "Test2")
+            );
+
+            var result = Kapper.getInstance().executeAll(
+                    AutomappedTestEntity.class,
+                    mockConnection,
+                    "INSERT INTO test_table(id, name) VALUES(:id, :name)",
+                    entities,
+                    Map.of(
+                            "id", AutomappedTestEntity::id,
+                            "name", AutomappedTestEntity::name
+                    )
+            );
+
+            // Assertions
+            assertArrayEquals(new int[] {1,1}, result);
+
+            // Verify interactions
+            verify(mockStatement).setInt(1, 1);
+            verify(mockStatement).setString(2, "Test1");
+            verify(mockStatement).setInt(1, 2);
+            verify(mockStatement).setString(2, "Test2");
+            verify(mockStatement).close();
+        }
     }
 }

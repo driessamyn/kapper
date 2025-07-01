@@ -8,6 +8,11 @@ import java.sql.ResultSet
 typealias Args = Map<String, Any?>
 
 /**
+ * Type alias for mapping functions from an object to SQL parameter values.
+ */
+typealias ArgMapper<T> = Pair<String, (T) -> Any?>
+
+/**
  * Kapper API interface for executing SQL statements and queries.
  * Used in cases where the extension methods cannot be used or are not preferred.
  */
@@ -120,7 +125,7 @@ interface Kapper {
     ): T?
 
     /**
-     * Execute a SQL statement that does not return a result set.
+     * Execute a SQL statement and return the number of affected rows.
      *
      * @param connection The SQL connection to use.
      * @param sql The SQL statement to execute.
@@ -132,4 +137,40 @@ interface Kapper {
         sql: String,
         args: Args,
     ): Int
+
+    /**
+     * Execute a SQL statement using an object and argument mapper functions to specify the query arguments.
+     *
+     * @param T The type of the object used to provide values for the SQL statement.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute.
+     * @param obj The object containing the values to be used in the SQL statement.
+     * @param args A map where the keys are the names of the parameters in the SQL statement, and the values are functions that extract the corresponding values from the object.
+     * @return The number of rows affected by the execution of the SQL statement.
+     */
+    fun <T : Any> execute(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        obj: T,
+        args: Map<String, (T) -> Any?>,
+    ): Int
+
+    /**
+     * Execute a SQL statement using an object and argument mapper functions to specify the query arguments.
+     *
+     * @param T The type of the object used to provide values for the SQL statement.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute.
+     * @param objects The objects containing the values to be used in the SQL statement.
+     * @param args A map where the keys are the names of the parameters in the SQL statement, and the values are functions that extract the corresponding values from the object.
+     * @return The number of rows affected by each execution in the batch.
+     */
+    fun <T : Any> executeAll(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        objects: Iterable<T>,
+        args: Map<String, (T) -> Any?>,
+    ): IntArray
 }
