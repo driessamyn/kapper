@@ -110,6 +110,30 @@ class JDBCStrategy : BenchmarkStrategy {
         return results
     }
 
+    override fun insertManyHeroes(connection: Connection) {
+        val heroes =
+            (1..100).map {
+                SuperHero(
+                    UUID.randomUUID(),
+                    "Hero$it",
+                    "hero$it@example.com",
+                    20 + (it % 30),
+                )
+            }
+        connection.prepareStatement(
+            "INSERT INTO super_heroes (id, name, email, age) VALUES (?, ?, ?, ?)",
+        ).use { stmt ->
+            for (h in heroes) {
+                stmt.setObject(1, h.id)
+                stmt.setString(2, h.name)
+                stmt.setString(3, h.email)
+                stmt.setInt(4, h.age ?: 0)
+                stmt.addBatch()
+            }
+            stmt.executeBatch()
+        }
+    }
+
     private fun ResultSet.mapRow(): SuperHero =
         SuperHero(
             UUID.fromString(this.getString("id")),

@@ -19,6 +19,8 @@ interface BenchmarkStrategy {
         age: Int,
     )
 
+    fun insertManyHeroes(connection: Connection)
+
     fun changeHero(
         connection: Connection,
         id: UUID,

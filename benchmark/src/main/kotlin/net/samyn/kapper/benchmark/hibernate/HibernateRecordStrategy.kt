@@ -72,4 +72,28 @@ class HibernateRecordStrategy : HibernateBaseStrategy(), BenchmarkStrategy {
         // Not implemented for record entity, could be added if needed
         return emptyList()
     }
+
+    override fun insertManyHeroes(connection: Connection) {
+        val heroes =
+            (1..100).map {
+                SuperHeroRecordEntity(
+                    UUID.randomUUID(),
+                    "Hero$it",
+                    "hero$it@example.com",
+                    20 + (it % 30),
+                )
+            }
+        val sessionFactory =
+            getSessionFactory(
+                connection,
+                listOf(SuperHeroRecordEntity::class.java),
+            )
+        sessionFactory.openSession().use { session ->
+            session.beginTransaction()
+            for (hero in heroes) {
+                session.persist(hero)
+            }
+            session.transaction.commit()
+        }
+    }
 }

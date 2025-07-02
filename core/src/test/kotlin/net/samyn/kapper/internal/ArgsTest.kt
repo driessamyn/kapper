@@ -16,12 +16,14 @@ class ArgsTest {
 
     @Test
     fun `set params`() {
-        mapOf(
-            "foo" to 1,
-            "bar" to "baz",
-        ).setParameters(query, preparedStatementMock, DbFlavour.UNKNOWN)
-        verify { preparedStatementMock.setParameter(1, 1, DbFlavour.UNKNOWN) }
-        verify { preparedStatementMock.setParameter(2, "baz", DbFlavour.UNKNOWN) }
+        val args =
+            mapOf(
+                "foo" to 1,
+                "bar" to "baz",
+            )
+        args.setParameters(query, preparedStatementMock, DbFlavour.UNKNOWN)
+        verify { preparedStatementMock.setParameter(1, args["foo"], DbFlavour.UNKNOWN) }
+        verify { preparedStatementMock.setParameter(2, args["bar"], DbFlavour.UNKNOWN) }
     }
 
     @Test

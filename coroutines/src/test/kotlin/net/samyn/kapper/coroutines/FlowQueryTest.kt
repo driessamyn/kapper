@@ -15,7 +15,6 @@ import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperQueryException
 import net.samyn.kapper.Mapper
-import net.samyn.kapper.internal.Query
 import net.samyn.kapper.internal.executeQuery
 import net.samyn.kapper.internal.extractFields
 import org.junit.jupiter.api.Test
@@ -35,7 +34,6 @@ class FlowQueryTest {
             every { next() } returns true andThen false
         }
     private val queryTemplate = "SELECT * FROM super_heroes where id = :id"
-    private val query = Query(queryTemplate)
     private val connection = mockk<Connection>(relaxed = true)
     private val mapper: (ResultSet, Map<String, Field>) -> Hero =
         mockk<(ResultSet, Map<String, Field>) -> Hero>()

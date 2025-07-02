@@ -3,6 +3,7 @@ package net.samyn.kapper.benchmark.kapper
 import net.samyn.kapper.benchmark.BenchmarkStrategy
 import net.samyn.kapper.benchmark.ISuperHero
 import net.samyn.kapper.execute
+import net.samyn.kapper.executeAll
 import java.sql.Connection
 import java.time.LocalDateTime
 import java.util.UUID
@@ -41,6 +42,26 @@ abstract class KapperBaseStrategy : BenchmarkStrategy {
             "name" to name,
             "email" to email,
             "age" to age,
+        )
+    }
+
+    override fun insertManyHeroes(connection: Connection) {
+        val superHeroes =
+            (1..100).map {
+                SuperHero(
+                    UUID.randomUUID(),
+                    "Hero$it",
+                    "hero$it@example.com",
+                    20 + (it % 30),
+                )
+            }
+        connection.executeAll(
+            "INSERT INTO super_heroes (id, name, email, age) VALUES (:id, :name, :email, :age)",
+            superHeroes,
+            "id" to SuperHero::id,
+            "name" to SuperHero::name,
+            "email" to SuperHero::email,
+            "age" to SuperHero::age,
         )
     }
 }

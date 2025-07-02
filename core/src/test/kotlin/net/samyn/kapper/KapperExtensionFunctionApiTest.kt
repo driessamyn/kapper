@@ -127,13 +127,58 @@ class KapperExtensionFunctionApiTest {
     inner class ExecuteTests {
         @Test
         fun execute() {
-            val result =
-                connection.execute(
-                    queryTemplate,
-                    "id" to 1,
-                    "name" to "Test1",
-                )
+            connection.execute(
+                queryTemplate,
+                "id" to 1,
+                "name" to "Test1",
+            )
             verify { kapperMock.execute(connection, queryTemplate, mapOf("id" to 1, "name" to "Test1")) }
+        }
+    }
+
+    @Nested
+    inner class ExecuteAllBatchExtensionTests {
+        @Test
+        fun executeAll_batch_extension() {
+            val dtos = listOf(TestEntity(1, "foo"), TestEntity(2, "bar"))
+            connection.executeAll(
+                queryTemplate,
+                dtos,
+                "id" to TestEntity::id,
+                "name" to TestEntity::name,
+            )
+            verify {
+                kapperMock.executeAll(
+                    TestEntity::class.java,
+                    connection,
+                    queryTemplate,
+                    dtos,
+                    mapOf("id" to TestEntity::id, "name" to TestEntity::name),
+                )
+            }
+        }
+    }
+
+    @Nested
+    inner class ExecuteDtoExtensionTests {
+        @Test
+        fun execute_dto_extension() {
+            val dto = TestEntity(1, "foo")
+            connection.execute(
+                queryTemplate,
+                dto,
+                "id" to TestEntity::id,
+                "name" to TestEntity::name,
+            )
+            verify {
+                kapperMock.execute(
+                    TestEntity::class.java,
+                    connection,
+                    queryTemplate,
+                    dto,
+                    mapOf("id" to TestEntity::id, "name" to TestEntity::name),
+                )
+            }
         }
     }
 }
