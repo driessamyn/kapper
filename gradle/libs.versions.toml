@@ -13,7 +13,7 @@ mysql-driver = "9.3.0"
 oracle-driver = "23.8.0.25.04"
 postgresql-driver = "42.7.7"
 slf4j = "2.0.17"
-sqlite = "3.50.1.0"
+sqlite = "3.50.2.0"
 test-containers = "1.21.3"
 
 [libraries]
