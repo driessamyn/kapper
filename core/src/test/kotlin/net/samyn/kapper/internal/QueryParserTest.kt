@@ -132,7 +132,7 @@ class QueryParserTest {
     @Test
     fun `strip query padding`() {
         val template = "    SELECT foo   "
-        val (sql, tokens) = parseQuery(template)
+        val (sql, _) = parseQuery(template)
         sql.shouldBe("SELECT foo")
     }
 

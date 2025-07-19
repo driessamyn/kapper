@@ -51,7 +51,7 @@ class KtormStrategy : BenchmarkStrategy {
                     when (dbType) {
                         DbFlavour.SQLITE -> SQLiteDialect()
                         DbFlavour.POSTGRESQL -> PostgreSqlDialect()
-                        else -> throw IllegalStateException("Unsupported database type")
+                        else -> error("Unsupported database type")
                     },
             ) {
                 object : Connection by connection {
@@ -179,4 +179,25 @@ class KtormStrategy : BenchmarkStrategy {
                 it[battles.battleDate] as LocalDateTime,
             )
         }
+
+    override fun insertManyHeroes(connection: Connection) {
+        val db = getDatabase(connection)
+        val heroes =
+            (1..100).map {
+                SuperHero(
+                    UUID.randomUUID(),
+                    "Hero$it",
+                    "hero$it@example.com",
+                    20 + (it % 30),
+                )
+            }
+        for (hero in heroes) {
+            db.insert(superHeroes) {
+                set(superHeroes.id, hero.id)
+                set(superHeroes.name, hero.name)
+                set(superHeroes.email, hero.email)
+                set(superHeroes.age, hero.age)
+            }
+        }
+    }
 }

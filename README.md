@@ -259,7 +259,6 @@ val heroAges =
             "age" to 80,
         )
     }
-}
 ```
 
 The `querySingle` function can be used to return a single result, or null if the query returns no results:
@@ -315,6 +314,44 @@ datasource.connection.use {
     )
 }
 ```
+
+Kapper now supports passing entire DTOs (data classes) to the `execute` and `executeAll` functions for insert, update, and delete operations, by providing explicit mapping instructions. This makes your code more concise and type-safe, reducing manual parameter mapping.
+
+###### `execute` with DTOs
+You can pass a DTO instance together with mapping instructions, where each SQL parameter name is mapped to a property reference of your DTO:
+
+```kotlin
+val hero = SuperHero(UUID.randomUUID(), "Wonder Woman", "wonder@dc.com", 3000)
+connection.execute(
+    "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age)",
+    hero,
+    "id" to SuperHero::id,
+    "name" to SuperHero::name,
+    "email" to SuperHero::email,
+    "age" to SuperHero::age,
+)
+```
+
+###### `executeAll` for Bulk Operations
+The `executeAll` function allows you to efficiently perform bulk inserts, updates, or deletes by passing a collection of DTOs and mapping instructions.
+Kapper handles batching and parameter mapping for you and `executeAll` results in a JDBC batch operation.
+
+```kotlin
+val heroes = listOf(
+    SuperHero(UUID.randomUUID(), "Flash", "flash@dc.com", 28),
+    SuperHero(UUID.randomUUID(), "Aquaman", "aqua@dc.com", 35)
+)
+connection.executeAll(
+    "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age)",
+    heroes,
+    "id" to SuperHero::id,
+    "name" to SuperHero::name,
+    "email" to SuperHero::email,
+    "age" to SuperHero::age,
+)
+```
+
+This eliminates repetitive boilerplate and makes bulk operations simple and safe.
 
 #### DB Transactions
 
@@ -478,12 +515,12 @@ Items will be ticked off as they are implemented.
 - [x] Add MS SQL Server, Oracle and SQLite integration tests.
 - [x] Support auto-mapping for Java records.
 - [x] Tests & examples in other JVM languages.
+- [x] Bulk operations support
+- [x] Support DTO argument for `execute`.
 - [ ] Cache query parsing.
 - [ ] Custom SQL type conversion.
 - [ ] Improve support for date/time conversion.
-- [ ] Support DTO argument for `execute`.
 - [ ] Add support for non-blocking JDBC drivers.
-- [ ] Bulk operations support
 - [ ] Improve user documentation / docs website.
 
 Anything else you think is missing, or you want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
