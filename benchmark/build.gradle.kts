@@ -61,3 +61,22 @@ tasks.register("jmhMapper") {
     }
     finalizedBy("jmh")
 }
+
+tasks.register<Zip>("benchmarkZip") {
+    dependsOn("jmhJar")
+
+    archiveBaseName.set("kapper-benchmarks")
+    archiveVersion.set(project.version.toString())
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+
+    // Include only the specific JMH JAR that was just built
+    from(tasks.named("jmhJar").get().outputs.files)
+
+    // Include benchmark scripts and documentation
+    from(projectDir) {
+        include("run.sh")
+        include("run-mapper.sh")
+        include("run-usage.txt")
+        include("README.md")
+    }
+}
