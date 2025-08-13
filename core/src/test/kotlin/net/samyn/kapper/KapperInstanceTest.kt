@@ -3,7 +3,6 @@ package net.samyn.kapper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.mockk.every
@@ -55,15 +54,13 @@ class KapperInstanceTest {
 
     @Test
     fun `query default implementation throws when mapper cannot be created`() {
-        val k = mockk<Kapper>(relaxed = true)
-        every { k.query<Foo>(any(), any(), any(), any()) } answers { callOriginal() }
+        val k = Kapper.createInstance()
         val ex = RuntimeException("test")
         mockkObject(Kapper.mapperRegistry) {
             every { Kapper.mapperRegistry.get(Foo::class.java) } throws ex
-            shouldThrow<Exception> {
+            shouldThrow<KapperMappingException> {
                 k.query(Foo::class.java, mockk<Connection>(relaxed = true), "FOO", emptyMap())
-            }.cause!! should {
-                it.shouldBeInstanceOf<KapperMappingException>()
+            } should {
                 it.cause shouldBe ex
             }
         }
@@ -86,17 +83,13 @@ class KapperInstanceTest {
 
     @Test
     fun `querySingle default implementation throws when auto-mapper cannot be created`() {
-        val k = mockk<Kapper>(relaxed = true)
-        every { k.querySingle<Foo>(any(), any(), any(), any()) } answers { callOriginal() }
-        every { k.querySingle(any(), any(), any(), any<(ResultSet, Map<String, Field>) -> Foo>(), any()) } returns Foo(1, "foo")
+        val k = Kapper.createInstance()
         val ex = RuntimeException("test")
         mockkObject(Kapper.mapperRegistry) {
             every { Kapper.mapperRegistry.get(Foo::class.java) } throws ex
-            shouldThrow<Exception> {
+            shouldThrow<KapperMappingException> {
                 k.querySingle(Foo::class.java, mockk<Connection>(relaxed = true), "FOO", emptyMap())
-            }.cause!! should {
-                // Need to figure out why this is wrapped in an invocation exception
-                it.shouldBeInstanceOf<KapperMappingException>()
+            } should {
                 it.cause shouldBe ex
             }
         }
