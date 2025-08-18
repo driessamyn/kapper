@@ -76,18 +76,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+ ./gradlew :kapper-benchmark:benchmarkZip -PnoDirtyCheck=true
 
 # Check if benchmark zip exists, build if missing
 ZIP_PATTERN="$BENCHMARK_DIR/$PACKAGE_NAME-*.zip"
-if ! ls $ZIP_PATTERN 1> /dev/null 2>&1; then
-    print_info "Benchmark zip not found. Building it now..."
-    ./gradlew :kapper-benchmark:benchmarkZip
-    
-    if ! ls $ZIP_PATTERN 1> /dev/null 2>&1; then
-        print_error "Failed to build benchmark zip"
-        exit 1
-    fi
-fi
 
 # Find the most recent zip file
 ZIP_FILE=$(ls -t $ZIP_PATTERN | head -n 1)
