@@ -63,7 +63,7 @@ test-containers = [
 test-dbs = ["mysql-driver", "postgresql-driver", "sqlite-jdbc", "mssql-server-driver", "oracle-driver"]
 
 [plugins]
-sonar = { id = "org.sonarqube", version = "6.2.0.5505" }
+sonar = { id = "org.sonarqube", version = "6.3.0.5676" }
 git-semver = { id = "com.github.jmongard.git-semver-plugin", version.ref = "git-semver" }
 jmh = { id = "me.champeau.gradle:jmh-gradle-plugin", version = "0.7.2" }
 
