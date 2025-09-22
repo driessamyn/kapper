@@ -48,7 +48,7 @@ dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref
 dokka-javadoc-plugin = { module = "org.jetbrains.dokka-javadoc:org.jetbrains.dokka-javadoc.gradle.plugin", version.ref = "dokka" }
 ktlint-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version = "12.1.2" }
 kotlin-jvm-plugin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
-kover-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version = "0.9.1" }
+kover-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version = "0.9.2" }
 
 [bundles]
 jmh = ["jmh-core", "jmh-generator-annprocess"]
