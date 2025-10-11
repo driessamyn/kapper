@@ -1,6 +1,6 @@
 plugins {
     id("kapper.library-conventions")
-    id("me.champeau.jmh") version "0.7.3"
+    alias(libs.plugins.jmh)
 }
 
 dependencies {
@@ -10,11 +10,11 @@ dependencies {
     implementation(libs.slf4j.simple)
 
     // other libraries to benchmark against
-    implementation("org.hibernate.orm:hibernate-core:7.1.3.Final")
-    implementation("org.hibernate.orm:hibernate-community-dialects:7.1.3.Final")
-    implementation("org.ktorm:ktorm-core:4.1.1")
-    implementation("org.ktorm:ktorm-support-postgresql:4.1.1")
-    implementation("org.ktorm:ktorm-support-sqlite:4.1.1")
+    implementation(libs.hibernate.core)
+    implementation(libs.hibernate.community.dialects)
+    implementation(libs.ktorm.core)
+    implementation(libs.ktorm.support.postgresql)
+    implementation(libs.ktorm.support.sqlite)
 
     // supported DBs
     implementation(libs.test.containers)
@@ -40,6 +40,8 @@ jmh {
 }
 
 tasks.register("jmhKapper") {
+    group = "benchmarking"
+    description = "Runs JMH benchmarks for KapperBenchmark classes."
     doFirst {
         jmh {
             includes.set(listOf(".*KapperBenchmark.*"))
@@ -51,6 +53,8 @@ tasks.register("jmhKapper") {
 }
 
 tasks.register("jmhMapper") {
+    group = "benchmarking"
+    description = "Runs JMH benchmarks for MapperBenchmark classes."
     doFirst {
         jmh {
             includes.set(listOf(".*MapperBenchmark.*"))
@@ -63,6 +67,8 @@ tasks.register("jmhMapper") {
 }
 
 tasks.register<Zip>("benchmarkZip") {
+    group = "benchmarking"
+    description = "Zips the JMH benchmark JAR for distribution."
     dependsOn("jmhJar")
 
     archiveBaseName.set("kapper-benchmarks")

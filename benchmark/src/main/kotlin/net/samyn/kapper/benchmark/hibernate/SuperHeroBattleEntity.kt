@@ -8,8 +8,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import jakarta.persistence.Temporal
-import jakarta.persistence.TemporalType
 import org.hibernate.Hibernate
 import org.hibernate.annotations.UpdateTimestamp
 import java.time.Instant
@@ -33,7 +31,6 @@ class SuperHeroBattleEntity(
     constructor() : this(SuperHeroEntity(), VillainEntity(), LocalDateTime.now())
 
     @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_ts")
     val updateTimestamp: Instant? = null
 
