@@ -45,7 +45,7 @@ internal fun parseQuery(template: String): Pair<String, Map<String, List<Int>>> 
             tokenNameBuilder != null -> {
                 // valid token character
                 if (c.isValidTokenChar()) {
-                    tokenNameBuilder!!.append(c)
+                    tokenNameBuilder.append(c)
                     // valid token separator character
                 } else if (c.isValidTokenSeparator()) {
                     tokens.getOrPut(tokenNameBuilder.toString()) { mutableListOf() }.add(tokenIndex)
