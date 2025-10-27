@@ -43,7 +43,7 @@ jobs:
       run: ./gradlew check sonar
 
     - name: Upload Test Report
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
       if: always() # always run even if the previous step fails
       with:
         name: junit-test-results
@@ -51,7 +51,7 @@ jobs:
         retention-days: 1
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-report
         path: build/reports/kover
@@ -97,7 +97,7 @@ jobs:
         run: ./gradlew integrationTest -Ddb=${{ matrix.db }}
 
       - name: Upload Test Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always() # always run even if the previous step fails
         with:
           name: ${{ matrix.db }}-test-results
