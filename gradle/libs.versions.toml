@@ -71,4 +71,4 @@ test-dbs = ["mysql-driver", "postgresql-driver", "sqlite-jdbc", "mssql-server-dr
 [plugins]
 git-semver = { id = "com.github.jmongard.git-semver-plugin", version.ref = "git-semver" }
 jmh = { id = "me.champeau.jmh", version = "0.7.3" }
-sonar = { id = "org.sonarqube", version = "6.3.1.5724" }
+sonar = { id = "org.sonarqube", version = "7.1.0.6387" }
