@@ -58,7 +58,7 @@ jobs:
         retention-days: 1
 
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf
+      uses: EnricoMi/publish-unit-test-result-action@27d65e188ec43221b20d26de30f4892fad91df2f
       if: always()
       with:
         check_name: Unit Tests
@@ -105,7 +105,7 @@ jobs:
           retention-days: 1
 
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf
+        uses: EnricoMi/publish-unit-test-result-action@27d65e188ec43221b20d26de30f4892fad91df2f
         if: always()
         with:
           check_name: ${{ matrix.db }} Integration Tests
