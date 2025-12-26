@@ -41,3 +41,6 @@ kotlin-compiler-*.salive
 
 results.txt
 *.hprof
+
+.DS_Store
+
