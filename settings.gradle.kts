@@ -11,7 +11,9 @@ develocity {
 }
 
 rootProject.name = "kapper"
-include("benchmark","core", "coroutines")
+include("benchmark","core", "coroutines", "examples:kotlin-example", "examples:java-example")
 project(":benchmark").name = "kapper-benchmark"
 project(":core").name = "kapper"
 project(":coroutines").name = "kapper-coroutines"
+project(":examples:kotlin-example").name = "kapper-kotlin-example"
+project(":examples:java-example").name = "kapper-java-example"

@@ -16,9 +16,13 @@ slf4j = "2.0.17"
 sqlite = "3.51.1.0"
 test-containers = "1.21.3"
 
+# Example dependencies
+hibernate-version = "7.1.5.Final"
+hibernate-validator-version = "9.0.1.Final"
+hikari = "7.0.1"
+ktorm = "4.1.1"
+
 [libraries]
-hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.1.11.Final" }
-hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.1.11.Final" }
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
 jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
@@ -42,7 +46,15 @@ test-containers-mssqlserver = { module = "org.testcontainers:mssqlserver", versi
 test-containers-mysql = { module = "org.testcontainers:mysql", version.ref = "test-containers" }
 test-containers-oracle = { module = "org.testcontainers:oracle-free", version.ref = "test-containers" }
 test-containers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-containers" }
+
+# Example dependencies
+hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.1.11.Final" }
+hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.1.11.Final" }
+hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator-version" }
+glassfish-jakarta = { module = "org.glassfish:jakarta.el", version = "4.0.2" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 ktorm-core = { module = "org.ktorm:ktorm-core", version = "4.1.1" }
+ktorm-support-mysql = { module = "org.ktorm:ktorm-support-mysql", version.ref = "ktorm" }
 ktorm-support-postgresql = { module = "org.ktorm:ktorm-support-postgresql", version = "4.1.1" }
 ktorm-support-sqlite = { module = "org.ktorm:ktorm-support-sqlite", version = "4.1.1" }
 
@@ -68,7 +80,17 @@ test-containers = [
 ]
 test-dbs = ["mysql-driver", "postgresql-driver", "sqlite-jdbc", "mssql-server-driver", "oracle-driver"]
 
+# Example bundles
+hibernate = ["hibernate-core", "hibernate-validator", "glassfish-jakarta"]
+ktorm = ["ktorm-core", "ktorm-support-mysql", "ktorm-support-postgresql"]
+example-test = [
+    "junit-jupiter", "kotest-assertions-core",
+    "test-containers-junit", "test-containers-mysql", "test-containers-postgresql"
+]
+example-dbs = ["mysql-driver", "postgresql-driver"]
+
 [plugins]
 git-semver = { id = "com.github.jmongard.git-semver-plugin", version.ref = "git-semver" }
 jmh = { id = "me.champeau.jmh", version = "0.7.3" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 sonar = { id = "org.sonarqube", version = "7.1.0.6387" }
