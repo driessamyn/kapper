@@ -37,7 +37,6 @@ kover {
     reports {
         filters {
             excludes {
-                annotatedBy("net.samyn.kapper.annotation.ExcludeFromCoverageKoverIssue")
                 packages("net.samyn.kapper.benchmark")
             }
         }
