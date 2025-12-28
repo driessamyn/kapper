@@ -10,6 +10,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
     id("org.jetbrains.dokka")
     id("org.jetbrains.dokka-javadoc")
+    id("dev.opensavvy.dokkatoo-mkdocs")
 }
 
 repositories {
@@ -155,4 +156,55 @@ val dokkaHtmlJar by tasks.registering(Jar::class) {
     description = "A HTML Documentation JAR containing Dokka HTML"
     from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
     archiveClassifier.set("html-doc")
+}
+
+// Generate markdown docs for the docs website using dokka-mkdocs
+tasks.register("generateMarkdownDocs") {
+    group = "documentation"
+    description = "Generate markdown API documentation for the docs website"
+    
+    dependsOn(tasks.named("dokkatooGeneratePublicationMkdocs"))
+    
+    doLast {
+        val projectDocsDir = rootProject.file("docs/api/${project.name}")
+        projectDocsDir.deleteRecursively()
+        projectDocsDir.mkdirs()
+        
+        val dokkaOutputDir = file("build/dokka/mkdocs")
+        if (dokkaOutputDir.exists()) {
+            // Copy from the nested module directory to flatten structure
+            val moduleDir = dokkaOutputDir.listFiles()?.find { it.isDirectory }
+            if (moduleDir != null) {
+                copy {
+                    from(moduleDir)
+                    into(projectDocsDir)
+                }
+            }
+        }
+        
+        // Remove internal packages
+        projectDocsDir.walkTopDown()
+            .filter { it.isDirectory && it.name.contains("internal") }
+            .forEach { it.deleteRecursively() }
+        
+        // Fix .html links to .md and remove internal links in all markdown files
+        projectDocsDir.walkTopDown()
+            .filter { it.extension == "md" }
+            .forEach { file ->
+                val content = file.readText()
+                val lines = content.lines()
+                val filteredLines = lines.filter { line ->
+                    // Remove lines that link to internal packages
+                    !line.contains("net.samyn.kapper.internal")
+                }
+                val fixedContent = filteredLines.joinToString("\n")
+                    .replace("/index.html)", ")")
+                    .replace(".html)", ")")
+                    .replace("](kapper/", "](./")
+                    .replace("](${project.name}/", "](./")
+                file.writeText(fixedContent)
+            }
+        
+        println("Generated markdown API docs for ${project.name} in docs/api/${project.name}")
+    }
 }

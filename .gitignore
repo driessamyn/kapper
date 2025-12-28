@@ -44,3 +44,9 @@ results.txt
 
 .DS_Store
 
+# docs
+node_modules
+package-lock.json
+/docs/.vitepress/dist/
+/docs/.vitepress/cache/deps/
+/docs/api/

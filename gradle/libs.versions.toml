@@ -63,6 +63,7 @@ ktorm-support-sqlite = { module = "org.ktorm:ktorm-support-sqlite", version = "4
 deployer-plugin = { module = "io.deepmedia.tools.deployer:io.deepmedia.tools.deployer.gradle.plugin", version = "0.18.0" }
 dokka-javadoc-plugin = { module = "org.jetbrains.dokka-javadoc:org.jetbrains.dokka-javadoc.gradle.plugin", version.ref = "dokka" }
 dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+dokka-mkdocs-plugin = { module = "dev.opensavvy.dokkatoo-mkdocs:dev.opensavvy.dokkatoo-mkdocs.gradle.plugin", version = "0.5.1" }
 ktlint-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version = "12.1.2" }
 kotlin-jvm-plugin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
 kover-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version = "0.9.3" }
