@@ -19,11 +19,11 @@ jobs:
       MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
       MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
     steps:
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
         with:
           java-version: '17'
           distribution: 'zulu'
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
       - name: History
