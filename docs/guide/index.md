@@ -7,7 +7,7 @@ It embraces SQL rather than abstracting it away, providing a simple, intuitive A
 
 Instead of adding another abstraction layer, Kapper embraces three core principles:
 
-1. **SQL is the Best Query Language**: SQL has evolved over decades to be expressive, powerful, and optimized for database operations. 
+1. **SQL is the Best Query Language**: SQL has evolved over decades to be expressive, powerful, and optimised for database operations. 
 Instead of hiding it, we should leverage it directly.
 
 2. **Minimal Abstraction**: Kapper provides just enough abstraction to make database operations comfortable in Kotlin, without trying to reinvent database interactions.

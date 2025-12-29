@@ -195,6 +195,5 @@ try {
 
 ## Next Steps
 
-- Learn about [Custom Mappers](./custom-mappers.md) for advanced mapping scenarios
 - Explore [Transactions](./transactions.md) for multi-operation consistency
 - See [Database Support](./database-support.md) for database-specific features

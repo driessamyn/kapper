@@ -60,7 +60,7 @@ This approach means:
 
 ### 3. Transparency
 
-**What you write is what gets executed. No magic, no hidden behavior.**
+**What you write is what gets executed. No magic, no hidden behaviour.**
 
 ```kotlin
 // This code...
@@ -91,9 +91,9 @@ val user = connection.querySingle<User>(
 #### Efficient Auto-Mapping
 
 ```kotlin
-// Kapper's auto-mapping is optimized:
+// Kapper's auto-mapping is optimised:
 // - Reflection is cached after first use
-// - Column index lookups are optimized
+// - Column index lookups are optimised
 // - Minimal object allocation during mapping
 
 val users = connection.query<User>("SELECT * FROM users")
@@ -197,13 +197,13 @@ val users = connection.query<User>("""
 // - Clear and concise
 // - Full SQL feature access
 // - Optimal query plans
-// - Easy to optimize
+// - Easy to optimise
 // - Stick to the one DB query language which you will need to learn anyway: SQL
 ```
 
 ### Why Not Active Record?
 
-Active Record patterns mix data and behavior, leading to complex object hierarchies:
+Active Record patterns mix data and behaviour, leading to complex object hierarchies:
 
 ```kotlin
 // Active Record approach (not Kapper)
@@ -263,7 +263,7 @@ user.getOrders(); // Hidden database query!
 // Problems:
 // - N+1 query problems
 // - Unpredictable performance  
-// - Hard to optimize
+// - Hard to optimise
 // - Hidden complexity
 ```
 
@@ -309,7 +309,7 @@ fun getUserOrders(userId: Long): List<UserOrder> {
 // Benefits:
 // - Explicit performance characteristics
 // - No hidden queries
-// - Easy to optimize (combine queries, add indexes)
+// - Easy to optimise (combine queries, add indexes)
 // - Clear data loading strategy
 ```
 

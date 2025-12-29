@@ -38,3 +38,9 @@ This covers:
 
 For complete API documentation, see:
 - [**kapper-coroutines API Reference**](../api/kapper-coroutines/)
+
+## Next Steps
+
+- See [Transactions](./transactions.md) for coroutine transaction handling
+- Explore [Performance Tuning](./performance-tuning.md) for async operation optimisation
+- Learn about [Examples](../examples/) for real-world coroutine patterns

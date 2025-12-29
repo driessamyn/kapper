@@ -24,7 +24,7 @@ Our benchmarks test realistic database operations using JMH (Java Microbenchmark
 ## Test Environment
 
 - **Platform**: Oracle Cloud ARM instances (4 OCPUs, 24GB RAM)
-- **JVM**: GraalVM JDK 21 with optimized JIT compilation
+- **JVM**: GraalVM JDK 21 with optimised JIT compilation
 - **Framework**: JMH (Java Microbenchmark Harness)
 - **Database**: SQLite 3.50 (embedded), PostgreSQL 14 (Testcontainers)
 - **Dataset**: 1000-row tables with realistic data structures

@@ -1,7 +1,9 @@
 # Kapper Benchmark Suite
 
-This module contains a set of benchmarks to evaluate the relative performance of kapper against various other database access libraries.
+This module contains a set of benchmarks to evaluate the relative performance of Kapper against various other database access libraries.
 It uses [Java Microbenchmark Harness (JMH)](https://github.com/openjdk/jmh).
+
+For complete benchmark results and analysis, visit the [Performance section](https://kapper.samyn.net/performance/) of our documentation.
 
 ## Overview
 

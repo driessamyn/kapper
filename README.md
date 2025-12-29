@@ -1,4 +1,4 @@
-# Kapper ORM
+# Kapper
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Maven Central](https://img.shields.io/maven-central/v/net.samyn/kapper.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/net.samyn/kapper)
@@ -13,8 +13,7 @@ This is the philosophy behind Kapper...</p>
 
 <br clear="left" />
 
-Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library written in Kotlin, targeting the JVM ecosystem.
-It embraces SQL rather than abstracting it away, providing a simple, intuitive API for executing queries and mapping results.
+Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library written in Kotlin, targeting the JVM ecosystem. It embraces SQL rather than abstracting it away, providing a simple, intuitive API for executing queries and mapping results.
 
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
@@ -22,523 +21,80 @@ It embraces SQL rather than abstracting it away, providing a simple, intuitive A
 ![Oracle](https://img.shields.io/badge/oracle-F80000.svg?style=for-the-badge&logo=oracle&logoColor=white)
 ![MSSQL](https://img.shields.io/badge/mssql-%23CC2927.svg?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
 
-
-## The Kapper Philosophy
+## Philosophy
 
 Instead of adding another abstraction layer, Kapper embraces three core principles:
 
-1. **SQL is the Best Query Language**: SQL has evolved over decades to be expressive, powerful, and optimized for database operations.
-Instead of hiding it, we should leverage it directly.
-2. **Minimal Abstraction**: Kapper provides just enough abstraction to make database operations comfortable in Kotlin, without trying to reinvent database interactions. 
-Kapper prefers extension of existing APIs than abstraction of them.
-3. **Transparency**: What you write is what gets executed.
-There's no magic query generation or hidden database calls.
+1. **SQL is the Best Query Language**: SQL has evolved over decades to be expressive, powerful, and optimised for database operations. Instead of hiding it, we should leverage it directly.
 
-Kapper aims to go against the grain of the heavyweight database abstractions.
-Instead, it makes JDBC support easy without taking away any flexibility.
-In fact, it can happily live alongside an existing _vanilla_ JDBC integration and/or your existing DB layer.
+2. **Minimal Abstraction**: Kapper provides just enough abstraction to make database operations comfortable in Kotlin, without trying to reinvent database interactions. Kapper prefers extension of existing APIs rather than abstraction of them.
 
-It does _not_ generate code, it does not introduce another layer of abstraction, it is never intrusive.
-It does _not_ hide SQL, instead it embraces the fact that SQL is the best language for DB interaction.
+3. **Transparency**: What you write is what gets executed. There's no magic query generation or hidden database calls.
 
-Kapper also means hairdresser in Dutch, but I have yet to come up with a reason for why this is relevant.
+[📖 Read more about Kapper's philosophy](https://driessamyn.github.io/kapper/guide/philosophy)
 
 ## Features
 
-- **Simple API**: Kapper provides a familiar set of methods for executing SQL queries, mapping results to Kotlin data classes, and updating/inserting data.
-- **Extensibility**: The Kapper API is implemented as extension functions on the `java.sql.Connection` interface, allowing seamless integration with existing JDBC code.
-- **Lightweight**: Kapper has minimal external dependencies, focusing on providing core functionality without bloat.
-- **Fast**: Kapper's extension design means that it is possible to match "raw" JDBC performance, while its [auto-mapper equals or outperforms other ORMs](./benchmark/README.md).
-- **Supported DBs**: PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server.
+- **🎯 SQL-First Approach**: Write your SQL directly - no DSL or query builders
+- **⚡ High Performance**: Near-JDBC performance with automatic object mapping
+- **🏗️ Auto-Mapping**: Automatically map result sets to Kotlin data classes and Java records
+- **🔧 Custom Mappers**: Full control with manual mapping for performance-critical paths
+- **🚀 Coroutines Support**: First-class support for Kotlin coroutines with `kapper-coroutines`
+- **🌊 Flow Integration**: Return query results as Kotlin `Flow` for reactive programming
+- **📦 Java Records**: Native support for Java record classes alongside Kotlin data classes
+- **🔄 Transactions**: Simple transaction handling with automatic commit/rollback
+- **📊 Bulk Operations**: Efficient batch inserts, updates, and deletes with `executeAll`
+- **🗄️ Database Support**: PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server, and many others
+- **📏 Minimal Dependencies**: Lightweight library with zero external dependencies
+- **🔌 JDBC Extension**: Extends `java.sql.Connection` - works alongside existing JDBC code
 
-![Kapper performance](./img/kapper-benchmark.png)
+[📖 Explore all features in detail](https://driessamyn.github.io/kapper/guide/)
 
-Snapshot releases are published from the main branch to [GitHub Packages](packages/2353016).
-Stable releases will be published to Maven Central.
-
-## Usage Overview
-
-Here's a simple example of how to use Kapper:
-
-Example DB table
-```sql
- CREATE TABLE super_heroes (
-    id UUID PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100),
-    age INT
-);
- ```
-
-and an example DTO:
-```kotlin
-data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
-```
-
-You can use Kapper like so:
-```kotlin
-// Assuming you have a java.sql.Connection instance, using your favourite connection pooler, for example:
-ds.getConnection().use { connection ->
-    // insert a row:
-    connection.execute(
-        "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age);",
-        "id" to UUID.randomUUID(),
-        "name" to "Batman",
-        "email" to "batman@dc.com",
-        "age" to 85,
-    )
-    
-    // Execute a SQL query and map the results to a list of SuperHero objects
-    val heroes: List<SuperHero> = connection.query<SuperHero>("SELECT * FROM super_heroes")
-
-    // or query by passing parameters
-    val olderHeroes = connection.query<SuperHero>("SELECT * FROM super_heroes WHERE age > :age", "age" to 80)
-    
-    // or find a single
-    val batman = connection.querySingle<SuperHero>(
-        "SELECT id, name FROM super_heroes WHERE name = :name",
-        "name" to "Batman",
-    )
-}
-```
-
-Kapper does not maintain a mapping between classes and DB tables or entities. 
-Instead, it can either auto-map to a given data class or record, if the constructor arguments match the DB fields, a custom mapper can be provided, or a mapping lambda can be passed in.
-This means Kapper provides a strongly typed mapping, but still allows rows-to-object mapping with lambdas or mapper functions for more flexibility or advanced used cases.
-
-Example of registering an custom mapper class:
+## Quick Start
 
 ```kotlin
-data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
+data class User(val id: UUID, val name: String, val email: String?)
 
-// Custom mapper
-class SuperHeroMapper : Mapper<SuperHero> {
-    override fun createInstance(
-        resultSet: ResultSet,
-        fields: Map<String, Field>,
-    ) = SuperHero(
-        id = UUID.fromString(resultSet.getString("id")),
-        name = resultSet.getString("name"),
-        email = resultSet.getString("email"),
-        age = resultSet.getInt("age"),
-    )
-}
+// Simple query
+val users = connection.query<User>("SELECT * FROM users WHERE age > :age", "age" to 18)
 
-Kapper.mapperRegistry.registerIfAbsent<SuperHero>(SuperHeroMapper())
-
-val heroes = connection.query<SuperHero>("SELECT * FROM super_heroes")
-```
-
-Or using a mapper lambda:
-
-```kotlin
-val heroes = connection.query<SuperHero>(
-    "SELECT * FROM super_heroes",
-    { resultSet, _ -> 
-        Superhero(
-            id = UUID.fromString(resultSet.getString("id")),
-            name = resultSet.getString("name"),
-            email = resultSet.getString("email"),
-            age = resultSet.getInt("age"),
-        ) 
-    }
-)
-```
-
-Further examples and documentation are explored below and in the [integration tests](lib/src/integrationTest/kotlin/net/samyn/kapper/), or check out the [Kapper-Example](https://github.com/driessamyn/kapper-examples) repo for more extended examples and documentation,
-including [a comparison with Hibernate and Ktorm](https://github.com/driessamyn/kapper-examples/tree/release-1.0-article?tab=readme-ov-file#comparison-with-orms).
-
-### Auto-mapping to Java Record Classes
-
-Kapper supports automatic mapping of SQL query results to Java record classes, in addition to Kotlin data classes.
-If you use Java records as your DTOs, Kapper will match the column names in your result set to the record's component names and instantiate the record automatically.
-
-For example, given the following Java record:
-
-```java
-public record SuperHeroRecord(UUID id, String name, String email, Integer age) {}
-```
-
-You can query and map results just as you would with a Kotlin data class:
-
-```kotlin
-val heroes: List<SuperHeroRecord> = connection.query<SuperHeroRecord>("SELECT * FROM super_heroes")
-```
-
-Additional Java examples can be found in the [Kapper-Example](https://github.com/driessamyn/kapper-examples#java-examples)
-
-#### Handling Default Values, Nullables, and Extra Fields
-
-Kapper's auto-mapping is flexible:
-- If a database field is missing, Kapper will use the default value for that property in a Kotlin data class, or `null` for nullable fields in both Kotlin data classes and Java records.
-- If the database returns extra columns that are not present in your data class or record, Kapper will simply ignore them.
-
-This allows you to evolve your database schema and DTOs independently, and makes it easy to work with partial queries or legacy tables.
-
-### How to use Kapper
-
-#### Import dependencies
-
-Stable versions of Kapper are published to [Maven Central](https://central.sonatype.com/artifact/net.samyn/kapper/versions).
-To use this in your project, simply add the following dependency to your `build.gradle.kts` (or the Groovy equivalent in `build.gradle`):
-
-```kotlin
-dependencies {
-    implementation("net.samyn:kapper:<version>")
-}
-```
-
-For Maven, use:
-
-```xml
-<dependency>
-    <groupId>net.samyn</groupId>
-    <artifactId>kapper</artifactId>
-    <version>[VERSION]</version>
-</dependency>
-```
-
-For co-routine support (see below), use `kapper-coroutines` instead.
-
-Snapshot releases are published from the `main` branch to [GitHub packages](./packages).
-
-In order to use these, add GitHub packages as a repository (and ensure `GH_USERNAME` and `GH_TOKEN` are set in your environment):
-```kotlin
-repositories {
-    mavenCentral()
-    maven {
-        name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/driessamyn/kapper")
-        credentials {
-            username = project.findProperty("gh.user") as String? ?: System.getenv("GH_USERNAME")
-            password = project.findProperty("gh.key") as String? ?: System.getenv("GH_TOKEN")
-        }
-    }
-}
-```
-
-#### Basic usage
-
-##### Queries
-
-Kapper can auto-map the results of a SQL query to a data class:
-
-```kotlin
-data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
-
-val heroes = dataSource.connection.use {
-    it.query<SuperHero>("SELECT * FROM super_heroes")
-}
-```
-
-Parameters can optionally be passed to the query by prefixing the query template tokens with `:`,`?` or `$` and providing the values as key-value pairs:
-
-```kotlin
-val olderHeroes = dataSource.connection.use {
-    it.query<SuperHero>(
-        "SELECT * FROM super_heroes WHERE age > :age",
-        "age" to 80,
-    )
-}
-```
-
-Kapper also support using a custom mapper in case auto-mapping cannot be used or is not desired.
-This is done by simply passing a mapper function to the query, using a lambda or a function reference:
-
-```kotlin
-val heroAges =
-    dataSource.connection.use {
-        it.query<Pair<String, *>>(
-            "SELECT * FROM super_heroes WHERE age > :age",
-            { resultSet, fields ->
-                Pair(
-                    resultSet.getString(fields["name"]!!.columnIndex),
-                    resultSet.getInt(fields["age"]!!.columnIndex),
-                )
-            },
-            "age" to 80,
-        )
-    }
-```
-
-The `querySingle` function can be used to return a single result, or null if the query returns no results:
-
-```kotlin
-val batman =
-    dataSource.connection.use {
-        it.querySingle<SuperHero>(
-            "SELECT * FROM super_heroes WHERE name = :name",
-            "name" to "Batman",
-        )
-    }
-```
-
-##### Execute
-
-Kapper provides an `execute` function to execute SQL statements that do not return a result set, such as `INSERT`, `UPDATE`, or `DELETE` statements.
-
-For example:
-
-```kotlin
-datasource.connection.use {
-    it.execute(
-        """
-            INSERT INTO super_heroes(id, name, email, age) 
-            VALUES (:id, :name, :email, :age)
-            """.trimIndent(),
-        "id" to UUID.randomUUID(),
-        "name" to "Batman",
-        "email" to "batman@dc.com",
-        "age" to 85,
-    )
-}
-
-datasource.connection.use {
-    it.execute(
-        """
-            UPDATE super_heroes
-            SET age = 86
-            WHERE name = :name
-            """.trimIndent(),
-        "name" to "Batman",
-    )
-}
-
-datasource.connection.use {
-    it.execute(
-        """
-                DELETE FROM super_heroes
-                WHERE name = :name
-                """.trimIndent(),
-        "name" to "Batman",
-    )
-}
-```
-
-Kapper now supports passing entire DTOs (data classes) to the `execute` and `executeAll` functions for insert, update, and delete operations, by providing explicit mapping instructions. This makes your code more concise and type-safe, reducing manual parameter mapping.
-
-###### `execute` with DTOs
-You can pass a DTO instance together with mapping instructions, where each SQL parameter name is mapped to a property reference of your DTO:
-
-```kotlin
-val hero = SuperHero(UUID.randomUUID(), "Wonder Woman", "wonder@dc.com", 3000)
+// Insert data
 connection.execute(
-    "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age)",
-    hero,
-    "id" to SuperHero::id,
-    "name" to SuperHero::name,
-    "email" to SuperHero::email,
-    "age" to SuperHero::age,
+    "INSERT INTO users(id, name, email) VALUES(:id, :name, :email)",
+    "id" to UUID.randomUUID(),
+    "name" to "Alice",
+    "email" to "alice@example.com"
 )
 ```
 
-###### `executeAll` for Bulk Operations
-The `executeAll` function allows you to efficiently perform bulk inserts, updates, or deletes by passing a collection of DTOs and mapping instructions.
-Kapper handles batching and parameter mapping for you and `executeAll` results in a JDBC batch operation.
+## Performance That Speaks for Itself
 
-```kotlin
-val heroes = listOf(
-    SuperHero(UUID.randomUUID(), "Flash", "flash@dc.com", 28),
-    SuperHero(UUID.randomUUID(), "Aquaman", "aqua@dc.com", 35)
-)
-connection.executeAll(
-    "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age)",
-    heroes,
-    "id" to SuperHero::id,
-    "name" to SuperHero::name,
-    "email" to SuperHero::email,
-    "age" to SuperHero::age,
-)
-```
+<div align="center">
+  <img src="./docs/public/kapper-benchmark.png" alt="Kapper Performance Benchmarks" width="600" />
+</div>
 
-This eliminates repetitive boilerplate and makes bulk operations simple and safe.
+Kapper consistently outperforms other ORMs while maintaining the simplicity and transparency of SQL.
 
-#### DB Transactions
+## 📚 Complete Documentation
 
-Kapper provides extension functions to make working with transactions easier.
+Discover everything Kapper can do for your project! Visit our comprehensive documentation site:
 
-The `withTransaction` function on `Connection` starts a transaction, executes the provided block, and commit the transaction if the block completes successfully.
-The same function on `DataSrouce` behaves the same except it also creates (and closes) the connection.
+**[📖 kapper.samyn.net](https://driessamyn.github.io/kapper)**
 
-For example:
+### What you'll find:
 
-```kotlin
-datasource.connection.withTransaction { connection ->
-    // insert a row:
-    connection.execute(
-        "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age);",
-        "id" to UUID.randomUUID(),
-        "name" to "Batman",
-        "email" to "batman@dc.com",
-        "age" to 85,
-    )
-}
-```
-
-is the equivalent of:
-
-```kotlin
-datasource.withTransaction { connection ->
-    // insert a row:
-    connection.execute(
-        "INSERT INTO super_heroes(id, name, email, age) VALUES(:id, :name, :email, :age);",
-        "id" to UUID.randomUUID(),
-        "name" to "Batman",
-        "email" to "batman@dc.com",
-        "age" to 85,
-    )
-}
-```
-
-### Coroutine support
-
-Kapper supports coroutines with the inclusion of the `kapper-coroutines` module:
-
-```kotlin
-dependencies {
-    implementation("net.samyn:kapper-coroutines:<versions>")
-}
-```
-
-#### Executing on a `Dispatcher`
-
-This module provides an extension function `withConnection` on the `DataSource` object, optionally allowing you to specify a `Dispatcher`.
-If no `Dispatcher` is provided, the default `Dispatchers.IO` is used.
-
-For example:
-
-```kotlin
-suspend fun listHeroes(): List<SuperHero> =
-    dataSource.withConnection {
-        // Kapper query runs on Dispatchers.IO
-        it.query<SuperHero>("SELECT * FROM super_heroes")
-    }
-```
-
-### Returning a `Flow`
-
-The `queryAsFlow` function in the `kapper-coroutines` module returns a `Flow` of the results, allowing for easy integration with other coroutines constructs, and for example allowing a query to be cancelled:
-
-```kotlin
-runBlocking {
-    val job =
-        async {
-            getDataSource(postgresql).withConnection { connection ->
-                connection.queryAsFlow<PopularMovie>(
-                    """
-                    SELECT
-                     title,
-                     release_date as releasedate, 
-                     gross_worldwide as grossed
-                    FROM movies 
-                    ORDER BY gross_worldwide DESC
-                    """.trimIndent(),
-                )
-                .runningFold(0L to emptyList<PopularMovie>()) { (totalGross, movieList), movie ->
-                    val newTotal = totalGross + movie.grossed
-                    newTotal to (movieList + movie)
-                }.takeWhile { (totalGross, _) ->
-                    // query will be cancelled here
-                    totalGross <= 10_000_000_000
-                }.last()
-            }
-        }
-    println("Query started")
-    val popularMovies = job.await()
-    println(
-        "Popular movies are: ${popularMovies.second.map { it.title }}, " +
-            "grossing a total of ${String.format("%,d", popularMovies.first)}",
-    )
-}
-```
-
-Note that running a query that returns a very large number of results and filtering them in the `Flow` may not be the most efficient way to handle this.
-Filtering in the DB query itself is generally more efficient.
-The above only serves as an example of how to use `Flow` with Kapper and the ability to cancel queries.
-
-The `queryAsFlow` function optionally takes a `fetchSize` parameter, which can be used to set the fetch size of the underlying JDBC statement.
-When not set, the fetch size is set to 1,000.
-This allows Kapper to cancel the JDBC `Statement` when the `Flow` is cancelled, _and_ if supported by the JDBC driver itself.
-
-See [Kapper-Example](https://github.com/driessamyn/kapper-examples) for additional examples.
-
-> **Note**: operations on the JDBC drivers are blocking.
-> This means that regardless of the coroutine support, the actual DB operations are blocking and the connection remains open until the operation is completed.
-> See [Coroutine support in Kapper 1.1](https://dev.to/driessamyn/coroutine-support-in-kapper-11-45h9) for more information.
-
-## Database support
-
-Kapper's integration tests currently cover Postgresql, MySQL, SQLite, Oracle and MS SQL Server.
-If you need support for another DB, and/or find an issue with a particular DB, feel free to [open an issue](kapper/issues) or, even better, submit a pull request. 
-
-The integration tests by default execute against Postgresql, SQLite, but the `-Ddb` property can be used to specify other DB targets.
-E.g.:
-
-```shell
-./gradlew integrationTest -Ddb=oracle
-```
-
-Or to run against _all_ supported DBs:
-
-```shell
-./gradlew integrationTest -Ddb=all
-``` 
-
-## Performance
-
-Kapper is designed to be fast and lightweight, with performance comparable to raw JDBC.
-This repository contains a [benchmark suite](./benchmark) that compares Kapper's performance against other popular ORMs like Hibernate and Ktorm.
-The benchmark suite is designed to be extensible and can be used to add new benchmarks or modify existing ones.
-Two Kapper benchmarks are included: with auto-mapping and with a custom mapper.
-In the current version of Kapper the _"cost"_ of auto-mapping in the small single digit _microsecond_ range.
-Manual mapping is always the fastest and recommended for performance-critical applications or queries.
-
-More details can be found [here](./benchmark/README.md), and the benchmark results are published in [kapper-benchmark-results](https://github.com/driessamyn/kapper-benchmark-results/).
-
-# External content
-
-- [Dev.to - Kapper, a Fresh Look at ORMs for Kotlin and the JVM ](https://dev.to/driessamyn/kapper-a-fresh-look-at-orms-for-kotlin-and-the-jvm-1ln5)
-- [Dev.to - Coroutine support in Kapper 1.1](https://dev.to/driessamyn/coroutine-support-in-kapper-11-45h9)
-- [Dev.to - Announcing Kapper 1.2: Cleaner Transactions with Less Boilerplate](https://dev.to/driessamyn/announcing-kapper-12-cleaner-transactions-with-less-boilerplate-2dbi)
-- [Dev.to - Kapper 1.3 Supports Flows](https://dev.to/driessamyn/kapper-13-supports-flows-more-kotlin-goodness-47f0)
-- [Dev.to - Kapper benchmarks - how does Kapper 1.3 compare to the competition?](https://dev.to/driessamyn/kapper-benchmarks-how-does-kapper-13-compare-to-the-competition-1m4d)
-
-## Roadmap
-
-The following items were part of the v1 roadmap and are planned for future releases.
-Items will be ticked off as they are implemented.
-
-- [x] Create a benchmark suite to validate performance.
-- [x] Create transaction syntax sugar.
-- [x] Add co-routine support.
-- [x] Add flow support.
-- [x] Add MS SQL Server, Oracle and SQLite integration tests.
-- [x] Support auto-mapping for Java records.
-- [x] Tests & examples in other JVM languages.
-- [x] Bulk operations support
-- [x] Support DTO argument for `execute`.
-- [ ] Cache query parsing.
-- [ ] Custom SQL type conversion.
-- [ ] Improve support for date/time conversion.
-- [ ] Add support for non-blocking JDBC drivers.
-- [ ] Improve user documentation / docs website.
-
-Anything else you think is missing, or you want to be prioritised, please [open an issue](kapper/issues) or submit a pull request.
-
-## Sponsors
-
-[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/)
-
-Special thanks to the kind people from YourKit for supporting open source projects and providing us with licenses for their profilers.
-
-YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
-<a href="https://www.yourkit.com/dotnet-profiler/">YourKit .NET Profiler</a>,
-and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
+- **[🚀 Quick Start Guide](https://driessamyn.github.io/kapper/guide/quick-start)** - Get up and running in minutes
+- **[📖 User Guide](https://driessamyn.github.io/kapper/guide/)** - Complete feature coverage with examples
+- **[💻 Working Examples](https://driessamyn.github.io/kapper/examples/)** - Real-world patterns and best practices
+- **[⚡ Performance Benchmarks](https://driessamyn.github.io/kapper/performance/)** - See how Kapper compares to other ORMs
+- **[🔧 Installation Guide](https://driessamyn.github.io/kapper/guide/installation)** - Maven, Gradle, and dependency setup
+- **[🔄 Migration Guide](https://driessamyn.github.io/kapper/guide/migration)** - Migrating from other ORMs
+- **[📚 API Reference](https://driessamyn.github.io/kapper/api/)** - Complete API documentation
 
 ## Contributing
 
-We welcome contributions to the Kapper! If you find any issues or have ideas for improvements, please feel free to [open an issue](kapper/issues) or submit a pull request.
+We welcome contributions! Please see our [documentation site](https://driessamyn.github.io/kapper) for guides and examples, or feel free to [open an issue](https://github.com/driessamyn/kapper/issues) or submit a pull request.
 
 ## License
 
-_Kapper_ is released under the [Apache 2.0 License](./LICENSE).
+Kapper is released under the [Apache 2.0 License](./LICENSE).

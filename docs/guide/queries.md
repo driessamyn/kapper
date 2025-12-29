@@ -200,5 +200,4 @@ try {
 
 - Learn about [Object Mapping](./mapping.md) for advanced mapping scenarios
 - Explore [Transactions](./transactions.md) for consistent multi-query operations
-- See [Custom Mappers](./custom-mappers.md) for complex type conversions
 - Check out [Performance Tuning](./performance-tuning.md) for optimization strategies

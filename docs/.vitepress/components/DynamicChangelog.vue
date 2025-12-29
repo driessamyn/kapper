@@ -95,7 +95,14 @@ const parseMarkdown = (body) => {
     // Inline code
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     // Links
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+      // Sanitize URL to prevent XSS from javascript: links
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) {
+        return `<a href="${url}" target="_blank" rel="noopener">${text}</a>`;
+      }
+      // Block other protocols
+      return text;
+    });
 
   // 3. Process block elements line-by-line
   const lines = html.split('\n');

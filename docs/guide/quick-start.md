@@ -153,5 +153,4 @@ You're now ready to use Kapper in your application. For more other examples and 
 
 - Explore [Examples](/examples/) for real-world patterns
 - Learn about [Coroutines Support](./coroutines.md) for async operations
-- Check out [Custom Mappers](./custom-mappers.md) for complex mapping scenarios
 - See [Performance Tuning](./performance-tuning.md) for optimization tips

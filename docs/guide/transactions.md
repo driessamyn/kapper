@@ -50,7 +50,7 @@ dataSource.withConnection { connection ->
 
 ## Nested Transactions
 
-Kapper follows standard JDBC behavior for nested transactions.
+Kapper follows standard JDBC behaviour for nested transactions.
 Be aware that most databases don't support true nested transactions.
 
 ## Error Handling

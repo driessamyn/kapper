@@ -78,7 +78,7 @@ Kapper extends `java.sql.Connection` directly rather than wrapping it, eliminati
 
 ### 3. No Query Generation
 - Direct SQL execution means no query building or parsing overhead
-- JIT compiler can optimize SQL string constants
+- JIT compiler can optimise SQL string constants
 - No complex query analysis or transformation
 
 ### 4. Smart Resource Management
@@ -90,7 +90,7 @@ Kapper extends `java.sql.Connection` directly rather than wrapping it, eliminati
 
 ### Benchmark Environment
 - **Platform**: Oracle Cloud ARM instances (4 OCPUs, 24GB RAM)
-- **JVM**: GraalVM JDK 21 with optimized JIT compilation
+- **JVM**: GraalVM JDK 21 with optimised JIT compilation
 - **Framework**: JMH (Java Microbenchmark Harness)
 - **Databases**: SQLite 3.50, PostgreSQL 14 (via Testcontainers)
 
@@ -124,7 +124,7 @@ val users = connection.query(
 val users = connection.query<User>("SELECT id, name FROM users")
 ```
 
-### 2. Optimize Queries
+### 2. Optimise Queries
 ```kotlin
 // Good: Specific columns
 connection.query<User>("SELECT id, name, email FROM users WHERE active = true")

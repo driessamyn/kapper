@@ -20,13 +20,13 @@ Many ORM libraries fall into a common pattern: they try to shield developers fro
 
 3. **Hidden Complexity**: ORMs often mask the actual database operations being performed. A simple-looking query might generate multiple database round trips or inefficient SQL, leading to performance problems that are hard to diagnose.
 
-4. **False Sense of Database Independence**: While ORMs promise database independence, in practice, efficient database usage often requires leveraging database-specific features. The abstraction becomes leaky when you need to optimize performance or use advanced features.
+4. **False Sense of Database Independence**: While ORMs promise database independence, in practice, efficient database usage often requires leveraging database-specific features. The abstraction becomes leaky when you need to optimise performance or use advanced features.
 
 ## The Kapper Philosophy
 
 Instead of adding another abstraction layer, Kapper embraces three core principles:
 
-1. **SQL is the Best Query Language**: SQL has evolved over decades to be expressive, powerful, and optimized for database operations. Instead of hiding it, we should leverage it directly.
+1. **SQL is the Best Query Language**: SQL has evolved over decades to be expressive, powerful, and optimised for database operations. Instead of hiding it, we should leverage it directly.
 
 2. **Minimal Abstraction**: Kapper provides just enough abstraction to make database operations comfortable in Kotlin or Java, without trying to reinvent database interactions. Kapper prefers extension of existing APIs than abstraction of them.
 

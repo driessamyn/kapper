@@ -307,7 +307,6 @@ val users = connection.query("SELECT id, name, email FROM users") { rs, _ ->
 
 ## Next Steps
 
-- Learn about [Custom Mappers](./custom-mappers.md) for complex type conversions
 - Explore [Queries](./queries.md) for advanced query patterns  
 - See [Transactions](./transactions.md) for managing database transactions
 - Check [Performance Tuning](./performance-tuning.md) for optimization tips
