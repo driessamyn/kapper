@@ -93,6 +93,15 @@ Discover everything Kapper can do for your project! Visit our comprehensive docu
 - **🔄 [Migration Guide](https://driessamyn.github.io/kapper/guide/migration)** - Migrating from other ORMs
 - **📚 [API Reference](https://driessamyn.github.io/kapper/api/)** - Complete API documentation
 
+## Sponsors
+
+[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/)
+
+Special thanks to the kind people from YourKit for supporting open source projects and providing us with licenses for their profilers.
+
+YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
+<a href="https://www.yourkit.com/dotnet-profiler/">YourKit .NET Profiler</a>,
+
 ## Contributing
 
 We welcome contributions! Please see our [documentation site](https://driessamyn.github.io/kapper) for guides and examples, or feel free to [open an issue](https://github.com/driessamyn/kapper/issues) or submit a pull request.
