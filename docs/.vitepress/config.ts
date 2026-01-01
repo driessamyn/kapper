@@ -130,7 +130,29 @@ export default defineConfig({
     },
 
     search: {
-      provider: 'local'
+      provider: 'local',
+      options: {
+        detailedView: true,
+        locales: {
+          root: {
+            translations: {
+              button: {
+                buttonText: 'Search docs',
+                buttonAriaLabel: 'Search docs'
+              },
+              modal: {
+                noResultsText: 'No results found',
+                resetButtonTitle: 'Clear search query',
+                footer: {
+                  selectText: 'to select',
+                  navigateText: 'to navigate',
+                  closeText: 'to close'
+                }
+              }
+            }
+          }
+        }
+      }
     },
 
     editLink: {
