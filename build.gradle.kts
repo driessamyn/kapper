@@ -62,6 +62,7 @@ sonar {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/kover/report.xml")
         property("sonar.coverage.exclusions", "benchmark/**,examples/**")
+        property("sonar.exclusions", "benchmark/**,examples/**,docs/**,build-logic/**,buildSrc/**")
         property("sonar.junit.reportPaths", "**/build/test-results/*/")
     }
 }
