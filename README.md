@@ -21,6 +21,8 @@ Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library
 ![Oracle](https://img.shields.io/badge/oracle-F80000.svg?style=for-the-badge&logo=oracle&logoColor=white)
 ![MSSQL](https://img.shields.io/badge/mssql-%23CC2927.svg?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
 
+See [Kapper](https://driessamyn.github.io/kapper/) for more information.
+
 ## Philosophy
 
 Instead of adding another abstraction layer, Kapper embraces three core principles:
@@ -31,7 +33,7 @@ Instead of adding another abstraction layer, Kapper embraces three core principl
 
 3. **Transparency**: What you write is what gets executed. There's no magic query generation or hidden database calls.
 
-[📖 Read more about Kapper's philosophy](https://driessamyn.github.io/kapper/guide/philosophy)
+📖 [Read more about Kapper's philosophy](https://driessamyn.github.io/kapper/guide/philosophy)
 
 ## Features
 
@@ -79,17 +81,17 @@ Kapper consistently outperforms other ORMs while maintaining the simplicity and 
 
 Discover everything Kapper can do for your project! Visit our comprehensive documentation site:
 
-**[📖 kapper.samyn.net](https://driessamyn.github.io/kapper)**
+**📖 [kapper.samyn.net](https://driessamyn.github.io/kapper)**
 
 ### What you'll find:
 
-- **[🚀 Quick Start Guide](https://driessamyn.github.io/kapper/guide/quick-start)** - Get up and running in minutes
-- **[📖 User Guide](https://driessamyn.github.io/kapper/guide/)** - Complete feature coverage with examples
-- **[💻 Working Examples](https://driessamyn.github.io/kapper/examples/)** - Real-world patterns and best practices
-- **[⚡ Performance Benchmarks](https://driessamyn.github.io/kapper/performance/)** - See how Kapper compares to other ORMs
-- **[🔧 Installation Guide](https://driessamyn.github.io/kapper/guide/installation)** - Maven, Gradle, and dependency setup
-- **[🔄 Migration Guide](https://driessamyn.github.io/kapper/guide/migration)** - Migrating from other ORMs
-- **[📚 API Reference](https://driessamyn.github.io/kapper/api/)** - Complete API documentation
+- **🚀 [Quick Start Guide](https://driessamyn.github.io/kapper/guide/quick-start)** - Get up and running in minutes
+- **📖 [User Guide](https://driessamyn.github.io/kapper/guide/)** - Complete feature coverage with examples
+- **💻 [Working Examples](https://driessamyn.github.io/kapper/examples/)** - Real-world patterns and best practices
+- **⚡ [Performance Benchmarks](https://driessamyn.github.io/kapper/performance/)** - See how Kapper compares to other ORMs
+- **🔧 [Installation Guide](https://driessamyn.github.io/kapper/guide/installation)** - Maven, Gradle, and dependency setup
+- **🔄 [Migration Guide](https://driessamyn.github.io/kapper/guide/migration)** - Migrating from other ORMs
+- **📚 [API Reference](https://driessamyn.github.io/kapper/api/)** - Complete API documentation
 
 ## Contributing
 
