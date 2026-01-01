@@ -14,7 +14,7 @@ oracle-driver = "23.26.0.0.0"
 postgresql-driver = "42.7.8"
 slf4j = "2.0.17"
 sqlite = "3.51.1.0"
-test-containers = "1.21.3"
+test-containers = "1.21.4"
 
 # Example dependencies
 hibernate-version = "7.1.5.Final"
