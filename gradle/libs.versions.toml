@@ -94,4 +94,4 @@ example-dbs = ["mysql-driver", "postgresql-driver"]
 git-semver = { id = "com.github.jmongard.git-semver-plugin", version.ref = "git-semver" }
 jmh = { id = "me.champeau.jmh", version = "0.7.3" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-sonar = { id = "org.sonarqube", version = "7.1.0.6387" }
+sonar = { id = "org.sonarqube", version = "7.2.2.6593" }
