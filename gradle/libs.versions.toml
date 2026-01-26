@@ -48,8 +48,8 @@ test-containers-oracle = { module = "org.testcontainers:oracle-free", version.re
 test-containers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-containers" }
 
 # Example dependencies
-hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.1.11.Final" }
-hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.1.11.Final" }
+hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.2.1.Final" }
+hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.2.1.Final" }
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator-version" }
 glassfish-jakarta = { module = "org.glassfish:jakarta.el", version = "4.0.2" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
