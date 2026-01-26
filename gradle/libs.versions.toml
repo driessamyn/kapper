@@ -66,7 +66,7 @@ dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref
 dokka-mkdocs-plugin = { module = "dev.opensavvy.dokkatoo-mkdocs:dev.opensavvy.dokkatoo-mkdocs.gradle.plugin", version = "0.5.1" }
 ktlint-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version = "12.1.2" }
 kotlin-jvm-plugin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
-kover-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version = "0.9.3" }
+kover-plugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version = "0.9.4" }
 # develocity = { id = "com.gradle.develocity", version = "4.1.1" }
 
 [bundles]
