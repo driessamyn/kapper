@@ -31,13 +31,14 @@ internal fun parseQuery(template: String): Pair<String, Map<String, List<Int>>> 
     var tokenIndex = 0
     var tokenNameBuilder: StringBuilder? = null
 
-    template.trim().forEachIndexed { i, c ->
+    val trimmed = template.trim()
+    trimmed.forEachIndexed { i, c ->
         when {
             // Token start char, and it follows at least one valid token character
             c.isTokenStart() &&
                 // doubled-up placeholders should not result in token, this is to support e.g. type casting in PostgreSQL
-                template.getOrNull(i - 1)?.isTokenStart() != true &&
-                template.getOrNull(i + 1)?.isValidTokenChar() == true -> {
+                trimmed.getOrNull(i - 1)?.isTokenStart() != true &&
+                trimmed.getOrNull(i + 1)?.isValidTokenChar() == true -> {
                 tokenNameBuilder = StringBuilder()
                 tokenIndex++
                 sqlBuilder.append('?')

@@ -16,8 +16,9 @@ class ExecuteTests : AbstractDbTests() {
         val results =
             connection.execute(
                 """
-                INSERT INTO super_heroes_$testId(id, name, email, age) VALUES(:id, :name, :email, :age)
-                """.trimIndent(),
+                INSERT INTO super_heroes_$testId(id, name, email, age) 
+                VALUES(:id, :name, :email, :age)
+                """,
                 "id" to supermanClone.id,
                 "name" to supermanClone.name,
                 "email" to supermanClone.email,
