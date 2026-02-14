@@ -157,6 +157,22 @@ class QueryParserTest {
         )
     }
 
+    @Test
+    fun `when template has leading and trailing whitespace should parse correctly`() {
+        // Reproduces issue #269
+        val template = """
+            INSERT INTO song_active_count (song_id, active_count) VALUES (:song_id, :active_count)
+            ON CONFLICT (song_id) DO UPDATE SET active_count = EXCLUDED.active_count
+            """
+        val (sql, tokens) = parseQuery(template)
+        assertSoftly {
+            sql.shouldBe(template.trim().replace(":song_id", "?").replace(":active_count", "?"))
+            tokens.shouldContainExactly(
+                mapOf("song_id" to listOf(1), "active_count" to listOf(2)),
+            )
+        }
+    }
+
     companion object {
         @JvmStatic
         fun provideQueryTemplates() =
