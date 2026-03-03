@@ -3,6 +3,7 @@ package net.samyn.kapper
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.getDbFlavour
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.sql.Connection
 import java.time.Instant
 import java.time.LocalDate
@@ -146,8 +147,8 @@ class TypesTest : AbstractDbTests() {
         val t_binary: ByteArray,
         val t_varbinary: ByteArray,
         val t_large_binary: ByteArray,
-        val t_numeric: Float,
-        val t_decimal: Float,
+        val t_numeric: BigDecimal,
+        val t_decimal: BigDecimal,
         val t_smallint: Int,
         val t_int: Int,
         val t_bigint: Long,
@@ -225,8 +226,8 @@ class TypesTest : AbstractDbTests() {
             t_binary = Random.nextBytes(16),
             t_varbinary = Random.nextBytes(16),
             t_large_binary = Random.nextBytes(16),
-            t_numeric = 123.456F,
-            t_decimal = 789.012F,
+            t_numeric = BigDecimal("123.456000"),
+            t_decimal = BigDecimal("789.012000"),
             t_smallint = 1,
             t_int = 123,
             t_bigint = 123456L,

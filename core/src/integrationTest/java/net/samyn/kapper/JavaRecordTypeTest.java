@@ -2,6 +2,7 @@ package net.samyn.kapper;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -17,8 +18,8 @@ public record JavaRecordTypeTest(
         byte[] t_binary,
         byte[] t_varbinary,
         byte[] t_large_binary,
-        float t_numeric,
-        float t_decimal,
+        BigDecimal t_numeric,
+        BigDecimal t_decimal,
         int t_smallint,
         int t_int,
         long t_bigint,
@@ -36,8 +37,8 @@ public record JavaRecordTypeTest(
         if (this == o) return true;
         if (!(o instanceof JavaRecordTypeTest that)) return false;
         return t_char == that.t_char
-                && Float.compare(that.t_numeric, t_numeric) == 0
-                && Float.compare(that.t_decimal, t_decimal) == 0
+                && t_numeric.compareTo(that.t_numeric) == 0
+                && t_decimal.compareTo(that.t_decimal) == 0
                 && t_smallint == that.t_smallint
                 && t_int == that.t_int
                 && t_bigint == that.t_bigint
@@ -66,8 +67,8 @@ public record JavaRecordTypeTest(
         result = 31 * result + Arrays.hashCode(t_binary);
         result = 31 * result + Arrays.hashCode(t_varbinary);
         result = 31 * result + Arrays.hashCode(t_large_binary);
-        result = 31 * result + Float.hashCode(t_numeric);
-        result = 31 * result + Float.hashCode(t_decimal);
+        result = 31 * result + t_numeric.hashCode();
+        result = 31 * result + t_decimal.hashCode();
         result = 31 * result + Integer.hashCode(t_smallint);
         result = 31 * result + Integer.hashCode(t_int);
         result = 31 * result + Long.hashCode(t_bigint);
