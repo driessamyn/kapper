@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -45,13 +46,14 @@ class AutoConverterTest {
                 ),
                 arrayOf(Char::class.java, "A", 'A'),
                 arrayOf(Int::class.java, 123F, 123),
-                arrayOf(java.lang.Integer::class.java, 123F, 123),
+                arrayOf(Integer::class.java, 123F, 123),
                 arrayOf(Long::class.java, 123F, 123L),
                 arrayOf(
                     Date::class.java,
                     Instant.parse("2023-10-01T00:00:00Z"),
                     Date.from(Instant.parse("2023-10-01T00:00:00Z")),
                 ),
+                arrayOf(BigDecimal::class.java, 123.456, BigDecimal.valueOf(123.456)),
                 arrayOf(Boolean::class.java, "true", true),
                 arrayOf(String::class.java, 123, "123"),
             )
@@ -128,6 +130,6 @@ class AutoConverterTest {
 
     @Test
     fun `when primitive type use custom converter`() {
-        autoConverter.convert(java.lang.Integer.valueOf(1), Int::class.java) shouldBe 1
+        autoConverter.convert(Integer.valueOf(1), Int::class.java) shouldBe 1
     }
 }

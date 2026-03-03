@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
+import java.math.BigDecimal
 import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -45,6 +46,7 @@ class SQLTypesConverterTest {
                 arguments(named("LONG", 123L), statement::setLong),
                 arguments(named("FLOAT", 123.45F), statement::setFloat),
                 arguments(named("DOUBLE", 123.45), statement::setDouble),
+                arguments(named("BIGDECIMAL", BigDecimal("123.45")), statement::setBigDecimal),
                 arguments(
                     named("CHAR", 'c'),
                     { i: Int, v: Char? -> statement.setString(i, v.toString()) },
@@ -127,9 +129,9 @@ class SQLTypesConverterTest {
                 arguments(named("SQLXML", JDBCType.SQLXML), "SQLXML", { f: Int -> resultSet.getString(f) }),
                 arguments(named("VARCHAR", JDBCType.VARCHAR), "VARCHAR", { f: Int -> resultSet.getString(f) }),
                 arguments(named("DATE", JDBCType.DATE), "DATE", { f: Int -> resultSet.getDate(f) }),
-                arguments(named("DECIMAL", JDBCType.DECIMAL), "DECIMAL", { f: Int -> resultSet.getFloat(f) }),
+                arguments(named("DECIMAL", JDBCType.DECIMAL), "DECIMAL", { f: Int -> resultSet.getBigDecimal(f) }),
                 arguments(named("FLOAT", JDBCType.FLOAT), "FLOAT", { f: Int -> resultSet.getFloat(f) }),
-                arguments(named("NUMERIC", JDBCType.NUMERIC), "NUMERIC", { f: Int -> resultSet.getFloat(f) }),
+                arguments(named("NUMERIC", JDBCType.NUMERIC), "NUMERIC", { f: Int -> resultSet.getBigDecimal(f) }),
                 arguments(named("REAL", JDBCType.REAL), "REAL", { f: Int -> resultSet.getFloat(f) }),
                 arguments(named("DOUBLE", JDBCType.DOUBLE), "DOUBLE", { f: Int -> resultSet.getDouble(f) }),
                 arguments(named("INTEGER", JDBCType.INTEGER), "INTEGER", { f: Int -> resultSet.getInt(f) }),

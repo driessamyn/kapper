@@ -4,6 +4,7 @@ package net.samyn.kapper.internal
 
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperUnsupportedOperationException
+import java.math.BigDecimal
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
@@ -149,7 +150,7 @@ internal fun convertUUID(value: Any): UUID =
 
 internal fun convertChar(value: Any): Char =
     when (value) {
-        is java.lang.Character -> value as Char
+        is Character -> value as Char
         is String -> {
             if (value.length != 1) {
                 throw KapperParseException(
@@ -175,9 +176,10 @@ internal fun convertChar(value: Any): Char =
 
 internal fun convertInt(value: Any): Int =
     when (value) {
-        is java.lang.Integer -> value.toInt()
+        is Integer -> value.toInt()
         is java.lang.Float -> value.toInt()
         is Float -> value.toInt()
+        is BigDecimal -> value.toInt()
 
         else -> {
             throw KapperUnsupportedOperationException(
@@ -190,10 +192,27 @@ internal fun convertLong(value: Any): Long =
     when (value) {
         is java.lang.Long -> value.toLong()
         is Float -> value.toLong()
+        is BigDecimal -> value.toLong()
 
         else -> {
             throw KapperUnsupportedOperationException(
                 "Cannot auto-convert from ${value.javaClass} to Long",
+            )
+        }
+    }
+
+internal fun convertBigDecimal(value: Any): BigDecimal =
+    when (value) {
+        is BigDecimal -> value
+        is Double -> BigDecimal.valueOf(value)
+        is Float -> BigDecimal.valueOf(value.toDouble())
+        is Long -> BigDecimal.valueOf(value)
+        is Int -> BigDecimal.valueOf(value.toLong())
+        is String -> BigDecimal(value)
+
+        else -> {
+            throw KapperUnsupportedOperationException(
+                "Cannot auto-convert from ${value.javaClass} to BigDecimal",
             )
         }
     }
