@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import net.samyn.kapper.KapperUnsupportedOperationException
 import net.samyn.kapper.internal.convertInt
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.util.Date
 
 class IntConverterTest {
@@ -32,6 +33,12 @@ class IntConverterTest {
     @Test
     fun `convert valid Integer to Int`() {
         val intValue = java.lang.Integer.valueOf(123)
+        intValue.shouldBe(123)
+    }
+
+    @Test
+    fun `convert valid BigDecimal to Int`() {
+        val intValue = convertInt(BigDecimal("123"))
         intValue.shouldBe(123)
     }
 }
