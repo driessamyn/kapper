@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 import java.util.Date
 import java.util.stream.Stream
 
@@ -23,6 +24,7 @@ class BooleanConverterTest {
                 Arguments.of(1.toShort()),
                 Arguments.of("true"),
                 Arguments.of("1"),
+                Arguments.of(BigDecimal.ONE),
             )
 
         @JvmStatic
@@ -35,6 +37,7 @@ class BooleanConverterTest {
                 Arguments.of(0.toShort()),
                 Arguments.of("false"),
                 Arguments.of("0"),
+                Arguments.of(BigDecimal.ZERO),
             )
     }
 

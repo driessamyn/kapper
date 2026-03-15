@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import net.samyn.kapper.KapperUnsupportedOperationException
 import net.samyn.kapper.internal.convertLong
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 class LongConverterTest {
     @Test
@@ -25,5 +26,11 @@ class LongConverterTest {
     fun `convert valid Long to Long`() {
         val longValue = java.lang.Long.valueOf(123)
         longValue.shouldBe(123)
+    }
+
+    @Test
+    fun `convert valid BigDecimal to Long`() {
+        val longValue = convertLong(BigDecimal("123456"))
+        longValue.shouldBe(123456L)
     }
 }
