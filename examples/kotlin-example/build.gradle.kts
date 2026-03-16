@@ -4,7 +4,7 @@ plugins {
     `java-test-fixtures`
 
     // needed for hibernate!
-    id("org.jetbrains.kotlin.plugin.jpa") version "2.3.10"
+    id("org.jetbrains.kotlin.plugin.jpa") version "2.3.20"
 }
 
 dependencies {
