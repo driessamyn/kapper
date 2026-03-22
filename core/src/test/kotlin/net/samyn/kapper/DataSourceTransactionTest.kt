@@ -18,6 +18,7 @@ class DataSourceTransactionTest {
 
     @Test
     fun `set autocommit correctly`() {
+        every { connectionMock.autoCommit } returns true
         dataSourceMock.withTransaction {
             verify { connectionMock.autoCommit = false }
         }

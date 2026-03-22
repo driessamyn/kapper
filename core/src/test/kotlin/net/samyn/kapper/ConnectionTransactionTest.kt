@@ -14,6 +14,7 @@ class ConnectionTransactionTest {
 
     @Test
     fun `set autocommit correctly`() {
+        every { connection.autoCommit } returns true
         connection.withTransaction {
             verify { connection.autoCommit = false }
         }
