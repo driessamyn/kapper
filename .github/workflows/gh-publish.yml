@@ -6,8 +6,7 @@ on:
       - 'release/*'
 
 permissions:
-  checks: write
-  pull-requests: write
+  contents: read
 
 jobs:
   publish:
