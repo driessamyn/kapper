@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
+import org.testcontainers.containers.MariaDBContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.oracle.OracleContainer
@@ -52,6 +53,10 @@ abstract class AbstractDbTests {
                 .also { it.start() }
         }
 
+        private val mariadb by lazy {
+            MariaDBContainer("mariadb:11.7").also { it.start() }
+        }
+
         private val msSqlServer by lazy {
             MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12")
                 .acceptLicense()
@@ -63,29 +68,37 @@ abstract class AbstractDbTests {
                 }
         }
 
-        private val connections = ConcurrentHashMap<DbFlavour, Connection>()
+        private val connections = ConcurrentHashMap<String, Connection>()
 
         private fun getConnection(container: JdbcDatabaseContainer<*>): Connection {
             Class.forName(container.driverClassName)
             return DriverManager.getConnection(container.jdbcUrl, container.username, container.password)
         }
 
-        val dbs =
+        // Use string keys so that MariaDB (which resolves to DbFlavour.MYSQL) can be a separate entry
+        private val selectedDb = System.getProperty("db", "").trim().uppercase()
+        private val allDbs =
             mapOf(
-                DbFlavour.POSTGRESQL to { getConnection(postgresql) },
-                DbFlavour.MYSQL to { getConnection(mysql) },
-                DbFlavour.SQLITE to { DriverManager.getConnection("jdbc:sqlite::memory:") },
-                DbFlavour.DUCKDB to { DriverManager.getConnection("jdbc:duckdb:") },
-                DbFlavour.MSSQLSERVER to { getConnection(msSqlServer) },
-                DbFlavour.ORACLE to { getConnection(oracle) },
-            ).filter {
-                // by default run against SQLite, PG and DuckDB only
-                //  this allows parallel runs for different int tests.
-                when (System.getProperty("db", "").uppercase()) {
-                    "" -> it.key == DbFlavour.SQLITE || it.key == DbFlavour.POSTGRESQL || it.key == DbFlavour.DUCKDB
-                    "ALL" -> true
-                    else -> it.key == DbFlavour.valueOf(System.getProperty("db").uppercase())
-                }
+                "POSTGRESQL" to { getConnection(postgresql) },
+                "MYSQL" to { getConnection(mysql) },
+                "SQLITE" to { DriverManager.getConnection("jdbc:sqlite::memory:") },
+                "DUCKDB" to { DriverManager.getConnection("jdbc:duckdb:") },
+                "MSSQLSERVER" to { getConnection(msSqlServer) },
+                "ORACLE" to { getConnection(oracle) },
+                "MARIADB" to { getConnection(mariadb) },
+            )
+
+        val dbs =
+            when (selectedDb) {
+                "" -> allDbs.filterKeys { it == "SQLITE" || it == "POSTGRESQL" || it == "DUCKDB" }
+                "ALL" -> allDbs
+                else ->
+                    mapOf(
+                        selectedDb to
+                            requireNotNull(allDbs[selectedDb]) {
+                                "Unsupported db '$selectedDb'. Expected one of ${allDbs.keys.sorted().joinToString()}"
+                            },
+                    )
             }
 
         @JvmStatic
@@ -96,7 +109,7 @@ abstract class AbstractDbTests {
                 connections
                     .map {
                         println("   ${it.key}")
-                        arguments(named(it.key.toString(), it.value))
+                        arguments(named(it.key, it.value))
                     }
             println("--------------------------------")
             return connections
