@@ -8,11 +8,14 @@ import javax.sql.DataSource
  * Attempt to commit the transaction and roll back in case of an exception.
  */
 inline fun Connection.withTransaction(block: Connection.() -> Unit) {
+    val wasAutoCommit = autoCommit
     autoCommit = false
+    var primaryFailure: Exception? = null
     try {
         block()
         commit()
     } catch (e: Exception) {
+        primaryFailure = e
         try {
             rollback()
         } catch (rollbackException: Exception) {
@@ -20,7 +23,16 @@ inline fun Connection.withTransaction(block: Connection.() -> Unit) {
         }
         throw e
     } finally {
-        autoCommit = true
+        try {
+            autoCommit = wasAutoCommit
+        } catch (restoreException: Exception) {
+            if (primaryFailure != null) {
+                primaryFailure.addSuppressed(restoreException)
+                throw primaryFailure
+            } else {
+                throw restoreException
+            }
+        }
     }
 }
 
