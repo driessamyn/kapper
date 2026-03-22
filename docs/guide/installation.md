@@ -6,7 +6,7 @@ Add Kapper to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("net.samyn:kapper:1.6.1")
+    implementation("net.samyn:kapper:%kapper_version%")
 }
 ```
 
@@ -14,7 +14,7 @@ For coroutine support, use:
 
 ```kotlin
 dependencies {
-    implementation("net.samyn:kapper-coroutines:1.6.1")
+    implementation("net.samyn:kapper-coroutines:%kapper_version%")
 }
 ```
 
@@ -24,7 +24,7 @@ Add Kapper to your `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation 'net.samyn:kapper:1.6.1'
+    implementation 'net.samyn:kapper:%kapper_version%'
 }
 ```
 
@@ -36,7 +36,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>net.samyn</groupId>
     <artifactId>kapper</artifactId>
-    <version>1.6.1</version>
+    <version>%kapper_version%</version>
 </dependency>
 ```
 
