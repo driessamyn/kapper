@@ -5,6 +5,7 @@ package net.samyn.kapper.internal.automapper
 import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperUnsupportedOperationException
+import java.math.BigDecimal
 import java.nio.ByteBuffer
 import java.sql.JDBCType
 import java.sql.PreparedStatement
@@ -34,7 +35,8 @@ private val STRING_TYPES =
         JDBCType.NCHAR, JDBCType.NCLOB, JDBCType.NVARCHAR, JDBCType.ROWID, JDBCType.SQLXML, JDBCType.VARCHAR,
     )
 private val DATE_TYPES = listOf(JDBCType.DATE)
-private val FLOAT_TYPES = listOf(JDBCType.DECIMAL, JDBCType.FLOAT, JDBCType.NUMERIC, JDBCType.REAL)
+private val DECIMAL_TYPES = listOf(JDBCType.DECIMAL, JDBCType.NUMERIC)
+private val FLOAT_TYPES = listOf(JDBCType.FLOAT, JDBCType.REAL)
 private val INTEGER_TYPES = listOf(JDBCType.INTEGER, JDBCType.SMALLINT, JDBCType.TINYINT)
 private val TIME_TYPES = listOf(JDBCType.TIME, JDBCType.TIME_WITH_TIMEZONE)
 private val TIMESTAMP_TYPES = listOf(JDBCType.TIMESTAMP, JDBCType.TIMESTAMP_WITH_TIMEZONE)
@@ -52,6 +54,8 @@ val sqlTypesConverter =
             in STRING_TYPES -> resultSet.getString(field.columnIndex)
 
             in DATE_TYPES -> convertDate(resultSet, field.columnIndex, field.dbFlavour)
+
+            in DECIMAL_TYPES -> convertDecimal(resultSet, field.columnIndex, field.dbFlavour)
 
             in FLOAT_TYPES -> resultSet.getNullableFloat(field.columnIndex)
 
@@ -159,6 +163,21 @@ fun ResultSet.getNullableDouble(columnIndex: Int): Double? {
     return dbValue
 }
 
+fun convertDecimal(
+    resultSet: ResultSet,
+    fieldIndex: Int,
+    dbFlavour: DbFlavour,
+): BigDecimal? =
+    when (dbFlavour) {
+        DbFlavour.SQLITE -> {
+            // SQLite stores NUMERIC/DECIMAL as floating point internally.
+            // Using getBigDecimal() would convert from double, introducing precision artifacts.
+            // Instead, read as String and construct BigDecimal to preserve the stored value.
+            resultSet.getString(fieldIndex)?.let { BigDecimal(it) }
+        }
+        else -> resultSet.getBigDecimal(fieldIndex)
+    }
+
 fun convertTimestamp(
     resultSet: ResultSet,
     fieldIndex: Int,
@@ -183,6 +202,7 @@ fun PreparedStatement.setParameter(
         is Long -> setLong(index, value)
         is Float -> setFloat(index, value)
         is Double -> setDouble(index, value)
+        is BigDecimal -> setBigDecimal(index, value)
         is Char -> setString(index, value.toString())
         is String -> setString(index, value)
         is ByteArray -> setBytes(index, value)
@@ -288,6 +308,6 @@ fun convertSQliteDate(date: String): Date =
                     else -> null
                 }
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     } ?: throw KapperUnsupportedOperationException("Cannot convert $date to Date.")
