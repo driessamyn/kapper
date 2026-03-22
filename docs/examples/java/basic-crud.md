@@ -15,8 +15,8 @@ public record VillainRecord(UUID id, String name) {}
 
 // Battle record
 public record SuperHeroBattleRecord(
-    UUID superHeroId, 
-    UUID villainId, 
+    UUID superHeroId,
+    UUID villainId,
     LocalDateTime battleDate,
     LocalDateTime updatedTs
 ) {}
@@ -30,11 +30,11 @@ try (var connection = dataSource.getConnection()) {
     var hero = new SuperHeroRecord(
         UUID.randomUUID(), "Batman", "batman@dc.com", 85
     );
-    
+
     var rows = kapper.execute(
         connection,
         """
-        INSERT INTO super_heroes(id, name, email, age) 
+        INSERT INTO super_heroes(id, name, email, age)
         VALUES (:id, :name, :email, :age)
         """,
         Map.of(
@@ -44,7 +44,7 @@ try (var connection = dataSource.getConnection()) {
             "age", hero.age()
         )
     );
-    
+
     System.out.println("Inserted " + rows + " hero(s)");
 }
 ```
@@ -53,21 +53,21 @@ try (var connection = dataSource.getConnection()) {
 
 ```java
 // Query single superhero
-Optional<SuperHeroRecord> hero = kapper.querySingle(
-    connection,
+SuperHeroRecord hero = kapper.querySingle(
     SuperHeroRecord.class,
-    "SELECT * FROM super_heroes WHERE name = :name", 
+    connection,
+    "SELECT * FROM super_heroes WHERE name = :name",
     Map.of("name", "Batman")
 );
 
-if (hero.isPresent()) {
-    System.out.println("Found hero: " + hero.get().name());
+if (hero != null) {
+    System.out.println("Found hero: " + hero.name());
 }
 
 // Query multiple superheroes
 List<SuperHeroRecord> heroes = kapper.query(
-    connection,
     SuperHeroRecord.class,
+    connection,
     "SELECT * FROM super_heroes WHERE age > :age",
     Map.of("age", 80)
 );
@@ -116,17 +116,17 @@ public class SuperHeroCrudExample {
     public static void main(String[] args) {
         var kapper = Kapper.getInstance();
         var dataSource = createDataSource();
-        
+
         try (var connection = dataSource.getConnection()) {
             // Create superhero
             var batman = new SuperHeroRecord(
                 UUID.randomUUID(), "Batman", "batman@dc.com", 85
             );
-            
+
             var insertedRows = kapper.execute(
                 connection,
                 """
-                INSERT INTO super_heroes(id, name, email, age) 
+                INSERT INTO super_heroes(id, name, email, age)
                 VALUES (:id, :name, :email, :age)
                 """,
                 Map.of(
@@ -136,52 +136,52 @@ public class SuperHeroCrudExample {
                     "age", batman.age()
                 )
             );
-            
+
             System.out.println("Inserted " + insertedRows + " hero(s)");
-            
+
             // Read hero back
-            Optional<SuperHeroRecord> retrievedHero = kapper.querySingle(
-                connection,
+            SuperHeroRecord retrievedHero = kapper.querySingle(
                 SuperHeroRecord.class,
-                "SELECT * FROM super_heroes WHERE id = :id", 
+                connection,
+                "SELECT * FROM super_heroes WHERE id = :id",
                 Map.of("id", batman.id())
             );
-            
-            retrievedHero.ifPresent(hero -> 
-                System.out.println("Retrieved: " + hero.name() + " (" + hero.age() + " years old)")
-            );
-            
+
+            if (retrievedHero != null) {
+                System.out.println("Retrieved: " + retrievedHero.name() + " (" + retrievedHero.age() + " years old)");
+            }
+
             // Update hero
             kapper.execute(
                 connection,
                 "UPDATE super_heroes SET age = :age WHERE id = :id",
                 Map.of("age", 86, "id", batman.id())
             );
-            
+
             // Verify update
-            Optional<SuperHeroRecord> updatedHero = kapper.querySingle(
-                connection,
+            SuperHeroRecord updatedHero = kapper.querySingle(
                 SuperHeroRecord.class,
-                "SELECT * FROM super_heroes WHERE id = :id", 
+                connection,
+                "SELECT * FROM super_heroes WHERE id = :id",
                 Map.of("id", batman.id())
             );
-            
-            updatedHero.ifPresent(hero -> 
-                System.out.println("Updated: " + hero.name() + " is now " + hero.age() + " years old")
-            );
-            
+
+            if (updatedHero != null) {
+                System.out.println("Updated: " + updatedHero.name() + " is now " + updatedHero.age() + " years old");
+            }
+
             // Clean up
             kapper.execute(
-                connection, 
-                "DELETE FROM super_heroes WHERE id = :id", 
+                connection,
+                "DELETE FROM super_heroes WHERE id = :id",
                 Map.of("id", batman.id())
             );
-            
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-    
+
     private static HikariDataSource createDataSource() {
         var dataSource = new HikariDataSource();
         dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/example");
@@ -209,7 +209,7 @@ public class SuperHeroRepository {
             return kapper.execute(
                 connection,
                 """
-                INSERT INTO super_heroes(id, name, email, age) 
+                INSERT INTO super_heroes(id, name, email, age)
                 VALUES (:id, :name, :email, :age)
                 """,
                 Map.of(
@@ -222,11 +222,11 @@ public class SuperHeroRepository {
         }
     }
 
-    public Optional<SuperHeroRecord> findById(UUID id) throws SQLException {
+    public SuperHeroRecord findById(UUID id) throws SQLException {
         try (var connection = dataSource.getConnection()) {
             return kapper.querySingle(
-                connection,
                 SuperHeroRecord.class,
+                connection,
                 "SELECT * FROM super_heroes WHERE id = :id",
                 Map.of("id", id)
             );
@@ -236,8 +236,8 @@ public class SuperHeroRepository {
     public List<SuperHeroRecord> findByAgeRange(int minAge, int maxAge) throws SQLException {
         try (var connection = dataSource.getConnection()) {
             return kapper.query(
-                connection,
                 SuperHeroRecord.class,
+                connection,
                 "SELECT * FROM super_heroes WHERE age BETWEEN :minAge AND :maxAge",
                 Map.of("minAge", minAge, "maxAge", maxAge)
             );
@@ -249,18 +249,17 @@ public class SuperHeroRepository {
 ## Error Handling
 
 ```java
-public Optional<SuperHeroRecord> findHeroSafely(String name) {
+public SuperHeroRecord findHeroSafely(String name) {
     try (var connection = dataSource.getConnection()) {
         return kapper.querySingle(
+            SuperHeroRecord.class,
             connection,
-            SuperHeroRecord.class, 
             "SELECT * FROM super_heroes WHERE name = :name",
             Map.of("name", name)
         );
-        
     } catch (SQLException e) {
         System.err.println("Database error: " + e.getMessage());
-        return Optional.empty();
+        return null;
     }
 }
 
@@ -268,22 +267,22 @@ public SuperHeroRecord createHeroWithValidation(String name, String email, int a
     if (name == null || name.trim().isEmpty()) {
         throw new IllegalArgumentException("Name cannot be empty");
     }
-    
+
     if (email == null || !email.contains("@")) {
         throw new IllegalArgumentException("Invalid email format");
     }
-    
+
     if (age < 0 || age > 10000) {
         throw new IllegalArgumentException("Age must be realistic");
     }
-    
+
     try (var connection = dataSource.getConnection()) {
         var hero = new SuperHeroRecord(UUID.randomUUID(), name, email, age);
-        
+
         kapper.execute(
             connection,
             """
-            INSERT INTO super_heroes(id, name, email, age) 
+            INSERT INTO super_heroes(id, name, email, age)
             VALUES (:id, :name, :email, :age)
             """,
             Map.of(
@@ -293,9 +292,9 @@ public SuperHeroRecord createHeroWithValidation(String name, String email, int a
                 "age", hero.age()
             )
         );
-        
+
         return hero;
-        
+
     } catch (SQLException e) {
         if (e.getSQLState().equals("23505")) { // Unique violation
             throw new IllegalArgumentException("Hero with this name already exists: " + name);
