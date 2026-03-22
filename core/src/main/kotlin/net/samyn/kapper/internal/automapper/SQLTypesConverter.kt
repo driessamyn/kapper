@@ -11,11 +11,11 @@ import java.sql.JDBCType
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.UUID
 
@@ -251,7 +251,7 @@ val formatters =
         "yyyy-MM-dd'T'HH:mm:ss'Z'",
         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
     ).associateWith {
-        SimpleDateFormat(it)
+        DateTimeFormatter.ofPattern(it)
     }
 
 fun convertDate(
@@ -271,40 +271,60 @@ fun convertDate(
         else -> resultSet.getDate(fieldIndex)?.let { Date(it.time) }
     }
 
+private fun parseToDate(
+    formatter: DateTimeFormatter,
+    date: String,
+): Date {
+    val accessor = formatter.parse(date)
+    val instant =
+        when {
+            accessor.isSupported(java.time.temporal.ChronoField.INSTANT_SECONDS) ->
+                Instant.from(accessor)
+            accessor.isSupported(java.time.temporal.ChronoField.YEAR) &&
+                accessor.isSupported(java.time.temporal.ChronoField.HOUR_OF_DAY) ->
+                LocalDateTime.from(accessor).atZone(java.time.ZoneId.systemDefault()).toInstant()
+            accessor.isSupported(java.time.temporal.ChronoField.YEAR) ->
+                LocalDate.from(accessor).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+            else ->
+                LocalTime.from(accessor).atDate(LocalDate.ofEpochDay(0)).atZone(java.time.ZoneId.systemDefault()).toInstant()
+        }
+    return Date.from(instant)
+}
+
 fun convertSQliteDate(date: String): Date =
     try {
         when {
             date.length > 2 && date[2] == ':' ->
                 when (date.length) {
-                    5 -> formatters["HH:mm"]!!.parse(date)
-                    6 -> formatters["HH:mm'Z'"]!!.parse(date)
-                    8 -> formatters["HH:mm:ss"]!!.parse(date)
-                    9 -> formatters["HH:mm:ss'Z'"]!!.parse(date)
-                    12 -> formatters["HH:mm:ss.SSS"]!!.parse(date)
-                    13 -> formatters["HH:mm:ss.SSS'Z'"]!!.parse(date)
+                    5 -> parseToDate(formatters.getValue("HH:mm"), date)
+                    6 -> parseToDate(formatters.getValue("HH:mm'Z'"), date)
+                    8 -> parseToDate(formatters.getValue("HH:mm:ss"), date)
+                    9 -> parseToDate(formatters.getValue("HH:mm:ss'Z'"), date)
+                    12 -> parseToDate(formatters.getValue("HH:mm:ss.SSS"), date)
+                    13 -> parseToDate(formatters.getValue("HH:mm:ss.SSS'Z'"), date)
                     else -> null
                 }
 
             date.length > 10 && date[10] == 'T' ->
                 when (date.length) {
-                    16 -> formatters["yyyy-MM-dd'T'HH:mm"]!!.parse(date)
-                    17 -> formatters["yyyy-MM-dd'T'HH:mm'Z'"]!!.parse(date)
-                    19 -> formatters["yyyy-MM-dd'T'HH:mm:ss"]!!.parse(date)
-                    20 -> formatters["yyyy-MM-dd'T'HH:mm:ss'Z'"]!!.parse(date)
-                    23 -> formatters["yyyy-MM-dd'T'HH:mm:ss.SSS"]!!.parse(date)
-                    24 -> formatters["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"]!!.parse(date)
+                    16 -> parseToDate(formatters.getValue("yyyy-MM-dd'T'HH:mm"), date)
+                    17 -> parseToDate(formatters.getValue("yyyy-MM-dd'T'HH:mm'Z'"), date)
+                    19 -> parseToDate(formatters.getValue("yyyy-MM-dd'T'HH:mm:ss"), date)
+                    20 -> parseToDate(formatters.getValue("yyyy-MM-dd'T'HH:mm:ss'Z'"), date)
+                    23 -> parseToDate(formatters.getValue("yyyy-MM-dd'T'HH:mm:ss.SSS"), date)
+                    24 -> parseToDate(formatters.getValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), date)
                     else -> null
                 }
 
             else ->
                 when (date.length) {
-                    10 -> formatters["yyyy-MM-dd"]!!.parse(date)
-                    16 -> formatters["yyyy-MM-dd HH:mm"]!!.parse(date)
-                    17 -> formatters["yyyy-MM-dd HH:mm'Z'"]!!.parse(date)
-                    19 -> formatters["yyyy-MM-dd HH:mm:ss"]!!.parse(date)
-                    20 -> formatters["yyyy-MM-dd HH:mm:ss'Z'"]!!.parse(date)
-                    23 -> formatters["yyyy-MM-dd HH:mm:ss.SSS"]!!.parse(date)
-                    24 -> formatters["yyyy-MM-dd HH:mm:ss.SSS'Z'"]!!.parse(date)
+                    10 -> parseToDate(formatters.getValue("yyyy-MM-dd"), date)
+                    16 -> parseToDate(formatters.getValue("yyyy-MM-dd HH:mm"), date)
+                    17 -> parseToDate(formatters.getValue("yyyy-MM-dd HH:mm'Z'"), date)
+                    19 -> parseToDate(formatters.getValue("yyyy-MM-dd HH:mm:ss"), date)
+                    20 -> parseToDate(formatters.getValue("yyyy-MM-dd HH:mm:ss'Z'"), date)
+                    23 -> parseToDate(formatters.getValue("yyyy-MM-dd HH:mm:ss.SSS"), date)
+                    24 -> parseToDate(formatters.getValue("yyyy-MM-dd HH:mm:ss.SSS'Z'"), date)
                     else -> null
                 }
         }
