@@ -33,6 +33,7 @@ class DbFlavourTest {
                 "MySQL Server",
                 "MySQL Community Server",
                 "MySQL Enterprise Server",
+                "MariaDB",
             ],
     )
     fun `when databaseProductName is mysql then getDbFlavour returns MYSQL`(value: String) {
@@ -132,7 +133,6 @@ class DbFlavourTest {
                 "IDS",
 
                 // Other common databases
-                "MariaDB",
                 "H2",
                 "HSQL Database Engine",
                 "HSQLDB",

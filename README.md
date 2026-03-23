@@ -21,6 +21,7 @@ Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library
 ![Oracle](https://img.shields.io/badge/oracle-F80000.svg?style=for-the-badge&logo=oracle&logoColor=white)
 ![MSSQL](https://img.shields.io/badge/mssql-%23CC2927.svg?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
 ![DuckDB](https://img.shields.io/badge/duckdb-FFF000.svg?style=for-the-badge&logo=duckdb&logoColor=black)
+![MariaDB](https://img.shields.io/badge/mariadb-003545.svg?style=for-the-badge&logo=mariadb&logoColor=white)
 
 See [Kapper](https://driessamyn.github.io/kapper/) for more information.
 
