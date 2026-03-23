@@ -34,6 +34,7 @@ class DbFlavourTest {
                 "MySQL Community Server",
                 "MySQL Enterprise Server",
                 "MariaDB",
+                "StarRocks",
             ],
     )
     fun `when databaseProductName is mysql then getDbFlavour returns MYSQL`(value: String) {

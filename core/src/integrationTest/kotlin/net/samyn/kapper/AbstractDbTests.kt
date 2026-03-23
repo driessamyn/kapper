@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MariaDBContainer
@@ -57,6 +58,14 @@ abstract class AbstractDbTests {
             MariaDBContainer("mariadb:11.7").also { it.start() }
         }
 
+        private val starrocks by lazy {
+            GenericContainer("starrocks/allin1-ubuntu:latest").apply {
+                withExposedPorts(9030)
+                withStartupTimeout(Duration.ofMinutes(3))
+                start()
+            }
+        }
+
         private val msSqlServer by lazy {
             MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12")
                 .acceptLicense()
@@ -86,6 +95,29 @@ abstract class AbstractDbTests {
                 "MSSQLSERVER" to { getConnection(msSqlServer) },
                 "ORACLE" to { getConnection(oracle) },
                 "MARIADB" to { getConnection(mariadb) },
+                "STARROCKS" to {
+                    Class.forName("com.mysql.cj.jdbc.Driver")
+                    val url = "jdbc:mysql://${starrocks.host}:${starrocks.getMappedPort(9030)}/"
+                    val bootstrapConn = DriverManager.getConnection(url, "root", "")
+                    // Wait for BE to register with the cluster
+                    for (i in 1..60) {
+                        try {
+                            val alive = bootstrapConn.createStatement().use { stmt ->
+                                stmt.executeQuery("SHOW BACKENDS").use { rs ->
+                                    rs.next() && rs.getBoolean("Alive")
+                                }
+                            }
+                            if (alive) break
+                        } catch (_: Exception) {
+                        }
+                        Thread.sleep(2000)
+                    }
+                    bootstrapConn.createStatement().use {
+                        it.execute("CREATE DATABASE IF NOT EXISTS test")
+                    }
+                    bootstrapConn.close()
+                    DriverManager.getConnection("${url}test", "root", "")
+                },
             )
 
         val dbs =
@@ -125,7 +157,7 @@ abstract class AbstractDbTests {
     @BeforeAll
     fun setup() {
         dbs.forEach { container ->
-            setupDatabase(connections.computeIfAbsent(container.key) { container.value() })
+            setupDatabase(connections.computeIfAbsent(container.key) { container.value() }, container.key)
         }
     }
 
@@ -137,18 +169,37 @@ abstract class AbstractDbTests {
         connections.clear()
     }
 
-    protected open fun setupDatabase(connection: Connection) {
+    protected open fun setupDatabase(
+        connection: Connection,
+        dbKey: String = "",
+    ) {
         val dbFlavour = connection.getDbFlavour()
+        val isStarRocks = dbKey == "STARROCKS"
         connection.createStatement().use { statement ->
+            val createTable =
+                if (isStarRocks) {
+                    """
+                    CREATE TABLE super_heroes_$testId (
+                        id ${convertDbColumnType("UUID", dbFlavour)},
+                        name VARCHAR(100),
+                        email VARCHAR(100),
+                        age ${convertDbColumnType("INT", dbFlavour)}
+                    )
+                    PRIMARY KEY (id)
+                    DISTRIBUTED BY HASH(id) BUCKETS 1
+                    """.trimIndent()
+                } else {
+                    """
+                    CREATE TABLE super_heroes_$testId (
+                        id ${convertDbColumnType("UUID", dbFlavour)} PRIMARY KEY,
+                        name VARCHAR(100),
+                        email VARCHAR(100),
+                        age ${convertDbColumnType("INT", dbFlavour)}
+                    )
+                    """.trimIndent()
+                }
             statement.execute(
-                """
-                CREATE TABLE super_heroes_$testId (
-                    id ${convertDbColumnType("UUID", dbFlavour)} PRIMARY KEY,
-                    name VARCHAR(100),
-                    email VARCHAR(100),
-                    age ${convertDbColumnType("INT", dbFlavour)}
-                )
-                """.trimIndent().also {
+                createTable.also {
                     println("------------ $dbFlavour --------------")
                     println(it)
                 },
