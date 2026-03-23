@@ -53,8 +53,8 @@ test-containers-mariadb = { module = "org.testcontainers:mariadb", version.ref =
 test-containers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-containers" }
 
 # Example dependencies
-hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.2.7.Final" }
-hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.2.7.Final" }
+hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.3.0.Final" }
+hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.3.0.Final" }
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator-version" }
 glassfish-jakarta = { module = "org.glassfish:jakarta.el", version = "4.0.2" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
