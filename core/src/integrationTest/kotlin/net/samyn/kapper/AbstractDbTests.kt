@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.testcontainers.containers.CockroachContainer
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MariaDBContainer
@@ -53,6 +54,10 @@ abstract class AbstractDbTests {
                 .also { it.start() }
         }
 
+        private val cockroachdb by lazy {
+            CockroachContainer("cockroachdb/cockroach:latest-v24.3").also { it.start() }
+        }
+
         private val mariadb by lazy {
             MariaDBContainer("mariadb:11.7").also { it.start() }
         }
@@ -86,6 +91,7 @@ abstract class AbstractDbTests {
                 "MSSQLSERVER" to { getConnection(msSqlServer) },
                 "ORACLE" to { getConnection(oracle) },
                 "MARIADB" to { getConnection(mariadb) },
+                "COCKROACHDB" to { getConnection(cockroachdb) },
             )
 
         val dbs =

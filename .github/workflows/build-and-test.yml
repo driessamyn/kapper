@@ -126,7 +126,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'run-compat-tests')
     strategy:
       matrix:
-        db: [ MARIADB ]
+        db: [ MARIADB, COCKROACHDB ]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
