@@ -6,5 +6,6 @@ enum class DbFlavour {
     SQLITE,
     ORACLE,
     MSSQLSERVER,
+    DUCKDB,
     UNKNOWN,
 }

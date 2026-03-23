@@ -94,6 +94,18 @@ class DbFlavourTest {
     @ValueSource(
         strings =
             [
+                "DuckDB",
+            ],
+    )
+    fun `when databaseProductName is duckdb then getDbFlavour returns DUCKDB`(value: String) {
+        every { connection.metaData.databaseProductName } returns value
+        connection.getDbFlavour() shouldBe DbFlavour.DUCKDB
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings =
+            [
                 // IBM DB2 variants
                 "DB2",
                 "DB2/NT",

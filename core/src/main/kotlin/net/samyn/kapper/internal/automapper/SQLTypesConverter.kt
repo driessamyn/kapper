@@ -67,7 +67,7 @@ val sqlTypesConverter =
             JDBCType.JAVA_OBJECT,
             -> resultSet.getObject(field.columnIndex)
 
-            in TIME_TYPES -> resultSet.getTime(field.columnIndex)?.toLocalTime()
+            in TIME_TYPES -> convertTime(resultSet, field.columnIndex, field.dbFlavour)
 
             in TIMESTAMP_TYPES -> convertTimestamp(resultSet, field.columnIndex, field.typeName)
 
@@ -163,6 +163,18 @@ fun ResultSet.getNullableDouble(columnIndex: Int): Double? {
     return dbValue
 }
 
+fun convertTime(
+    resultSet: ResultSet,
+    fieldIndex: Int,
+    dbFlavour: DbFlavour,
+): LocalTime? =
+    when (dbFlavour) {
+        // DuckDB's JDBC driver stores TIME in UTC; using getTime() with the default
+        // calendar applies a timezone offset. Reading as String avoids this.
+        DbFlavour.DUCKDB -> resultSet.getString(fieldIndex)?.let { LocalTime.parse(it) }
+        else -> resultSet.getTime(fieldIndex)?.toLocalTime()
+    }
+
 fun convertDecimal(
     resultSet: ResultSet,
     fieldIndex: Int,
@@ -217,7 +229,14 @@ fun PreparedStatement.setParameter(
         is Date -> setDate(index, java.sql.Date(value.time))
         is LocalDate -> setDate(index, java.sql.Date.valueOf(value))
         is LocalDateTime -> setTimestamp(index, Timestamp.from(value.atZone(java.time.ZoneOffset.systemDefault()).toInstant()))
-        is LocalTime -> setTime(index, java.sql.Time.valueOf(value))
+        is LocalTime ->
+            when (dbFlavour) {
+                // DuckDB's JDBC driver applies a timezone offset with setTime/getTime
+                // and does not support setObject with Types.TIME;
+                // using setString preserves the intended value.
+                DbFlavour.DUCKDB -> setString(index, value.toString())
+                else -> setTime(index, java.sql.Time.valueOf(value))
+            }
         else -> setObject(index, value)
     }
 }
