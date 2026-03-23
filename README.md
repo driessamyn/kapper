@@ -20,6 +20,7 @@ Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 ![Oracle](https://img.shields.io/badge/oracle-F80000.svg?style=for-the-badge&logo=oracle&logoColor=white)
 ![MSSQL](https://img.shields.io/badge/mssql-%23CC2927.svg?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
+![DuckDB](https://img.shields.io/badge/duckdb-FFF000.svg?style=for-the-badge&logo=duckdb&logoColor=black)
 
 See [Kapper](https://driessamyn.github.io/kapper/) for more information.
 
@@ -46,7 +47,7 @@ Instead of adding another abstraction layer, Kapper embraces three core principl
 - **📦 Java Records**: Native support for Java record classes alongside Kotlin data classes
 - **🔄 Transactions**: Simple transaction handling with automatic commit/rollback
 - **📊 Bulk Operations**: Efficient batch inserts, updates, and deletes with `executeAll`
-- **🗄️ Database Support**: PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server, and many others
+- **🗄️ Database Support**: PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server, DuckDB, and many others
 - **📏 Minimal Dependencies**: Lightweight library with zero external dependencies
 - **🔌 JDBC Extension**: Extends `java.sql.Connection` - works alongside existing JDBC code
 

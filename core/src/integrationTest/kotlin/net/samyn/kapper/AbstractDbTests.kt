@@ -34,6 +34,7 @@ abstract class AbstractDbTests {
     companion object {
         init {
             Class.forName("org.sqlite.JDBC")
+            Class.forName("org.duckdb.DuckDBDriver")
         }
 
         private val postgresql by lazy {
@@ -74,13 +75,14 @@ abstract class AbstractDbTests {
                 DbFlavour.POSTGRESQL to { getConnection(postgresql) },
                 DbFlavour.MYSQL to { getConnection(mysql) },
                 DbFlavour.SQLITE to { DriverManager.getConnection("jdbc:sqlite::memory:") },
+                DbFlavour.DUCKDB to { DriverManager.getConnection("jdbc:duckdb:") },
                 DbFlavour.MSSQLSERVER to { getConnection(msSqlServer) },
                 DbFlavour.ORACLE to { getConnection(oracle) },
             ).filter {
-                // by default run against SQLite and PG only
+                // by default run against SQLite, PG and DuckDB only
                 //  this allows parallel runs for different int tests.
                 when (System.getProperty("db", "").uppercase()) {
-                    "" -> it.key == DbFlavour.SQLITE || it.key == DbFlavour.POSTGRESQL
+                    "" -> it.key == DbFlavour.SQLITE || it.key == DbFlavour.POSTGRESQL || it.key == DbFlavour.DUCKDB
                     "ALL" -> true
                     else -> it.key == DbFlavour.valueOf(System.getProperty("db").uppercase())
                 }

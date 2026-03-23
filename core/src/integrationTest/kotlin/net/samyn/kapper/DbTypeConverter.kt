@@ -15,16 +15,19 @@ private val specialTypes =
                 DbFlavour.MYSQL to "TEXT",
                 DbFlavour.POSTGRESQL to "TEXT",
                 DbFlavour.MSSQLSERVER to "NVARCHAR(MAX)",
+                DbFlavour.DUCKDB to "VARCHAR",
             ),
         "BINARY" to
             mapOf(
                 DbFlavour.POSTGRESQL to "BYTEA",
                 DbFlavour.ORACLE to "RAW(128)",
+                DbFlavour.DUCKDB to "BLOB",
             ),
         "VARBINARY" to
             mapOf(
                 DbFlavour.POSTGRESQL to "BYTEA",
                 DbFlavour.ORACLE to "RAW(128)",
+                DbFlavour.DUCKDB to "BLOB",
             ),
         "BLOB" to
             mapOf(

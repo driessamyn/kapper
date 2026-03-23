@@ -284,6 +284,23 @@ class SQLTypesConverterTest {
     }
 
     @Test
+    fun `time needs converting for duckdb`() {
+        val field = Field(3, JDBCType.TIME, "time", DbFlavour.DUCKDB)
+        val time = LocalTime.now().truncatedTo(ChronoUnit.SECONDS)
+        every { resultSet.getString(3) } returns time.toString()
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(time)
+    }
+
+    @Test
+    fun `time supports null for duckdb`() {
+        val field = Field(3, JDBCType.TIME, "time", DbFlavour.DUCKDB)
+        every { resultSet.getString(3) } returns null
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(null)
+    }
+
+    @Test
     fun `time supports null`() {
         val field = Field(3, JDBCType.TIME, "time", DbFlavour.UNKNOWN)
         every { resultSet.getTime(3) } returns null

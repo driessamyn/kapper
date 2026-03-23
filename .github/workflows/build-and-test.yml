@@ -1,7 +1,7 @@
 name: Build and Test
 on:
   push:
-    branches: [ main, feature/* ]
+    branches: [ main ]
   pull_request:
     branches: [ main, feature/* ]
 
@@ -79,8 +79,9 @@ jobs:
     needs:
       - build
     strategy:
+      fail-fast: false
       matrix:
-        db: [ POSTGRESQL, MYSQL, SQLITE, MSSQLSERVER, ORACLE ]
+        db: [ POSTGRESQL, MYSQL, SQLITE, MSSQLSERVER, ORACLE, DUCKDB ]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
