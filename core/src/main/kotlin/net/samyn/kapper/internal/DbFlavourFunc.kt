@@ -17,6 +17,7 @@ fun Connection.getDbFlavour(): DbFlavour {
         productName.contains("sql server", ignoreCase = true) ||
             productName.contains("mssql", ignoreCase = true) -> DbFlavour.MSSQLSERVER
         productName.contains("duckdb", ignoreCase = true) -> DbFlavour.DUCKDB
+        productName.contains("firebird", ignoreCase = true) -> DbFlavour.FIREBIRD
         else -> DbFlavour.UNKNOWN
     }
 }
