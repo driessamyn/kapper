@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.testcontainers.containers.ClickHouseContainer
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MariaDBContainer
@@ -57,6 +58,12 @@ abstract class AbstractDbTests {
             MariaDBContainer("mariadb:11.7").also { it.start() }
         }
 
+        private val clickhouse by lazy {
+            ClickHouseContainer("clickhouse/clickhouse-server:24.3")
+                .withEnv("CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT", "1")
+                .also { it.start() }
+        }
+
         private val msSqlServer by lazy {
             MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12")
                 .acceptLicense()
@@ -86,6 +93,7 @@ abstract class AbstractDbTests {
                 "MSSQLSERVER" to { getConnection(msSqlServer) },
                 "ORACLE" to { getConnection(oracle) },
                 "MARIADB" to { getConnection(mariadb) },
+                "CLICKHOUSE" to { getConnection(clickhouse) },
             )
 
         val dbs =
