@@ -23,6 +23,7 @@ private data class PropertyData<T : Any>(
     val kProp: KParameter,
     val isOptional: Boolean,
     val type: KClass<T>,
+    val javaType: Class<*> = type.javaObjectType,
 )
 
 private val reflectionCache = ConcurrentHashMap<Class<*>, ReflectionData<Any>>()
@@ -67,7 +68,7 @@ class KotlinDataClassMapper<T : Any>(
             args[prop.kProp] =
                 when {
                     value == null -> null
-                    value::class != prop.type -> {
+                    !prop.javaType.isInstance(value) -> {
                         typesConverter.convert(value, prop.type.java)
                     }
                     else -> value

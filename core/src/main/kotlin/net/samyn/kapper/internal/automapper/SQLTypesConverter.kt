@@ -18,6 +18,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.UUID
+import kotlin.reflect.KClass
 
 fun interface SQLTypesConverter {
     fun convert(
@@ -44,7 +45,7 @@ private val TIMESTAMP_TYPES = listOf(JDBCType.TIMESTAMP, JDBCType.TIMESTAMP_WITH
 val sqlTypesConverter =
     SQLTypesConverter { field, resultSet ->
         when (field.type) {
-            JDBCType.ARRAY -> resultSet.getArray(field.columnIndex)
+            JDBCType.ARRAY -> convertArray(resultSet, field.columnIndex)
             JDBCType.BIGINT -> resultSet.getNullableLong(field.columnIndex)
             in BINARY_TYPES -> resultSet.getBytes(field.columnIndex)
 
@@ -163,6 +164,33 @@ fun ResultSet.getNullableDouble(columnIndex: Int): Double? {
     return dbValue
 }
 
+fun convertArray(
+    resultSet: ResultSet,
+    fieldIndex: Int,
+): List<*>? {
+    val sqlArray = resultSet.getArray(fieldIndex) ?: return null
+    try {
+        val javaArray = sqlArray.array ?: return null
+        return when (javaArray) {
+            is Array<*> -> javaArray.toList()
+            is IntArray -> javaArray.toList()
+            is LongArray -> javaArray.toList()
+            is ShortArray -> javaArray.toList()
+            is DoubleArray -> javaArray.toList()
+            is FloatArray -> javaArray.toList()
+            is BooleanArray -> javaArray.toList()
+            is ByteArray -> javaArray.toList()
+            is CharArray -> javaArray.toList()
+            else ->
+                throw KapperUnsupportedOperationException(
+                    "Unsupported array element type: ${javaArray::class.simpleName}",
+                )
+        }
+    } finally {
+        sqlArray.free()
+    }
+}
+
 fun convertTime(
     resultSet: ResultSet,
     fieldIndex: Int,
@@ -202,11 +230,23 @@ fun convertTimestamp(
         else -> resultSet.getTimestamp(fieldIndex)?.toInstant()
     }
 
+private val NOOP: () -> Unit = {}
+
+/**
+ * Sets a parameter on the PreparedStatement and returns a cleanup function.
+ *
+ * For array parameters, the cleanup function calls [java.sql.Array.free] on the created array.
+ * Per the JDBC spec, Array.free() must not be called until after statement execution
+ * (executeQuery/executeUpdate/executeBatch), because the driver may defer reading
+ * the array data until that point.
+ *
+ * @return a cleanup function to invoke after statement execution. No-op for non-array types.
+ */
 fun PreparedStatement.setParameter(
     index: Int,
     value: Any?,
     dbFlavour: DbFlavour,
-) {
+): () -> Unit {
     when (value) {
         is Byte -> setByte(index, value)
         is Short -> setShort(index, value)
@@ -237,9 +277,88 @@ fun PreparedStatement.setParameter(
                 DbFlavour.DUCKDB -> setString(index, value.toString())
                 else -> setTime(index, java.sql.Time.valueOf(value))
             }
+        is IntArray,
+        is LongArray,
+        is ShortArray,
+        is FloatArray,
+        is DoubleArray,
+        is BooleanArray,
+        is CharArray,
+        ->
+            throw KapperUnsupportedOperationException(
+                "Primitive Kotlin arrays are not supported as SQL array parameters; use List<T> or Array<T> instead",
+            )
+        is Collection<*> -> {
+            val elements = value.toTypedArray()
+            val sqlTypeName = inferSqlArrayTypeName(elements, dbFlavour)
+            val sqlArray = connection.createArrayOf(sqlTypeName, elements)
+            setArray(index, sqlArray)
+            return sqlArray::free
+        }
+        is Array<*> -> {
+            val sqlTypeName = inferSqlArrayTypeName(value, dbFlavour)
+            val sqlArray = connection.createArrayOf(sqlTypeName, value)
+            setArray(index, sqlArray)
+            return sqlArray::free
+        }
         else -> setObject(index, value)
     }
+    return NOOP
 }
+
+internal fun inferSqlArrayTypeName(
+    elements: Array<*>,
+    dbFlavour: DbFlavour,
+): String {
+    val firstNonNull =
+        elements.firstOrNull { it != null }
+            ?: throw KapperUnsupportedOperationException(
+                "Cannot infer SQL array element type from empty or all-null collection",
+            )
+    return kotlinToSqlArrayTypeName(firstNonNull::class, dbFlavour)
+}
+
+internal fun kotlinToSqlArrayTypeName(
+    kClass: KClass<*>,
+    dbFlavour: DbFlavour,
+): String =
+    when (dbFlavour) {
+        DbFlavour.POSTGRESQL ->
+            when (kClass) {
+                Int::class, java.lang.Integer::class -> "int4"
+                Long::class, java.lang.Long::class -> "int8"
+                Short::class, java.lang.Short::class -> "int2"
+                Float::class, java.lang.Float::class -> "float4"
+                Double::class, java.lang.Double::class -> "float8"
+                Boolean::class, java.lang.Boolean::class -> "bool"
+                String::class -> "text"
+                BigDecimal::class -> "numeric"
+                UUID::class -> "uuid"
+                else ->
+                    throw KapperUnsupportedOperationException(
+                        "Array element type ${kClass.simpleName} is not supported for $dbFlavour",
+                    )
+            }
+        DbFlavour.DUCKDB ->
+            when (kClass) {
+                Int::class, java.lang.Integer::class -> "INTEGER"
+                Long::class, java.lang.Long::class -> "BIGINT"
+                Short::class, java.lang.Short::class -> "SMALLINT"
+                Float::class, java.lang.Float::class -> "FLOAT"
+                Double::class, java.lang.Double::class -> "DOUBLE"
+                Boolean::class, java.lang.Boolean::class -> "BOOLEAN"
+                String::class -> "VARCHAR"
+                BigDecimal::class -> "DECIMAL"
+                else ->
+                    throw KapperUnsupportedOperationException(
+                        "Array element type ${kClass.simpleName} is not supported for $dbFlavour",
+                    )
+            }
+        else ->
+            throw KapperUnsupportedOperationException(
+                "Array parameters are not supported for $dbFlavour",
+            )
+    }
 
 fun UUID.toBytes(): ByteArray {
     val buffer = ByteBuffer.wrap(ByteArray(16))

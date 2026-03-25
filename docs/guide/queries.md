@@ -52,6 +52,31 @@ val users = connection.query<User>(
 )
 ```
 
+### Array Parameters
+
+Pass arrays (as `List<T>`) to queries on PostgreSQL and DuckDB:
+
+```kotlin
+val userIds = listOf(1, 2, 3, 4, 5)
+
+val users = connection.query<User>(
+    "SELECT * FROM users WHERE id = ANY(:ids)",
+    "ids" to userIds
+)
+
+val tags = listOf("featured", "sale", "new")
+val products = connection.query<Product>(
+    "SELECT * FROM products WHERE tags && :tags",
+    "tags" to tags
+)
+```
+
+**Important:**
+- Arrays are only supported on PostgreSQL and DuckDB
+- Cannot pass empty lists (element type cannot be inferred)
+- Use `List<Int>`, `List<String>`, etc., not primitive arrays like `IntArray`
+- See [Array Types](./mapping.md#array-types) for supported element types
+
 ## Complex Queries
 
 Kapper doesn't limit your SQL capabilities.

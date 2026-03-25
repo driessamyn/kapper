@@ -12,6 +12,7 @@ Kapper officially supports and is tested against:
 * SQLite
 * MS SQL Server
 * Oracle
+* DuckDB
 
 ## Connection Setup
 
@@ -47,6 +48,23 @@ val dataSource = HikariDataSource().apply {
 
 Kapper automatically handles type conversion between many SQL and JVM/Kotlin types.
 When a type is not supprted, it can be supported through [custom mappers](mapping.md)
+
+### Array Support
+
+Array types are supported on a per-database basis:
+
+**PostgreSQL and DuckDB:**
+- Full support for `List<T>` parameters and result mapping
+- Supported element types: Int, Long, Short, Float, Double, Boolean, String, BigDecimal
+- PostgreSQL also supports UUID element type
+- Arrays can be null, contain null elements, or be empty (on result mapping)
+- Example: `WHERE id = ANY(:ids)` with `"ids" to listOf(1, 2, 3)`
+
+**MySQL, SQLite, Oracle, MSSQL:**
+- Array types are not supported
+- Passing a List/Array parameter will throw `KapperUnsupportedOperationException`
+
+See [Array Types](./mapping.md#array-types) in the mapping guide for details and examples.
 
 ## Testing
 

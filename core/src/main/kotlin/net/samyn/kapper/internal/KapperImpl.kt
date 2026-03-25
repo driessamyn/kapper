@@ -66,9 +66,13 @@ internal class KapperImpl(
     ): Int {
         val query = queryFactory(sql)
         connection.prepareStatement(query.sql).use { stmt ->
-            args.setParameters(query, stmt, connection.getDbFlavour())
-            logger.debug("Executing prepared statement: {}", stmt)
-            return stmt.executeUpdate()
+            val cleanup = args.setParameters(query, stmt, connection.getDbFlavour())
+            try {
+                logger.debug("Executing prepared statement: {}", stmt)
+                return stmt.executeUpdate()
+            } finally {
+                cleanup()
+            }
         }
     }
 
@@ -81,9 +85,13 @@ internal class KapperImpl(
     ): Int {
         val query = queryFactory(sql)
         connection.prepareStatement(query.sql).use { stmt ->
-            args.setParameters(query.tokens, stmt, obj, connection.getDbFlavour())
-            logger.debug("Executing prepared statement: {}", stmt)
-            return stmt.executeUpdate()
+            val cleanup = args.setParameters(query.tokens, stmt, obj, connection.getDbFlavour())
+            try {
+                logger.debug("Executing prepared statement: {}", stmt)
+                return stmt.executeUpdate()
+            } finally {
+                cleanup()
+            }
         }
     }
 
@@ -97,12 +105,17 @@ internal class KapperImpl(
         val query = queryFactory(sql)
         connection.prepareStatement(query.sql).use { stmt ->
             val dbFlavour = connection.getDbFlavour()
+            val cleanups = mutableListOf<() -> Unit>()
             for (obj in objects) {
-                args.setParameters(query.tokens, stmt, obj, dbFlavour)
+                cleanups.add(args.setParameters(query.tokens, stmt, obj, dbFlavour))
                 logger.debug("Adding to batch: {}", stmt)
                 stmt.addBatch()
             }
-            return stmt.executeBatch()
+            try {
+                return stmt.executeBatch()
+            } finally {
+                cleanups.forEach { it() }
+            }
         }
     }
 }

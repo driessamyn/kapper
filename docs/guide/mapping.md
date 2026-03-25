@@ -117,6 +117,49 @@ data class Entity(
 )
 ```
 
+### Array Types
+
+Kapper supports SQL array types for PostgreSQL and DuckDB:
+
+```kotlin
+data class UserPreferences(
+    val id: Long,
+    val tags: List<String>,           // String array
+    val scores: List<Int>,            // Integer array
+    val prices: List<BigDecimal>,     // Decimal array
+    val ids: List<Long>,              // Long array
+    val active: List<Boolean>,        // Boolean array
+    val optionalTags: List<String>?   // Nullable array
+)
+
+val users = connection.query<UserPreferences>(
+    "SELECT id, tags, scores, prices, ids, active, optional_tags FROM users"
+)
+```
+
+**Supported element types:**
+- PostgreSQL: Int, Long, Short, Float, Double, Boolean, String, BigDecimal, UUID
+- DuckDB: Int, Long, Short, Float, Double, Boolean, String, BigDecimal
+
+**Array parameter binding** (for queries):
+
+```kotlin
+val userIds = listOf(1L, 2L, 3L)
+
+val users = connection.query<User>(
+    "SELECT * FROM users WHERE id = ANY(:ids)",
+    "ids" to userIds
+)
+```
+
+**Limitations:**
+- Nested/multi-dimensional arrays are not supported
+- Primitive Kotlin arrays (IntArray, LongArray) are not supported as parameters - use List<Int>, List<Long> instead
+- Empty or all-null collections cannot be passed as parameters (the SQL element type cannot be inferred at runtime)
+- Arrays with null elements are supported for reading and writing, as long as at least one element is non-null
+- Null arrays map to null
+- Other databases (MySQL, SQLite, Oracle, MSSQL) do not support arrays - passing a List parameter will throw KapperUnsupportedOperationException
+
 ## Advanced Mapping Techniques
 
 ### Using Column Aliases
