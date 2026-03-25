@@ -70,6 +70,7 @@ jobs:
           **/build/test-results/*/TEST-*.xml
 
     - name: Add coverage report to PR
+      if: github.event_name == 'pull_request' || github.event_name == 'push'
       id: kover
       uses: mi-kas/kover-report@5f58465b6f395c8fa3adc2665e27250bad87de50
       with:
