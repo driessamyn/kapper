@@ -154,7 +154,7 @@ val users = connection.query<User>(
 
 **Limitations:**
 - Nested/multi-dimensional arrays are not supported
-- Primitive Kotlin arrays (IntArray, LongArray) are not supported as parameters - use List<Int>, List<Long> instead
+- Primitive Kotlin arrays (IntArray, LongArray) are not supported as parameters - use `List<Int>`, `List<Long>` instead
 - Empty or all-null collections cannot be passed as parameters (the SQL element type cannot be inferred at runtime)
 - Arrays with null elements are supported for reading and writing, as long as at least one element is non-null
 - Null arrays map to null
