@@ -158,4 +158,50 @@ class KotlinDataClassMapperTest {
     }
 
     data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
+
+    data class HeroWithTags(val id: UUID, val name: String, val tags: List<Int>)
+
+    @Test
+    fun `should map list property without triggering converter`() {
+        val id = UUID.randomUUID()
+        val tags = arrayListOf(1, 2, 3)
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "INTEGER[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", tags),
+            )
+        val mapper = KotlinDataClassMapper(HeroWithTags::class.java, autoTypesConverterMock, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.shouldBe(HeroWithTags(id, "Batman", listOf(1, 2, 3)))
+        verify(exactly = 0) { autoTypesConverterMock.convert(any(), any()) }
+    }
+
+    data class HeroWithNullableTags(val id: UUID, val name: String, val tags: List<Int>? = null)
+
+    @Test
+    fun `should map null list property`() {
+        val id = UUID.randomUUID()
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "INTEGER[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", null),
+            )
+        val mapper = KotlinDataClassMapper(HeroWithNullableTags::class.java, autoTypesConverterMock, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.shouldBe(HeroWithNullableTags(id, "Batman", null))
+    }
 }

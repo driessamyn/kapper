@@ -18,17 +18,21 @@ fun Connection.executeQuery(
     fetchSize: Int = 0,
 ): ResultSet {
     this.prepareStatement(query.sql).let { stmt ->
+        var cleanup: () -> Unit = {}
         try {
-            args.setParameters(query, stmt, this.getDbFlavour())
+            cleanup = args.setParameters(query, stmt, this.getDbFlavour())
             logger.debug("Executing prepared statement for query: {}", stmt)
             stmt.fetchSize = fetchSize
-            return CloseableResultSet(stmt.executeQuery()) {
+            val rs = stmt.executeQuery()
+            cleanup()
+            return CloseableResultSet(rs) {
                 // cancel the statement when the ResultSet is closed and the statement isn't yet.
                 if (!stmt.isClosed) stmt.cancel()
                 // close the statement when the ResultSet is closed
                 if (!stmt.isClosed) stmt.close()
             }
         } catch (e: Exception) {
+            cleanup()
             logger.warn("Failed to execute query: ${query.sql}", e)
             stmt.close()
             throw e

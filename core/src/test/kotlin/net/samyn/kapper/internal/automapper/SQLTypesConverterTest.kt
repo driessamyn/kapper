@@ -99,7 +99,6 @@ class SQLTypesConverterTest {
         @JvmStatic
         fun convertSQLTypeTests() =
             listOf(
-                arguments(named("ARRAY", JDBCType.ARRAY), "ARRAY", { f: Int -> resultSet.getArray(f) }),
                 arguments(named("BIGINT", JDBCType.BIGINT), "BIGINT", { f: Int -> resultSet.getLong(f) }),
                 arguments(named("BINARY", JDBCType.BINARY), "BINARY", { f: Int -> resultSet.getBytes(f) }),
                 arguments(named("BLOB", JDBCType.BLOB), "BLOB", { f: Int -> resultSet.getBytes(f) }),
@@ -473,5 +472,277 @@ class SQLTypesConverterTest {
         every { resultSet.getBigDecimal(1) } returns null
         val result = convertDecimal(resultSet, 1, DbFlavour.UNKNOWN)
         result.shouldBe(null)
+    }
+
+    // --- Array read tests ---
+
+    @Test
+    fun `array returns list of integers`() {
+        val field = Field(1, JDBCType.ARRAY, "INTEGER[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns arrayOf(1, 2, 3)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1, 2, 3))
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `array returns list of strings`() {
+        val field = Field(1, JDBCType.ARRAY, "VARCHAR[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns arrayOf("a", "b", "c")
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf("a", "b", "c"))
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `null array returns null`() {
+        val field = Field(1, JDBCType.ARRAY, "INTEGER[]", DbFlavour.POSTGRESQL)
+        every { resultSet.getArray(1) } returns null
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(null)
+    }
+
+    @Test
+    fun `array with null elements preserves nulls`() {
+        val field = Field(1, JDBCType.ARRAY, "INTEGER[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns arrayOf(1, null, 3)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1, null, 3))
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `empty array returns empty list`() {
+        val field = Field(1, JDBCType.ARRAY, "INTEGER[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns arrayOf<Any>()
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(emptyList<Any>())
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `array free is called even when conversion fails`() {
+        val field = Field(1, JDBCType.ARRAY, "INTEGER[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } throws RuntimeException("conversion error")
+        shouldThrow<RuntimeException> {
+            sqlTypesConverter.convert(field, resultSet)
+        }
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `primitive int array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "INTEGER[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns intArrayOf(1, 2, 3)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1, 2, 3))
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `primitive long array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "BIGINT[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns longArrayOf(1L, 2L)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1L, 2L))
+    }
+
+    @Test
+    fun `primitive short array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "SMALLINT[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns shortArrayOf(1, 2)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1.toShort(), 2.toShort()))
+    }
+
+    @Test
+    fun `primitive double array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "FLOAT8[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns doubleArrayOf(1.5, 2.5)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1.5, 2.5))
+    }
+
+    @Test
+    fun `primitive float array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "FLOAT4[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns floatArrayOf(1.5f, 2.5f)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1.5f, 2.5f))
+    }
+
+    @Test
+    fun `primitive boolean array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "BOOL[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns booleanArrayOf(true, false)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(true, false))
+    }
+
+    @Test
+    fun `byte array from sql array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "BYTEA[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns byteArrayOf(1, 2, 3)
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf(1.toByte(), 2.toByte(), 3.toByte()))
+    }
+
+    @Test
+    fun `char array from sql array is unwrapped`() {
+        val field = Field(1, JDBCType.ARRAY, "CHAR[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns charArrayOf('a', 'b')
+        val result = sqlTypesConverter.convert(field, resultSet)
+        result.shouldBe(listOf('a', 'b'))
+    }
+
+    @Test
+    fun `unsupported array element type throws`() {
+        val field = Field(1, JDBCType.ARRAY, "UNKNOWN[]", DbFlavour.POSTGRESQL)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { resultSet.getArray(1) } returns sqlArray
+        every { sqlArray.array } returns object {} // unrecognized type
+        shouldThrow<KapperUnsupportedOperationException> {
+            sqlTypesConverter.convert(field, resultSet)
+        }
+        verify { sqlArray.free() }
+    }
+
+    // --- Array write tests ---
+
+    @Test
+    fun `should set list as array parameter for postgresql`() {
+        val conn = mockk<java.sql.Connection>(relaxed = true)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { statement.connection } returns conn
+        every { conn.createArrayOf("int4", any()) } returns sqlArray
+        val cleanup = statement.setParameter(1, listOf(1, 2, 3), DbFlavour.POSTGRESQL)
+        verify { conn.createArrayOf("int4", any()) }
+        verify { statement.setArray(1, sqlArray) }
+        // free must not be called until after execution
+        verify(exactly = 0) { sqlArray.free() }
+        cleanup()
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `should set list as array parameter for duckdb`() {
+        val conn = mockk<java.sql.Connection>(relaxed = true)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { statement.connection } returns conn
+        every { conn.createArrayOf("INTEGER", any()) } returns sqlArray
+        val cleanup = statement.setParameter(1, listOf(1, 2, 3), DbFlavour.DUCKDB)
+        verify { conn.createArrayOf("INTEGER", any()) }
+        verify { statement.setArray(1, sqlArray) }
+        cleanup()
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `should throw for array parameter on unsupported db`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            statement.setParameter(1, listOf(1, 2, 3), DbFlavour.MYSQL)
+        }
+    }
+
+    @Test
+    fun `should throw for empty collection parameter`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            statement.setParameter(1, emptyList<Int>(), DbFlavour.POSTGRESQL)
+        }
+    }
+
+    @Test
+    fun `should throw for primitive array parameters`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            statement.setParameter(1, intArrayOf(1, 2, 3), DbFlavour.POSTGRESQL)
+        }
+        shouldThrow<KapperUnsupportedOperationException> {
+            statement.setParameter(1, longArrayOf(1L, 2L), DbFlavour.POSTGRESQL)
+        }
+    }
+
+    @Test
+    fun `should set kotlin array as array parameter`() {
+        val conn = mockk<java.sql.Connection>(relaxed = true)
+        val sqlArray = mockk<java.sql.Array>(relaxed = true)
+        every { statement.connection } returns conn
+        every { conn.createArrayOf("int4", any()) } returns sqlArray
+        val cleanup = statement.setParameter(1, arrayOf(1, 2, 3), DbFlavour.POSTGRESQL)
+        verify { conn.createArrayOf("int4", any()) }
+        verify { statement.setArray(1, sqlArray) }
+        cleanup()
+        verify { sqlArray.free() }
+    }
+
+    @Test
+    fun `non-array parameter returns noop cleanup`() {
+        val cleanup = statement.setParameter(1, 42, DbFlavour.UNKNOWN)
+        cleanup() // should not throw
+    }
+
+    // --- Type name inference tests ---
+
+    @Test
+    fun `postgresql type name mapping`() {
+        kotlinToSqlArrayTypeName(Int::class, DbFlavour.POSTGRESQL).shouldBe("int4")
+        kotlinToSqlArrayTypeName(Long::class, DbFlavour.POSTGRESQL).shouldBe("int8")
+        kotlinToSqlArrayTypeName(String::class, DbFlavour.POSTGRESQL).shouldBe("text")
+        kotlinToSqlArrayTypeName(Boolean::class, DbFlavour.POSTGRESQL).shouldBe("bool")
+        kotlinToSqlArrayTypeName(Double::class, DbFlavour.POSTGRESQL).shouldBe("float8")
+    }
+
+    @Test
+    fun `duckdb type name mapping`() {
+        kotlinToSqlArrayTypeName(Int::class, DbFlavour.DUCKDB).shouldBe("INTEGER")
+        kotlinToSqlArrayTypeName(Long::class, DbFlavour.DUCKDB).shouldBe("BIGINT")
+        kotlinToSqlArrayTypeName(String::class, DbFlavour.DUCKDB).shouldBe("VARCHAR")
+        kotlinToSqlArrayTypeName(BigDecimal::class, DbFlavour.DUCKDB).shouldBe("DECIMAL")
+    }
+
+    @Test
+    fun `unsupported element type throws for postgresql`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            kotlinToSqlArrayTypeName(Date::class, DbFlavour.POSTGRESQL)
+        }
+    }
+
+    @Test
+    fun `unsupported element type throws for duckdb`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            kotlinToSqlArrayTypeName(Date::class, DbFlavour.DUCKDB)
+        }
+    }
+
+    @Test
+    fun `unsupported db flavour throws`() {
+        shouldThrow<KapperUnsupportedOperationException> {
+            kotlinToSqlArrayTypeName(Int::class, DbFlavour.SQLITE)
+        }
     }
 }
