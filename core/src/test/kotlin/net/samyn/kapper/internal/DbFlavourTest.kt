@@ -18,6 +18,7 @@ class DbFlavourTest {
                 "PostgreSQL",
                 "Postgres",
                 "EnterpriseDB",
+                "CockroachDB",
             ],
     )
     fun `when databaseProductName is postgresql then getDbFlavour returns POSTGRESQL`(value: String) {
