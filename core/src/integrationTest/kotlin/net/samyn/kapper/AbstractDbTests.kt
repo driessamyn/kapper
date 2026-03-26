@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MariaDBContainer
@@ -68,6 +69,18 @@ abstract class AbstractDbTests {
                 }
         }
 
+        private val firebird by lazy {
+            GenericContainer("jacobalberty/firebird:v4.0").apply {
+                withExposedPorts(3050)
+                withEnv("FIREBIRD_DATABASE", "test.fdb")
+                withEnv("FIREBIRD_USER", "test")
+                withEnv("FIREBIRD_PASSWORD", "test")
+                withEnv("ISC_PASSWORD", "masterkey")
+                withStartupTimeout(Duration.ofMinutes(1))
+                start()
+            }
+        }
+
         private val connections = ConcurrentHashMap<String, Connection>()
 
         private fun getConnection(container: JdbcDatabaseContainer<*>): Connection {
@@ -86,6 +99,12 @@ abstract class AbstractDbTests {
                 "MSSQLSERVER" to { getConnection(msSqlServer) },
                 "ORACLE" to { getConnection(oracle) },
                 "MARIADB" to { getConnection(mariadb) },
+                "FIREBIRD" to {
+                    Class.forName("org.firebirdsql.jdbc.FBDriver")
+                    DriverManager.getConnection(
+                        "jdbc:firebirdsql://${firebird.host}:${firebird.getMappedPort(3050)}/test.fdb?user=test&password=test",
+                    )
+                },
             )
 
         val dbs =
@@ -153,15 +172,16 @@ abstract class AbstractDbTests {
                     println(it)
                 },
             )
-            statement.execute(
-                """
-                INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
-                    (${convertUUIDString(superman.id, dbFlavour)}, '${superman.name}', '${superman.email}', ${superman.age}),
-                    (${convertUUIDString(batman.id, dbFlavour)}, '${batman.name}', '${batman.email}', ${batman.age}),
-                    (${convertUUIDString(spiderMan.id, dbFlavour)}, '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age}),
-                    (${convertUUIDString(nullMan.id, dbFlavour)}, '${nullMan.name}', NULL, NULL);
-                """,
-            )
+            listOf(superman, batman, spiderMan, nullMan).forEach { hero ->
+                val email = hero.email?.let { "'$it'" } ?: "NULL"
+                val age = hero.age?.toString() ?: "NULL"
+                statement.execute(
+                    """
+                    INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
+                        (${convertUUIDString(hero.id, dbFlavour)}, '${hero.name}', $email, $age)
+                    """,
+                )
+            }
         }
     }
 

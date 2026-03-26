@@ -107,6 +107,18 @@ class DbFlavourTest {
     @ValueSource(
         strings =
             [
+                "Firebird",
+            ],
+    )
+    fun `when databaseProductName is firebird then getDbFlavour returns FIREBIRD`(value: String) {
+        every { connection.metaData.databaseProductName } returns value
+        connection.getDbFlavour() shouldBe DbFlavour.FIREBIRD
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings =
+            [
                 // IBM DB2 variants
                 "DB2",
                 "DB2/NT",
@@ -137,7 +149,6 @@ class DbFlavourTest {
                 "HSQL Database Engine",
                 "HSQLDB",
                 "Apache Derby",
-                "Firebird",
                 "Interbase",
                 "Progress",
                 "Progress OpenEdge",

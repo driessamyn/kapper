@@ -261,7 +261,7 @@ fun PreparedStatement.setParameter(
         is Boolean -> setBoolean(index, value)
         is UUID ->
             when (dbFlavour) {
-                DbFlavour.MYSQL -> setString(index, value.toString())
+                DbFlavour.MYSQL, DbFlavour.FIREBIRD -> setString(index, value.toString())
                 DbFlavour.ORACLE -> setBytes(index, value.toBytes())
                 else -> setObject(index, value)
             }

@@ -15,7 +15,7 @@ class QuerySingleTests : AbstractDbTests() {
         val sql =
             if (DbFlavour.MSSQLSERVER == connection.getDbFlavour()) {
                 "SELECT TOP 1 * FROM super_heroes_$testId ORDER BY name ASC"
-            } else if (DbFlavour.ORACLE == connection.getDbFlavour()) {
+            } else if (connection.getDbFlavour() in listOf(DbFlavour.ORACLE, DbFlavour.FIREBIRD)) {
                 "SELECT * FROM super_heroes_$testId ORDER BY name ASC FETCH FIRST 1 ROWS ONLY"
             } else {
                 "SELECT * FROM super_heroes_$testId ORDER BY name ASC LIMIT 1"
