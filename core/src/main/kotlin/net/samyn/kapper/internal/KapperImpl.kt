@@ -95,6 +95,66 @@ internal class KapperImpl(
         }
     }
 
+    override fun <T : Any> executeReturning(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        mapper: (ResultSet, Map<String, Field>) -> T,
+        args: Args,
+    ): List<T> {
+        require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
+        return buildList {
+            connection.executeQuery(queryFactory(sql), args).use { rs ->
+                try {
+                    val fields = rs.extractFields(connection.getDbFlavour())
+                    while (rs.next()) {
+                        add(mapper(rs, fields))
+                    }
+                } catch (e: SQLException) {
+                    "Failed to execute statement: $sql".also {
+                        logger.warn(it, e)
+                        throw KapperQueryException(it, e)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun <R : Any, A : Any> executeReturning(
+        clazz: Class<R>,
+        connection: Connection,
+        sql: String,
+        mapper: (ResultSet, Map<String, Field>) -> R,
+        obj: A,
+        args: Map<String, (A) -> Any?>,
+    ): List<R> {
+        require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
+        val query = queryFactory(sql)
+        connection.prepareStatement(query.sql).use { stmt ->
+            val cleanup = args.setParameters(query.tokens, stmt, obj, connection.getDbFlavour())
+            try {
+                logger.debug("Executing prepared statement: {}", stmt)
+                return buildList {
+                    stmt.executeQuery().use { rs ->
+                        try {
+                            val fields = rs.extractFields(connection.getDbFlavour())
+                            while (rs.next()) {
+                                add(mapper(rs, fields))
+                            }
+                        } catch (e: SQLException) {
+                            "Failed to execute statement: $sql".also {
+                                logger.warn(it, e)
+                                throw KapperQueryException(it, e)
+                            }
+                        }
+                    }
+                }
+            } finally {
+                cleanup()
+            }
+        }
+    }
+
     override fun <T : Any> executeAll(
         clazz: Class<T>,
         connection: Connection,

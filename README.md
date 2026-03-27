@@ -48,6 +48,7 @@ Instead of adding another abstraction layer, Kapper embraces three core principl
 - **📦 Java Records**: Native support for Java record classes alongside Kotlin data classes
 - **🔄 Transactions**: Simple transaction handling with automatic commit/rollback
 - **📊 Bulk Operations**: Efficient batch inserts, updates, and deletes with `executeAll`
+- **↩️ DML with Results**: Execute DML statements that return records with `executeReturning` (where supported by the database)
 - **🗄️ Database Support**: PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server, DuckDB, and many others
 - **📏 Minimal Dependencies**: Lightweight library with zero external dependencies
 - **🔌 JDBC Extension**: Extends `java.sql.Connection` - works alongside existing JDBC code
