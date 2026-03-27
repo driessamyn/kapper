@@ -2,6 +2,7 @@ package net.samyn.kapper
 
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.getDbFlavour
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.sql.Connection
@@ -15,7 +16,11 @@ import java.util.UUID
 import kotlin.random.Random
 
 class TypesTest : AbstractDbTests() {
-    override fun setupDatabase(connection: Connection) {
+    override fun setupDatabase(
+        connection: Connection,
+        dbKey: String,
+    ) {
+        if (dbKey == "STARROCKS") return
         val dbFlavour = connection.getDbFlavour()
         connection.createStatement().use { statement ->
             statement.execute(
@@ -51,6 +56,10 @@ class TypesTest : AbstractDbTests() {
 
     @Test
     fun `can insert and retreive the same types`() {
+        assumeFalse(
+            System.getProperty("db", "").trim().uppercase() == "STARROCKS",
+            "StarRocks does not support all SQL types tested here",
+        )
         val testData = createTestObject()
         val result =
             connection.execute(

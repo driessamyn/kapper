@@ -11,7 +11,8 @@ fun Connection.getDbFlavour(): DbFlavour {
         productName.contains("postgres", ignoreCase = true) ||
             productName.contains("enterprisedb", ignoreCase = true) -> DbFlavour.POSTGRESQL
         productName.contains("mysql", ignoreCase = true) ||
-            productName.contains("mariadb", ignoreCase = true) -> DbFlavour.MYSQL
+            productName.contains("mariadb", ignoreCase = true) ||
+            productName.contains("starrocks", ignoreCase = true) -> DbFlavour.MYSQL
         productName.contains("sqlite", ignoreCase = true) -> DbFlavour.SQLITE
         productName.contains("oracle", ignoreCase = true) -> DbFlavour.ORACLE
         productName.contains("sql server", ignoreCase = true) ||
