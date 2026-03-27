@@ -311,6 +311,91 @@ class KapperJavaApiTest {
         }
 
         @Test
+        void testExecuteReturningWithMap() throws Exception {
+            when(mockResultSet.next()).thenReturn(true, false);
+            when(mockResultSet.getInt(1)).thenReturn(1);
+            when(mockResultSet.getString(2)).thenReturn("Test1");
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("id", 1);
+            args.put("name", "Test1");
+
+            List<AutomappedTestEntity> result = Kapper.getInstance().executeReturning(
+                    AutomappedTestEntity.class,
+                    mockConnection,
+                    "INSERT INTO test_table(id, name) VALUES(:id, :name)",
+                    args
+            );
+
+            assertEquals(1, result.size());
+            assertEquals(new AutomappedTestEntity(1, "Test1"), result.get(0));
+
+            verify(mockStatement).setInt(1, 1);
+            verify(mockStatement).setString(2, "Test1");
+            verify(mockStatement).close();
+        }
+
+        @Test
+        void testExecuteReturningWithMapperFunc() throws Exception {
+            when(mockResultSet.next()).thenReturn(true, false);
+            when(mockResultSet.getInt("id")).thenReturn(1);
+            when(mockResultSet.getString("name")).thenReturn("Test1");
+
+            Map<String, Object> args = Map.of("id", 1, "name", "Test1");
+
+            List<TestEntity> result = Kapper.getInstance().executeReturning(
+                    TestEntity.class,
+                    mockConnection,
+                    "INSERT INTO test_table(id, name) VALUES(:id, :name)",
+                    (rs, fields) -> {
+                        try {
+                            return new TestEntity(
+                                    rs.getInt("id"),
+                                    rs.getString("name")
+                            );
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    },
+                    args
+            );
+
+            assertEquals(1, result.size());
+            assertEquals(new TestEntity(1, "Test1"), result.get(0));
+
+            verify(mockStatement).setInt(1, 1);
+            verify(mockStatement).setString(2, "Test1");
+            verify(mockStatement).close();
+        }
+
+        @Test
+        void testExecuteReturningWithRecord() throws Exception {
+            when(mockResultSet.next()).thenReturn(true, false);
+            when(mockResultSet.getInt(1)).thenReturn(1);
+            when(mockResultSet.getString(2)).thenReturn("Test1");
+
+            AutomappedTestEntity entity = new AutomappedTestEntity(1, "Test1");
+
+            List<AutomappedTestEntity> result = Kapper.getInstance().executeReturning(
+                    AutomappedTestEntity.class,
+                    mockConnection,
+                    "INSERT INTO test_table(id, name) VALUES(:id, :name)",
+                    entity,
+                    Map.of(
+                            "id", AutomappedTestEntity::id,
+                            "name", AutomappedTestEntity::name
+                    )
+            );
+
+            assertEquals(1, result.size());
+            assertEquals(entity, result.get(0));
+
+            verify(mockStatement).setInt(1, 1);
+            verify(mockStatement).setString(2, "Test1");
+            verify(mockStatement).close();
+        }
+
+        @Test
         void testExecuteAll() throws SQLException {
             // Setup statement behavior
             when(mockStatement.executeBatch()).thenReturn(new int[]{1,1});

@@ -173,4 +173,106 @@ interface Kapper {
         objects: Iterable<T>,
         args: Map<String, (T) -> Any?>,
     ): IntArray
+
+    /**
+     * Execute a SQL statement with a RETURNING clause and map the results to a list of instances of the specified class.
+     *
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute, including a RETURNING clause.
+     * @param args Optional parameters to be substituted in the SQL statement. Parameter substitution is based on the Map keys.
+     * @return The rows returned by the RETURNING clause as a list of [T] instances.
+     */
+    fun <T : Any> executeReturning(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        args: Args,
+    ): List<T> {
+        val mapper =
+            try {
+                mapperRegistry.get(clazz)
+            } catch (e: Exception) {
+                logger.error("Error creating instance of $clazz", e)
+                throw KapperMappingException("Error creating mapper for $clazz", e)
+            }
+        return executeReturning(clazz, connection, sql, mapper::createInstance, args)
+    }
+
+    /**
+     * Execute a SQL statement with a RETURNING clause and map the results to a list of instances of the specified class.
+     *
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute, including a RETURNING clause.
+     * @param mapper Mapping function to map the [ResultSet] to the target class.
+     * @param args Optional parameters to be substituted in the SQL statement. Parameter substitution is based on the Map keys.
+     * @return The rows returned by the RETURNING clause as a list of [T] instances.
+     */
+    fun <T : Any> executeReturning(
+        clazz: Class<T>,
+        connection: Connection,
+        sql: String,
+        mapper: (ResultSet, Map<String, Field>) -> T,
+        args: Args,
+    ): List<T>
+
+    /**
+     * Execute a SQL statement with a RETURNING clause using an object and argument mapper functions,
+     * and map the results to a list of instances of the specified class.
+     *
+     * The argument object type [A] and the returned row type [R] are intentionally separate,
+     * allowing patterns such as passing a `CreateFoo` request and receiving a `Foo` result.
+     *
+     * @param R The type to map the results to.
+     * @param A The type of the object used to provide parameter values.
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute, including a RETURNING clause.
+     * @param obj The object containing the values to be used in the SQL statement.
+     * @param args A map where the keys are the names of the parameters in the SQL statement, and the values are functions that extract the corresponding values from the object.
+     * @return The rows returned by the RETURNING clause as a list of [R] instances.
+     */
+    fun <R : Any, A : Any> executeReturning(
+        clazz: Class<R>,
+        connection: Connection,
+        sql: String,
+        obj: A,
+        args: Map<String, (A) -> Any?>,
+    ): List<R> {
+        val mapper =
+            try {
+                mapperRegistry.get(clazz)
+            } catch (e: Exception) {
+                logger.error("Error creating instance of $clazz", e)
+                throw KapperMappingException("Error creating auto-mapper for $clazz", e)
+            }
+        return executeReturning(clazz, connection, sql, mapper::createInstance, obj, args)
+    }
+
+    /**
+     * Execute a SQL statement with a RETURNING clause using an object and argument mapper functions,
+     * and map the results to a list of instances of the specified class.
+     *
+     * The argument object type [A] and the returned row type [R] are intentionally separate,
+     * allowing patterns such as passing a `CreateFoo` request and receiving a `Foo` result.
+     *
+     * @param R The type to map the results to.
+     * @param A The type of the object used to provide parameter values.
+     * @param clazz The class to map the results to.
+     * @param connection The SQL connection to use.
+     * @param sql The SQL statement to execute, including a RETURNING clause.
+     * @param mapper Mapping function to map the [ResultSet] to the target class.
+     * @param obj The object containing the values to be used in the SQL statement.
+     * @param args A map where the keys are the names of the parameters in the SQL statement, and the values are functions that extract the corresponding values from the object.
+     * @return The rows returned by the RETURNING clause as a list of [R] instances.
+     */
+    fun <R : Any, A : Any> executeReturning(
+        clazz: Class<R>,
+        connection: Connection,
+        sql: String,
+        mapper: (ResultSet, Map<String, Field>) -> R,
+        obj: A,
+        args: Map<String, (A) -> Any?>,
+    ): List<R>
 }

@@ -199,6 +199,84 @@ val orderTotals = connection.query<BigDecimal>(
 
 See [mapping](mapping.md) for more detail and more advanced mapping support.
 
+## DML Statements that Return Records
+
+Some databases support DML statements (INSERT, UPDATE, DELETE) that return the affected records.
+Kapper provides `executeReturning()` for this pattern, which executes the statement and maps the returned rows — without the fragility of routing DML through a query function.
+
+> **Note:** Support for this feature varies by database. Check your database's documentation to confirm support and syntax.
+
+### Basic Usage
+
+```kotlin
+data class User(val id: Long, val name: String, val email: String)
+
+val inserted: List<User> = connection.executeReturning<User>(
+    "INSERT INTO users(id, name, email) VALUES(:id, :name, :email) RETURNING id, name, email",
+    "id" to 1L,
+    "name" to "Alice",
+    "email" to "alice@example.com"
+)
+```
+
+### Object-Based Parameters
+
+Pass an object along with argument mappers, the same way as `execute()`:
+
+```kotlin
+data class User(val id: Long, val name: String, val email: String)
+
+val user = User(id = 1L, name = "Alice", email = "alice@example.com")
+val updated: List<User> = connection.executeReturning(
+    "UPDATE users SET email = :email WHERE id = :id RETURNING id, name, email",
+    obj = user,
+    "id" to User::id,
+    "email" to User::email
+)
+```
+
+### Different Argument and Return Types
+
+The argument object type and returned row type can differ — for example passing a request object and receiving a domain model result:
+
+```kotlin
+data class CreateUserRequest(val name: String, val email: String)
+data class User(val id: Long, val name: String, val email: String)
+
+val request = CreateUserRequest(name = "Alice", email = "alice@example.com")
+val created: List<User> = connection.executeReturning<User, CreateUserRequest>(
+    "INSERT INTO users(name, email) VALUES(:name, :email) RETURNING id, name, email",
+    obj = request,
+    "name" to CreateUserRequest::name,
+    "email" to CreateUserRequest::email
+)
+```
+
+### Custom Mapper
+
+Use a custom mapper for full control over result mapping:
+
+```kotlin
+val names: List<String> = connection.executeReturning(
+    "INSERT INTO users(id, name, email) VALUES(:id, :name, :email) RETURNING name",
+    mapper = { rs, _ -> rs.getString("name") },
+    "id" to 1L,
+    "name" to "Alice",
+    "email" to "alice@example.com"
+)
+```
+
+### Java API
+
+```java
+List<User> result = Kapper.getInstance().executeReturning(
+    User.class,
+    connection,
+    "INSERT INTO users(name, email) VALUES(:name, :email) RETURNING id, name, email",
+    Map.of("name", "Alice", "email", "alice@example.com")
+);
+```
+
 ## Error Handling
 
 ```kotlin
