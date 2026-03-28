@@ -4,15 +4,13 @@ on:
     workflows: ["Build and Test"]
     types: [completed]
 
-permissions:
-  checks: write
-  pull-requests: write
-  actions: read
-
 jobs:
   sonar:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      actions: read
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'pull_request')
@@ -100,6 +98,9 @@ jobs:
   coverage-comment:
     name: Coverage PR Comment
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      actions: read
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request'
