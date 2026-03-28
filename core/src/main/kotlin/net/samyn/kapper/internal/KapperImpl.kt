@@ -18,6 +18,8 @@ internal class KapperImpl(
 ) : Kapper {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+        private const val SQL_BLANK_ERROR = "SQL query cannot be empty or blank"
+        private const val EXECUTING_STMT_LOG = "Executing prepared statement: {}"
     }
 
     override fun <T : Any> query(
@@ -27,7 +29,7 @@ internal class KapperImpl(
         mapper: (ResultSet, Map<String, Field>) -> T,
         args: Args,
     ): List<T> {
-        require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
+        require(sql.isNotBlank()) { SQL_BLANK_ERROR }
         return buildList {
             connection.executeQuery(queryFactory(sql), args).use { rs ->
                 try {
@@ -68,7 +70,7 @@ internal class KapperImpl(
         connection.prepareStatement(query.sql).use { stmt ->
             val cleanup = args.setParameters(query, stmt, connection.getDbFlavour())
             try {
-                logger.debug("Executing prepared statement: {}", stmt)
+                logger.debug(EXECUTING_STMT_LOG, stmt)
                 return stmt.executeUpdate()
             } finally {
                 cleanup()
@@ -87,7 +89,7 @@ internal class KapperImpl(
         connection.prepareStatement(query.sql).use { stmt ->
             val cleanup = args.setParameters(query.tokens, stmt, obj, connection.getDbFlavour())
             try {
-                logger.debug("Executing prepared statement: {}", stmt)
+                logger.debug(EXECUTING_STMT_LOG, stmt)
                 return stmt.executeUpdate()
             } finally {
                 cleanup()
@@ -102,7 +104,7 @@ internal class KapperImpl(
         mapper: (ResultSet, Map<String, Field>) -> T,
         args: Args,
     ): List<T> {
-        require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
+        require(sql.isNotBlank()) { SQL_BLANK_ERROR }
         return buildList {
             connection.executeQuery(queryFactory(sql), args).use { rs ->
                 try {
@@ -128,12 +130,12 @@ internal class KapperImpl(
         obj: A,
         args: Map<String, (A) -> Any?>,
     ): List<R> {
-        require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
+        require(sql.isNotBlank()) { SQL_BLANK_ERROR }
         val query = queryFactory(sql)
         connection.prepareStatement(query.sql).use { stmt ->
             val cleanup = args.setParameters(query.tokens, stmt, obj, connection.getDbFlavour())
             try {
-                logger.debug("Executing prepared statement: {}", stmt)
+                logger.debug(EXECUTING_STMT_LOG, stmt)
                 return buildList {
                     stmt.executeQuery().use { rs ->
                         try {
