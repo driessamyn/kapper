@@ -10,6 +10,8 @@ import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.utility.DockerImageName
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MariaDBContainer
@@ -57,6 +59,13 @@ abstract class AbstractDbTests {
             MariaDBContainer("mariadb:11.7").also { it.start() }
         }
 
+        private val tidb by lazy {
+            GenericContainer<Nothing>(DockerImageName.parse("pingcap/tidb:v8.5.1")).apply {
+                withExposedPorts(4000)
+                start()
+            }
+        }
+
         private val msSqlServer by lazy {
             MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12")
                 .acceptLicense()
@@ -86,6 +95,11 @@ abstract class AbstractDbTests {
                 "MSSQLSERVER" to { getConnection(msSqlServer) },
                 "ORACLE" to { getConnection(oracle) },
                 "MARIADB" to { getConnection(mariadb) },
+                "TIDB" to {
+                    DriverManager.getConnection(
+                        "jdbc:mysql://${tidb.host}:${tidb.getMappedPort(4000)}/test?user=root&allowPublicKeyRetrieval=true&useSSL=false",
+                    )
+                },
             )
 
         val dbs =
