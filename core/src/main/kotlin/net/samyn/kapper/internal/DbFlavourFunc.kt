@@ -8,6 +8,7 @@ import java.sql.Connection
 fun Connection.getDbFlavour(): DbFlavour {
     val productName = this.metaData.databaseProductName
     return when {
+        productName.contains("cockroach", ignoreCase = true) -> DbFlavour.POSTGRESQL
         productName.contains("postgres", ignoreCase = true) ||
             productName.contains("enterprisedb", ignoreCase = true) -> DbFlavour.POSTGRESQL
         productName.contains("mysql", ignoreCase = true) ||
