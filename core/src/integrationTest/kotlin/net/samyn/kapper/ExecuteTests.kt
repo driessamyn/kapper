@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.getDbFlavour
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import java.util.UUID
@@ -179,6 +180,10 @@ class ExecuteTests : AbstractDbTests() {
 
     @Test
     fun `with TX rolls back`() {
+        assumeFalse(
+            System.getProperty("db", "").trim().uppercase() == "STARROCKS",
+            "StarRocks PRIMARY KEY tables use upsert semantics",
+        )
         val id = UUID.randomUUID()
         shouldThrow<SQLException> {
             connection.withTransaction {
