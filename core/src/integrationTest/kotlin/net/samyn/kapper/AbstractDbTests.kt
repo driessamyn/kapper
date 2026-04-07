@@ -15,6 +15,7 @@ import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MariaDBContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.YugabyteDBYSQLContainer
 import org.testcontainers.oracle.OracleContainer
 import java.sql.Connection
 import java.sql.DriverManager
@@ -53,6 +54,12 @@ abstract class AbstractDbTests {
                 .also { it.start() }
         }
 
+        private val yugabytedb by lazy {
+            YugabyteDBYSQLContainer("yugabytedb/yugabyte:2024.2.8.0-b85")
+                .withStartupTimeout(Duration.ofMinutes(3))
+                .also { it.start() }
+        }
+
         private val mariadb by lazy {
             MariaDBContainer("mariadb:11.7").also { it.start() }
         }
@@ -86,6 +93,7 @@ abstract class AbstractDbTests {
                 "MSSQLSERVER" to { getConnection(msSqlServer) },
                 "ORACLE" to { getConnection(oracle) },
                 "MARIADB" to { getConnection(mariadb) },
+                "YUGABYTEDB" to { getConnection(yugabytedb) },
             )
 
         val dbs =
