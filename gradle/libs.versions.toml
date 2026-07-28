@@ -51,6 +51,7 @@ test-containers-mysql = { module = "org.testcontainers:mysql", version.ref = "te
 test-containers-oracle = { module = "org.testcontainers:oracle-free", version.ref = "test-containers" }
 test-containers-mariadb = { module = "org.testcontainers:mariadb", version.ref = "test-containers" }
 test-containers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "test-containers" }
+test-containers-cockroachdb = { module = "org.testcontainers:cockroachdb", version.ref = "test-containers" }
 
 # Example dependencies
 hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.3.0.Final" }
@@ -83,7 +84,8 @@ test-containers = [
     "test-containers-mysql",
     "test-containers-postgresql",
     "test-containers-mssqlserver",
-    "test-containers-oracle"
+    "test-containers-oracle",
+    "test-containers-cockroachdb"
 ]
 test-dbs = ["mariadb-driver", "mysql-driver", "postgresql-driver", "sqlite-jdbc", "duckdb-jdbc", "mssql-server-driver", "oracle-driver"]
 

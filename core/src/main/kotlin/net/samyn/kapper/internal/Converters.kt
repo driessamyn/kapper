@@ -177,6 +177,12 @@ internal fun convertChar(value: Any): Char =
 internal fun convertInt(value: Any): Int =
     when (value) {
         is Integer -> value.toInt()
+        is java.lang.Long -> {
+            if (value < Int.MIN_VALUE.toLong() || value > Int.MAX_VALUE.toLong()) {
+                throw KapperParseException("Cannot parse $value to Int (out of range)")
+            }
+            value.toInt()
+        }
         is java.lang.Float -> value.toInt()
         is Float -> value.toInt()
         is BigDecimal -> value.toInt()
