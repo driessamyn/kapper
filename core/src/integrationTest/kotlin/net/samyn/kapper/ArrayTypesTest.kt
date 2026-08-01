@@ -10,8 +10,11 @@ import java.util.UUID
 class ArrayTypesTest : AbstractDbTests() {
     private val arrayDbs = setOf(DbFlavour.POSTGRESQL, DbFlavour.DUCKDB)
 
-    override fun setupDatabase(connection: Connection) {
-        super.setupDatabase(connection)
+    override fun setupDatabase(
+        connection: Connection,
+        dbKey: String,
+    ) {
+        super.setupDatabase(connection, dbKey)
         val dbFlavour = connection.getDbFlavour()
         if (dbFlavour !in arrayDbs) return
         connection.createStatement().use { statement ->

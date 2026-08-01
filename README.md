@@ -23,6 +23,10 @@ Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library
 ![DuckDB](https://img.shields.io/badge/duckdb-FFF000.svg?style=for-the-badge&logo=duckdb&logoColor=black)
 ![MariaDB](https://img.shields.io/badge/mariadb-003545.svg?style=for-the-badge&logo=mariadb&logoColor=white)
 ![CockroachDB](https://img.shields.io/badge/cockroachdb-6933FF.svg?style=for-the-badge&logo=cockroachlabs&logoColor=white)
+![YugabyteDB](https://img.shields.io/badge/yugabytedb-FC4C02.svg?style=for-the-badge&logo=yugabyte&logoColor=white)
+![StarRocks](https://img.shields.io/badge/starrocks-FF6B6B.svg?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg%3D%3D&logoColor=white)
+![TiDB](https://img.shields.io/badge/tidb-4D96FE.svg?style=for-the-badge&logo=tidb&logoColor=white)
+![Firebird](https://img.shields.io/badge/firebird-FFCC00.svg?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg%3D%3D&logoColor=white)
 
 See [Kapper](https://driessamyn.github.io/kapper/) for more information.
 

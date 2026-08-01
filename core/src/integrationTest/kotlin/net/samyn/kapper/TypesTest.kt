@@ -15,7 +15,10 @@ import java.util.UUID
 import kotlin.random.Random
 
 class TypesTest : AbstractDbTests() {
-    override fun setupDatabase(connection: Connection) {
+    override fun setupDatabase(
+        connection: Connection,
+        dbKey: String,
+    ) {
         val dbFlavour = connection.getDbFlavour()
         connection.createStatement().use { statement ->
             statement.execute(
