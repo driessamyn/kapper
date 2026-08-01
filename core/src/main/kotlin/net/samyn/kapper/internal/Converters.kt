@@ -149,9 +149,9 @@ internal fun convertUUID(value: Any): UUID =
     }
 
 internal fun convertChar(value: Any): Char =
-    when (value) {
-        is Character -> value as Char
-        is String -> {
+    when {
+        value is Character -> value as Char
+        value is String -> {
             if (value.length != 1) {
                 throw KapperParseException(
                     "Cannot parse $value to Char (length != 1)",
@@ -159,7 +159,7 @@ internal fun convertChar(value: Any): Char =
             }
             value[0]
         }
-        is CharArray -> {
+        value is CharArray -> {
             if (value.size != 1) {
                 throw KapperParseException(
                     "Cannot parse $value to Char (size != 1)",
@@ -168,9 +168,24 @@ internal fun convertChar(value: Any): Char =
             value[0]
         }
         else -> {
-            throw KapperUnsupportedOperationException(
-                "Cannot auto-convert from ${value.javaClass} to Char",
-            )
+            // Handle primitive char arrays (JVM type '[C')
+            // Check by class name to handle primitive char arrays
+            val className = value.javaClass.name
+            if (className == "[C") {
+                // Cast to CharArray - at runtime they are the same
+                @Suppress("UNCHECKED_CAST")
+                val charArray = value as CharArray
+                if (charArray.size != 1) {
+                    throw KapperParseException(
+                        "Cannot parse $value to Char (size != 1)",
+                    )
+                }
+                charArray[0]
+            } else {
+                throw KapperUnsupportedOperationException(
+                    "Cannot auto-convert from ${value.javaClass} to Char",
+                )
+            }
         }
     }
 
@@ -197,8 +212,18 @@ internal fun convertInt(value: Any): Int =
 internal fun convertLong(value: Any): Long =
     when (value) {
         is java.lang.Long -> value.toLong()
+        is Long -> value
+        is Int -> value.toLong()
+        is java.lang.Integer -> value.toLong()
         is Float -> value.toLong()
+        is java.lang.Float -> value.toLong()
+        is Double -> value.toLong()
+        is java.lang.Double -> value.toLong()
         is BigDecimal -> value.toLong()
+        is Short -> value.toLong()
+        is java.lang.Short -> value.toLong()
+        is Byte -> value.toLong()
+        is java.lang.Byte -> value.toLong()
 
         else -> {
             throw KapperUnsupportedOperationException(
@@ -211,6 +236,8 @@ internal fun convertFloat(value: Any): Float =
     when (value) {
         is java.lang.Float -> value.toFloat()
         is Float -> value
+        is java.lang.Double -> value.toFloat()
+        is Double -> value.toFloat()
         is BigDecimal -> value.toFloat()
 
         else -> {
@@ -224,6 +251,8 @@ internal fun convertDouble(value: Any): Double =
     when (value) {
         is java.lang.Double -> value.toDouble()
         is Double -> value
+        is java.lang.Float -> value.toDouble()
+        is Float -> value.toDouble()
         is BigDecimal -> value.toDouble()
 
         else -> {
@@ -260,7 +289,15 @@ internal fun convertBoolean(value: Any): Boolean =
             value != 0
         }
 
+        is java.lang.Integer -> {
+            value != 0
+        }
+
         is Byte -> {
+            value != 0.toByte()
+        }
+
+        is java.lang.Byte -> {
             value != 0.toByte()
         }
 
@@ -268,12 +305,32 @@ internal fun convertBoolean(value: Any): Boolean =
             value != 0.toShort()
         }
 
+        is java.lang.Short -> {
+            value != 0.toShort()
+        }
+
         is Long -> {
+            value != 0L
+        }
+
+        is java.lang.Long -> {
             value != 0L
         }
 
         is Float -> {
             value != 0.0f
+        }
+
+        is java.lang.Float -> {
+            value != 0.0f
+        }
+
+        is Double -> {
+            value != 0.0
+        }
+
+        is java.lang.Double -> {
+            value != 0.0
         }
 
         is BigDecimal -> {

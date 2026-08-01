@@ -28,9 +28,11 @@ private val converters: Map<Class<*>, (Any) -> Any> =
         LocalTime::class.java to ::convertLocalTime,
         Instant::class.java to ::convertInstant,
         Char::class.java to ::convertChar,
+        Character::class.java to ::convertChar,
         Int::class.java to ::convertInt,
         Integer::class.java to ::convertInt,
         Long::class.java to ::convertLong,
+        java.lang.Long::class.java to ::convertLong,
         Float::class.java to ::convertFloat,
         java.lang.Float::class.java to ::convertFloat,
         Double::class.java to ::convertDouble,
@@ -38,6 +40,7 @@ private val converters: Map<Class<*>, (Any) -> Any> =
         BigDecimal::class.java to ::convertBigDecimal,
         Date::class.java to ::convertDate,
         Boolean::class.java to ::convertBoolean,
+        java.lang.Boolean::class.java to ::convertBoolean,
         String::class.java to ::convertString,
     )
 

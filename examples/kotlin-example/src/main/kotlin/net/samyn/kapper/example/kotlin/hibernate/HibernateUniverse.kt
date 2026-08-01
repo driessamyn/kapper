@@ -148,6 +148,7 @@ public class SuperHeroHibernateQueries(
                 .createSelectionQuery(
                     """
             SELECT b FROM SuperHeroBattleEntity b 
+            JOIN FETCH b.villain
             WHERE b.superHero.name = :name
         """,
                     SuperHeroBattleEntity::class.java,
