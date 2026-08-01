@@ -258,7 +258,11 @@ fun PreparedStatement.setParameter(
         is Char -> setString(index, value.toString())
         is String -> setString(index, value)
         is ByteArray -> setBytes(index, value)
-        is Boolean -> setBoolean(index, value)
+        is Boolean ->
+            when (dbFlavour) {
+                DbFlavour.ORACLE -> setInt(index, if (value) 1 else 0)
+                else -> setBoolean(index, value)
+            }
         is UUID ->
             when (dbFlavour) {
                 DbFlavour.MYSQL -> setString(index, value.toString())
