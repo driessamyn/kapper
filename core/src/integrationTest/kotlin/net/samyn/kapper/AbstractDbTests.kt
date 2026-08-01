@@ -11,12 +11,15 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.testcontainers.containers.CockroachContainer
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.JdbcDatabaseContainer
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.containers.MariaDBContainer
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.YugabyteDBYSQLContainer
 import org.testcontainers.oracle.OracleContainer
+import org.testcontainers.utility.DockerImageName
 import java.sql.Connection
 import java.sql.DriverManager
 import java.time.Duration
@@ -58,6 +61,39 @@ abstract class AbstractDbTests {
             CockroachContainer("cockroachdb/cockroach:latest-v24.3").also { it.start() }
         }
 
+        private val yugabytedb by lazy {
+            YugabyteDBYSQLContainer("yugabytedb/yugabyte:2024.2.8.0-b85")
+                .withStartupTimeout(Duration.ofMinutes(3))
+                .also { it.start() }
+        }
+
+        private val starrocks by lazy {
+            GenericContainer("starrocks/allin1-ubuntu:latest").apply {
+                withExposedPorts(9030)
+                withStartupTimeout(Duration.ofMinutes(3))
+                start()
+            }
+        }
+
+        private val tidb by lazy {
+            GenericContainer<Nothing>(DockerImageName.parse("pingcap/tidb:v8.5.1")).apply {
+                withExposedPorts(4000)
+                start()
+            }
+        }
+
+        private val firebird by lazy {
+            GenericContainer("jacobalberty/firebird:v4.0").apply {
+                withExposedPorts(3050)
+                withEnv("FIREBIRD_DATABASE", "test.fdb")
+                withEnv("FIREBIRD_USER", "test")
+                withEnv("FIREBIRD_PASSWORD", "test")
+                withEnv("ISC_PASSWORD", "masterkey")
+                withStartupTimeout(Duration.ofMinutes(1))
+                start()
+            }
+        }
+
         private val mariadb by lazy {
             MariaDBContainer("mariadb:11.7").also { it.start() }
         }
@@ -92,6 +128,42 @@ abstract class AbstractDbTests {
                 "ORACLE" to { getConnection(oracle) },
                 "MARIADB" to { getConnection(mariadb) },
                 "COCKROACHDB" to { getConnection(cockroachdb) },
+                "YUGABYTEDB" to { getConnection(yugabytedb) },
+                "STARROCKS" to {
+                    Class.forName("com.mysql.cj.jdbc.Driver")
+                    val url = "jdbc:mysql://${starrocks.host}:${starrocks.getMappedPort(9030)}/"
+                    val bootstrapConn = DriverManager.getConnection(url, "root", "")
+                    // Wait for BE to register with the cluster
+                    for (i in 1..60) {
+                        try {
+                            val alive =
+                                bootstrapConn.createStatement().use { stmt ->
+                                    stmt.executeQuery("SHOW BACKENDS").use { rs ->
+                                        rs.next() && rs.getBoolean("Alive")
+                                    }
+                                }
+                            if (alive) break
+                        } catch (_: Exception) {
+                        }
+                        Thread.sleep(2000)
+                    }
+                    bootstrapConn.createStatement().use {
+                        it.execute("CREATE DATABASE IF NOT EXISTS test")
+                    }
+                    bootstrapConn.close()
+                    DriverManager.getConnection("${url}test", "root", "")
+                },
+                "TIDB" to {
+                    DriverManager.getConnection(
+                        "jdbc:mysql://${tidb.host}:${tidb.getMappedPort(4000)}/test?user=root&allowPublicKeyRetrieval=true&useSSL=false",
+                    )
+                },
+                "FIREBIRD" to {
+                    Class.forName("org.firebirdsql.jdbc.FBDriver")
+                    DriverManager.getConnection(
+                        "jdbc:firebirdsql://${firebird.host}:${firebird.getMappedPort(3050)}/test.fdb?user=test&password=test",
+                    )
+                },
             )
 
         val dbs =
@@ -131,7 +203,7 @@ abstract class AbstractDbTests {
     @BeforeAll
     fun setup() {
         dbs.forEach { container ->
-            setupDatabase(connections.computeIfAbsent(container.key) { container.value() })
+            setupDatabase(connections.computeIfAbsent(container.key) { container.value() }, container.key)
         }
     }
 
@@ -143,18 +215,37 @@ abstract class AbstractDbTests {
         connections.clear()
     }
 
-    protected open fun setupDatabase(connection: Connection) {
+    protected open fun setupDatabase(
+        connection: Connection,
+        dbKey: String = "",
+    ) {
         val dbFlavour = connection.getDbFlavour()
+        val isStarRocks = dbKey == "STARROCKS"
         connection.createStatement().use { statement ->
+            val createTable =
+                if (isStarRocks) {
+                    """
+                    CREATE TABLE super_heroes_$testId (
+                        id ${convertDbColumnType("UUID", dbFlavour)},
+                        name VARCHAR(100),
+                        email VARCHAR(100),
+                        age ${convertDbColumnType("INT", dbFlavour)}
+                    )
+                    PRIMARY KEY (id)
+                    DISTRIBUTED BY HASH(id) BUCKETS 1
+                    """.trimIndent()
+                } else {
+                    """
+                    CREATE TABLE super_heroes_$testId (
+                        id ${convertDbColumnType("UUID", dbFlavour)} PRIMARY KEY,
+                        name VARCHAR(100),
+                        email VARCHAR(100),
+                        age ${convertDbColumnType("INT", dbFlavour)}
+                    )
+                    """.trimIndent()
+                }
             statement.execute(
-                """
-                CREATE TABLE super_heroes_$testId (
-                    id ${convertDbColumnType("UUID", dbFlavour)} PRIMARY KEY,
-                    name VARCHAR(100),
-                    email VARCHAR(100),
-                    age ${convertDbColumnType("INT", dbFlavour)}
-                )
-                """.trimIndent().also {
+                createTable.also {
                     println("------------ $dbFlavour --------------")
                     println(it)
                 },

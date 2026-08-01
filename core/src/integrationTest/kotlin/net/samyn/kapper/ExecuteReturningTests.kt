@@ -13,8 +13,11 @@ class ExecuteReturningTests : AbstractDbTests() {
     // MySQL and Oracle use different syntax; MSSQL uses OUTPUT.
     private val returningDbs = setOf(DbFlavour.POSTGRESQL, DbFlavour.DUCKDB, DbFlavour.SQLITE)
 
-    override fun setupDatabase(connection: Connection) {
-        super.setupDatabase(connection)
+    override fun setupDatabase(
+        connection: Connection,
+        dbKey: String,
+    ) {
+        super.setupDatabase(connection, dbKey)
     }
 
     @Test
