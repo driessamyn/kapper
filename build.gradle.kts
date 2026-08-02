@@ -9,6 +9,10 @@ repositories {
     mavenCentral()
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 dependencies {
     kover(project(":kapper"))
     kover(project(":kapper-coroutines"))
@@ -28,6 +32,22 @@ subprojects {
 tasks.check {
     dependsOn(":koverHtmlReport")
     dependsOn(":koverXmlReport")
+}
+
+// Resolve every lockable configuration across all projects so that
+// `--write-locks` regenerates each project's lock file in one invocation.
+tasks.register("resolveAndLockAll") {
+    notCompatibleWithConfigurationCache("Filters configurations at execution time")
+    doFirst {
+        require(gradle.startParameter.isWriteDependencyLocks) {
+            "$path must be run from the command line with the `--write-locks` flag"
+        }
+    }
+    doLast {
+        allprojects.forEach { project ->
+            project.configurations.filter { it.isCanBeResolved }.forEach { it.resolve() }
+        }
+    }
 }
 
 // Generate all API documentation for the docs website

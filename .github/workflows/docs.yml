@@ -51,6 +51,13 @@ jobs:
         run: npm install --ignore-scripts
         working-directory: docs
 
+      - name: Verify npm lock file is up to date
+        run: |
+          npm install --ignore-scripts --package-lock-only
+          git diff --exit-code -- package-lock.json
+          git ls-files --others --exclude-standard -- package-lock.json | grep -q . && { echo "Untracked package-lock.json present"; exit 1; } || true
+        working-directory: docs
+
       - name: Build documentation
         run: npm run build
         working-directory: docs
