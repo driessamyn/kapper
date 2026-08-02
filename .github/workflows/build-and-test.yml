@@ -34,6 +34,12 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
+    - name: Verify Gradle dependency lock files are up to date
+      run: |
+        ./gradlew resolveAndLockAll --write-locks
+        git diff --exit-code -- '*.lockfile'
+        git ls-files --others --exclude-standard -- '*.lockfile' | grep -q . && { echo "Untracked lockfile(s) present:"; git ls-files --others --exclude-standard -- '*.lockfile'; exit 1; } || true
+
     - name: Build & Test with Gradle
       run: ./gradlew check
 
