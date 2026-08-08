@@ -64,10 +64,10 @@ hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.3.0
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator-version" }
 glassfish-jakarta = { module = "org.glassfish:jakarta.el", version = "4.0.2" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
-ktorm-core = { module = "org.ktorm:ktorm-core", version = "4.1.1" }
+ktorm-core = { module = "org.ktorm:ktorm-core", version = "4.2.1" }
 ktorm-support-mysql = { module = "org.ktorm:ktorm-support-mysql", version.ref = "ktorm" }
-ktorm-support-postgresql = { module = "org.ktorm:ktorm-support-postgresql", version = "4.1.1" }
-ktorm-support-sqlite = { module = "org.ktorm:ktorm-support-sqlite", version = "4.1.1" }
+ktorm-support-postgresql = { module = "org.ktorm:ktorm-support-postgresql", version = "4.2.1" }
+ktorm-support-sqlite = { module = "org.ktorm:ktorm-support-sqlite", version = "4.2.1" }
 
 # PLUGINS
 ##  This way because buildSrc is not supported for plugins
