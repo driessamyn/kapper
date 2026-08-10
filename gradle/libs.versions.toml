@@ -23,7 +23,7 @@ test-containers = "1.21.4"
 # Example dependencies
 hibernate-version = "7.1.5.Final"
 hibernate-validator-version = "9.1.0.Final"
-hikari = "7.0.2"
+hikari = "7.1.0"
 ktorm = "4.1.1"
 
 [libraries]
