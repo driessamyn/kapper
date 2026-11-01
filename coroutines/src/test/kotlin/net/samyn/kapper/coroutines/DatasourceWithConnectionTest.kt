@@ -5,9 +5,11 @@ import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -16,6 +18,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.sql.Connection
+import java.util.concurrent.Executors
 import javax.sql.DataSource
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.time.Duration.Companion.seconds
@@ -79,6 +82,33 @@ class DatasourceWithConnectionTest {
                 }
             query.join()
             actualDispatcher shouldBe dispatcher
+        }
+
+    @Test
+    fun `acquire and close connection on given dispatcher`() =
+        runTest {
+            val executor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "acquisition-thread") }
+            val dispatcher = executor.asCoroutineDispatcher()
+            try {
+                val connection = mockk<Connection>(relaxed = true)
+                var acquisitionThread: String? = null
+                var closeThread: String? = null
+                every { connection.close() } answers { closeThread = Thread.currentThread().name }
+                val dataSource = mockk<DataSource>(relaxed = true)
+                every { dataSource.connection } answers {
+                    acquisitionThread = Thread.currentThread().name
+                    connection
+                }
+
+                dataSource.withConnection(dispatcher) { it shouldBe connection }
+
+                // both the blocking pool checkout and the close run on the given dispatcher,
+                // not on the caller's thread
+                acquisitionThread shouldBe "acquisition-thread"
+                closeThread shouldBe "acquisition-thread"
+            } finally {
+                executor.shutdown()
+            }
         }
 
     @Test
