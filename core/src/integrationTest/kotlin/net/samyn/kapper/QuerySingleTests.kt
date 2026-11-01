@@ -17,6 +17,9 @@ class QuerySingleTests : AbstractDbTests() {
                 "SELECT TOP 1 * FROM super_heroes_$testId ORDER BY name ASC"
             } else if (DbFlavour.ORACLE == connection.getDbFlavour()) {
                 "SELECT * FROM super_heroes_$testId ORDER BY name ASC FETCH FIRST 1 ROWS ONLY"
+            } else if (DbFlavour.FIREBIRD == connection.getDbFlavour()) {
+                // Firebird limits rows with the ROWS n clause (LIMIT is not supported)
+                "SELECT * FROM super_heroes_$testId ORDER BY name ASC ROWS 1"
             } else {
                 "SELECT * FROM super_heroes_$testId ORDER BY name ASC LIMIT 1"
             }

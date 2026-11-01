@@ -94,6 +94,7 @@ class SQLTypesConverterTest {
                 ),
                 arguments(named("UUID", uuid), statement::setString, uuid.toString(), DbFlavour.MYSQL),
                 arguments(named("UUID", uuid), statement::setBytes, uuid.toBytes(), DbFlavour.ORACLE),
+                arguments(named("UUID", uuid), statement::setString, uuid.toString(), DbFlavour.FIREBIRD),
             )
 
         @JvmStatic

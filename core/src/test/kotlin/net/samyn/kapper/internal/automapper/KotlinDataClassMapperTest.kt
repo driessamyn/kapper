@@ -3,6 +3,7 @@ package net.samyn.kapper.internal.automapper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -10,6 +11,7 @@ import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
 import net.samyn.kapper.internal.AutoConverter
+import net.samyn.kapper.internal.autoConverter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -160,6 +162,162 @@ class KotlinDataClassMapperTest {
     data class SuperHero(val id: UUID, val name: String, val email: String? = null, val age: Int? = null)
 
     data class HeroWithTags(val id: UUID, val name: String, val tags: List<Int>)
+
+    @Test
+    fun `should preserve original list when elements already match`() {
+        val id = UUID.randomUUID()
+        val tags = arrayListOf(1, 2, 3)
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "INTEGER[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", tags),
+            )
+        val mapper = KotlinDataClassMapper(HeroWithTags::class.java, autoTypesConverterMock, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.tags.shouldBeSameInstanceAs(tags)
+    }
+
+    data class HeroWithLongTags(val id: UUID, val name: String, val tags: List<Int>)
+
+    @Test
+    fun `should coerce Long list elements to declared element type`() {
+        val id = UUID.randomUUID()
+        val tags = arrayListOf(1L, 2L, 3L)
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "BIGINT[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", tags),
+            )
+        val mapper = KotlinDataClassMapper(HeroWithLongTags::class.java, autoConverter, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.shouldBe(HeroWithLongTags(id, "Batman", listOf(1, 2, 3)))
+    }
+
+    data class HeroWithMixedNullableTags(val id: UUID, val name: String, val tags: List<Int?>)
+
+    @Test
+    fun `should coerce mixed list with null elements to declared element type`() {
+        val id = UUID.randomUUID()
+        val tags = arrayListOf<Any?>(null, 1, 2L)
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "INTEGER[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", tags),
+            )
+        val mapper = KotlinDataClassMapper(HeroWithMixedNullableTags::class.java, autoConverter, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.shouldBe(HeroWithMixedNullableTags(id, "Batman", listOf(null, 1, 2)))
+    }
+
+    data class HeroWithStarTags(val id: UUID, val name: String, val tags: List<*>)
+
+    @Test
+    fun `should map star-projection list without element coercion`() {
+        val id = UUID.randomUUID()
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "INTEGER[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", listOf(1, 2, 3)),
+            )
+        val mapper = KotlinDataClassMapper(HeroWithStarTags::class.java, autoConverter, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.shouldBe(HeroWithStarTags(id, "Batman", listOf(1, 2, 3)))
+    }
+
+    data class GenericHero<T>(val id: UUID, val name: String, val tags: List<T>)
+
+    @Test
+    fun `should map list with generic element type without coercion`() {
+        val id = UUID.randomUUID()
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "INTEGER[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", listOf(1, 2, 3)),
+            )
+        val mapper = KotlinDataClassMapper(GenericHero::class.java, autoConverter, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.shouldBe(GenericHero(id, "Batman", listOf(1, 2, 3)))
+    }
+
+    @Test
+    fun `should route non-list value for list property through whole-value conversion`() {
+        val id = UUID.randomUUID()
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "INTEGER[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", "not-a-list"),
+            )
+        every { autoTypesConverterMock.convert("not-a-list", List::class.java) } returns emptyList<Int>()
+        val mapper = KotlinDataClassMapper(HeroWithTags::class.java, autoTypesConverterMock, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.tags.shouldBe(emptyList<Int>())
+        verify { autoTypesConverterMock.convert("not-a-list", List::class.java) }
+    }
+
+    data class HeroWithShortTags(val id: UUID, val name: String, val tags: List<Short>)
+
+    @Test
+    fun `should coerce Long list elements to Short`() {
+        val id = UUID.randomUUID()
+        val tags = arrayListOf(1L, 2L, 3L)
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.BIT, "SomeType", DbFlavour.UNKNOWN),
+                "tags" to Field(3, JDBCType.ARRAY, "BIGINT[]", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", id),
+                ColumnValue("name", "Batman"),
+                ColumnValue("tags", tags),
+            )
+        val mapper = KotlinDataClassMapper(HeroWithShortTags::class.java, autoConverter, fieldsConverterMock)
+        val instance = mapper.createInstance(resultSet, fields)
+        instance.shouldBe(HeroWithShortTags(id, "Batman", listOf(1.toShort(), 2.toShort(), 3.toShort())))
+    }
 
     @Test
     fun `should map list property without triggering converter`() {
