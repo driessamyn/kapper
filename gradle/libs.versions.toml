@@ -16,7 +16,7 @@ postgresql-driver = "42.7.13"
 yugabytedb-driver = "42.7.3-yb-4"
 slf4j = "2.0.18"
 duckdb = "1.5.1.0"
-firebird-driver = "5.0.6.java11"
+firebird-driver = "5.0.13.java11"
 sqlite = "3.51.2.0"
 test-containers = "1.21.4"
 
