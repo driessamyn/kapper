@@ -3,6 +3,7 @@ package net.samyn.kapper.internal.converter
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperUnsupportedOperationException
 import net.samyn.kapper.internal.autoConverter
 import org.junit.jupiter.api.Nested
@@ -131,5 +132,30 @@ class AutoConverterTest {
     @Test
     fun `when primitive type use custom converter`() {
         autoConverter.convert(Integer.valueOf(1), Int::class.java) shouldBe 1
+    }
+
+    @Test
+    fun `when registered converter rejects source type fall back to target conversion`() {
+        // convertDouble/convertFloat do not handle Long; the target-aware conversion should.
+        autoConverter.convert(42L, Double::class.java) shouldBe 42.0
+        autoConverter.convert(42L, java.lang.Double::class.java) shouldBe 42.0
+        autoConverter.convert(42L, Float::class.java) shouldBe 42.0f
+        // convertInt does not handle Double; the target-aware conversion should.
+        autoConverter.convert(42.0, Int::class.java) shouldBe 42
+    }
+
+    @Test
+    fun `when registered converter handles source type keep registered behavior`() {
+        autoConverter.convert(42L, Int::class.java) shouldBe 42
+        autoConverter.convert(123F, Long::class.java) shouldBe 123L
+    }
+
+    @Test
+    fun `when range check fails the exception is not swallowed`() {
+        // convertInt rejects out-of-range Longs with KapperParseException; the fallback must
+        // not turn that into a silent wrap-around via convertToPrimitive.
+        shouldThrow<KapperParseException> { autoConverter.convert(Int.MAX_VALUE.toLong() + 1, Int::class.java) }
+        shouldThrow<KapperParseException> { autoConverter.convert(300L, Byte::class.java) }
+        shouldThrow<KapperParseException> { autoConverter.convert(32768L, Short::class.java) }
     }
 }

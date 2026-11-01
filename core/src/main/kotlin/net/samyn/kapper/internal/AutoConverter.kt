@@ -2,6 +2,7 @@
 
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperUnsupportedOperationException
 import java.math.BigDecimal
 import java.time.Instant
@@ -44,31 +45,62 @@ private val converters: Map<Class<*>, (Any) -> Any> =
         String::class.java to ::convertString,
     )
 
-fun convertToPrimitive(wrapper: Any): Any {
-    return when (wrapper.javaClass) {
-        Integer::class.java -> (wrapper as Number).toInt()
-        java.lang.Long::class.java -> (wrapper as Number).toLong()
-        java.lang.Double::class.java -> (wrapper as Number).toDouble()
-        java.lang.Float::class.java -> (wrapper as Number).toFloat()
-        java.lang.Boolean::class.java -> (wrapper as Boolean)
-        java.lang.Byte::class.java -> (wrapper as Number).toByte()
-        java.lang.Short::class.java -> (wrapper as Number).toShort()
-        Character::class.java -> (wrapper as Char)
-        else -> throw KapperUnsupportedOperationException(
-            "Cannot auto-convert from ${wrapper.javaClass} to primitive type",
+@JvmOverloads
+fun convertToPrimitive(
+    wrapper: Any,
+    target: Class<*> = wrapper.javaClass,
+): Any {
+    fun unsupported(): Nothing =
+        throw KapperUnsupportedOperationException(
+            "Cannot auto-convert from ${wrapper.javaClass} to ${target.canonicalName}",
         )
+    val number = wrapper as? Number
+    return when (target) {
+        Int::class.java, Integer::class.java -> number?.toInt() ?: unsupported()
+        Long::class.java, java.lang.Long::class.java -> number?.toLong() ?: unsupported()
+        Double::class.java, java.lang.Double::class.java -> number?.toDouble() ?: unsupported()
+        Float::class.java, java.lang.Float::class.java -> number?.toFloat() ?: unsupported()
+        Byte::class.java, java.lang.Byte::class.java -> number?.toByteChecked() ?: unsupported()
+        Short::class.java, java.lang.Short::class.java -> number?.toShortChecked() ?: unsupported()
+        Boolean::class.java, java.lang.Boolean::class.java -> wrapper as? Boolean ?: unsupported()
+        Character::class.java, Char::class.java -> wrapper as? Char ?: unsupported()
+        else -> unsupported()
     }
+}
+
+/**
+ * Narrows [this] to a [Byte], rejecting values that would silently wrap around, mirroring the
+ * range check used by [convertInt] for Long sources.
+ */
+private fun Number.toByteChecked(): Byte {
+    val converted = toByte()
+    if (converted.toLong() != toLong()) {
+        throw KapperParseException("Cannot parse $this to Byte (out of range)")
+    }
+    return converted
+}
+
+/**
+ * Narrows [this] to a [Short], rejecting values that would silently wrap around, mirroring the
+ * range check used by [convertInt] for Long sources.
+ */
+private fun Number.toShortChecked(): Short {
+    val converted = toShort()
+    if (converted.toLong() != toLong()) {
+        throw KapperParseException("Cannot parse $this to Short (out of range)")
+    }
+    return converted
 }
 
 val autoConverter =
     AutoConverter { value, target ->
-        if (!converters.containsKey(target) && target.isPrimitive && !value.javaClass.isPrimitive) {
-            // convert from java type to primitive type here
-            return@AutoConverter convertToPrimitive(value)
+        converters[target]?.let { converter ->
+            try {
+                return@AutoConverter converter.invoke(value)
+            } catch (_: KapperUnsupportedOperationException) {
+                // The registered converter does not handle this source type; fall back to the
+                // target-aware conversion below (e.g. a Long element into a Double target).
+            }
         }
-        // Kover considers this not covered, which I think is a bug.
-        //  https://github.com/Kotlin/kotlinx-kover/issues/729
-        converters[target]?.invoke(value) ?: throw KapperUnsupportedOperationException(
-            "Cannot auto-convert from ${value.javaClass} to ${target.canonicalName}",
-        )
+        convertToPrimitive(value, target)
     }

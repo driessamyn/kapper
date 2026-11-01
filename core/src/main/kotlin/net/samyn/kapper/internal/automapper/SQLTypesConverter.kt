@@ -267,6 +267,9 @@ fun PreparedStatement.setParameter(
             when (dbFlavour) {
                 DbFlavour.MYSQL -> setString(index, value.toString())
                 DbFlavour.ORACLE -> setBytes(index, value.toBytes())
+                // Firebird stores UUIDs as CHAR(36), and its driver does not
+                // convert a java.util.UUID to CHAR, so bind it as a string.
+                DbFlavour.FIREBIRD -> setString(index, value.toString())
                 else -> setObject(index, value)
             }
         is Instant -> setTimestamp(index, Timestamp.from(value))

@@ -36,6 +36,14 @@ abstract class AbstractDbTests {
     @Parameter
     protected lateinit var connection: Connection
 
+    /**
+     * True when the current connection is StarRocks. StarRocks reports as [DbFlavour.MYSQL]
+     * and its JDBC product name is "MySQL", so it is detected by matching the injected
+     * [connection] against the [connections] map key (which holds the setup dbKey).
+     */
+    protected val isStarRocks: Boolean
+        get() = connections.entries.firstOrNull { it.value === connection }?.key == "STARROCKS"
+
     companion object {
         init {
             Class.forName("org.sqlite.JDBC")
@@ -233,6 +241,7 @@ abstract class AbstractDbTests {
                     )
                     PRIMARY KEY (id)
                     DISTRIBUTED BY HASH(id) BUCKETS 1
+                    PROPERTIES ("replication_num" = "1")
                     """.trimIndent()
                 } else {
                     """
@@ -244,21 +253,66 @@ abstract class AbstractDbTests {
                     )
                     """.trimIndent()
                 }
-            statement.execute(
-                createTable.also {
-                    println("------------ $dbFlavour --------------")
-                    println(it)
-                },
-            )
-            statement.execute(
-                """
-                INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
-                    (${convertUUIDString(superman.id, dbFlavour)}, '${superman.name}', '${superman.email}', ${superman.age}),
-                    (${convertUUIDString(batman.id, dbFlavour)}, '${batman.name}', '${batman.email}', ${batman.age}),
-                    (${convertUUIDString(spiderMan.id, dbFlavour)}, '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age}),
-                    (${convertUUIDString(nullMan.id, dbFlavour)}, '${nullMan.name}', NULL, NULL);
-                """,
-            )
+            // StarRocks' single-node test container intermittently reports "backends without
+            // enough disk space" when creating the first table, even though disk is available.
+            // Retry a few times to ride out this flakiness.
+            if (isStarRocks) {
+                var attempts = 0
+                while (true) {
+                    try {
+                        statement.execute(
+                            createTable.also {
+                                println("------------ $dbFlavour --------------")
+                                println(it)
+                            },
+                        )
+                        break
+                    } catch (e: java.sql.SQLException) {
+                        attempts++
+                        if (attempts >= 5) throw e
+                        Thread.sleep(2000)
+                    }
+                }
+            } else {
+                statement.execute(
+                    createTable.also {
+                        println("------------ $dbFlavour --------------")
+                        println(it)
+                    },
+                )
+            }
+            val heroes =
+                listOf(
+                    Triple(superman.id, superman.name, superman.email) to superman.age,
+                    Triple(batman.id, batman.name, batman.email) to batman.age,
+                    Triple(spiderMan.id, spiderMan.name, spiderMan.email) to spiderMan.age,
+                    Triple(nullMan.id, nullMan.name, nullMan.email) to nullMan.age,
+                )
+            // Firebird (like Oracle) does not support the multi-row INSERT ... VALUES (...), (...) syntax,
+            // so issue one INSERT per row for both.
+            if (dbFlavour == DbFlavour.FIREBIRD) {
+                heroes.forEach { (hero, age) ->
+                    val (id, name, email) = hero
+                    val ageSql = age?.toString() ?: "NULL"
+                    val emailSql = email?.let { "'$it'" } ?: "NULL"
+                    statement.execute(
+                        """
+                        INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
+                            (${convertUUIDString(id, dbFlavour)}, '$name', $emailSql, $ageSql)
+                        """,
+                    )
+                }
+            } else {
+                statement.execute(
+                    """
+                    INSERT INTO super_heroes_$testId (id, name, email, age) VALUES
+                        (${convertUUIDString(superman.id, dbFlavour)}, '${superman.name}', '${superman.email}', ${superman.age}),
+                        (${convertUUIDString(batman.id, dbFlavour)}, '${batman.name}', '${batman.email}', ${batman.age}),
+                        (${convertUUIDString(spiderMan.id, dbFlavour)}, '${spiderMan.name}', '${spiderMan.email}', ${spiderMan.age}),
+                        (${convertUUIDString(nullMan.id, dbFlavour)}, '${nullMan.name}', NULL, NULL);
+                    """,
+                )
+            }
         }
     }
 
