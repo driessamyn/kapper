@@ -21,8 +21,8 @@ The `queryAsFlow` function takes the same arguments as the _regular_, blocking, 
 
 ```kotlin
  val query =
-    datasource.withConnection {
-        async {
+    async {
+        datasource.withConnection {
             // SuperHero is a plain Kotlin dataclass
             it.queryAsFlow<SuperHero>("SELECT * FROM super_heroes")
                 .map { it.name }
