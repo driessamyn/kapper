@@ -4,7 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    rebase-strategy: "disabled"
+    rebase-strategy: "auto"
+    # Wait 5 days after a release before opening a version update, so that
+    # regressions surface upstream first. Security updates ignore cooldown.
+    cooldown:
+      default-days: 5
     labels:
       - "dependencies"
       - "automerge"
@@ -15,7 +19,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    rebase-strategy: "disabled"
+    rebase-strategy: "auto"
+    # Wait 5 days after a release before opening a version update, so that
+    # regressions surface upstream first. Security updates ignore cooldown.
+    cooldown:
+      default-days: 5
+    # CodeQL's init and analyze steps must run the same version, so they have
+    # to be bumped together in a single pull request.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     labels:
       - "dependencies"
       - "automerge"
