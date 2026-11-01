@@ -1,0 +1,89 @@
+// Representative binary-compatibility-validator .api dump for Kapper's public surface.
+// Hand-authored from the source at HEAD db83912 (no dump exists yet; PKG-6 is not done).
+// Used to de-risk the .api-dump -> JSON parser. NOT captured from a real Gradle run.
+
+public abstract interface class net/samyn/kapper/Kapper {
+	public static final field Companion Lnet/samyn/kapper/Kapper$Companion;
+	public fun <init> ()V
+	public abstract fun execute (Ljava/sql/Connection;Ljava/lang/String;Ljava/util/Map;)I
+	public abstract fun <T : Ljava/lang/Object;> execute (Ljava/lang/Class;Ljava/sql/Connection;Ljava/lang/String;Ljava/lang/Object;Ljava/util/Map;)I
+	public abstract fun <T : Ljava/lang/Object;> executeAll (Ljava/lang/Class;Ljava/sql/Connection;Ljava/lang/String;Ljava/lang/Iterable;Ljava/util/Map;)[I
+	public abstract fun <T : Ljava/lang/Object;> executeReturning (Ljava/lang/Class;Ljava/sql/Connection;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;
+	public abstract fun <R : Ljava/lang/Object;, A : Ljava/lang/Object;> executeReturning (Ljava/lang/Class;Ljava/sql/Connection;Ljava/lang/String;Ljava/lang/Object;Ljava/util/Map;)Ljava/util/List;
+	public abstract fun <T : Ljava/lang/Object;> query (Ljava/lang/Class;Ljava/sql/Connection;Ljava/lang/String;Ljava/util/Map;)Ljava/util/List;
+	public abstract fun <T : Ljava/lang/Object;> querySingle (Ljava/lang/Class;Ljava/sql/Connection;Ljava/lang/String;Ljava/util/Map;)Ljava/lang/Object;
+}
+
+public final class net/samyn/kapper/Kapper$Companion {
+	public final fun createInstance ()Lnet/samyn/kapper/Kapper;
+	public final fun getInstance ()Lnet/samyn/kapper/Kapper;
+	public final fun getMapperRegistry ()Lnet/samyn/kapper/MapperRegistry;
+}
+
+public final class net/samyn/kapper/KapperKotlinQueryFunKt {
+	public static final fun query (Ljava/sql/Connection;Ljava/lang/String;[Lkotlin/Pair;)Ljava/util/List;
+	public static final fun query (Ljava/sql/Connection;Ljava/lang/String;Lkotlin/jvm/functions/Function2;[Lkotlin/Pair;)Ljava/util/List;
+	public static final fun query (Ljava/sql/Connection;Lkotlin/reflect/KClass;Ljava/lang/String;[Lkotlin/Pair;)Ljava/util/List;
+}
+
+public final class net/samyn/kapper/KapperKotlinQuerySingleFunKt {
+	public static final fun querySingle (Ljava/sql/Connection;Ljava/lang/String;[Lkotlin/Pair;)Ljava/lang/Object;
+	public static final fun querySingle (Ljava/sql/Connection;Lkotlin/reflect/KClass;Ljava/lang/String;[Lkotlin/Pair;)Ljava/lang/Object;
+}
+
+public final class net/samyn/kapper/TransactionFunKt {
+	public static final fun withTransaction (Ljava/sql/Connection;Lkotlin/jvm/functions/Function1;)V
+	public static final fun withTransaction (Ljavax/sql/DataSource;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class net/samyn/kapper/MapperRegistry {
+	public fun <init> ()V
+	public final fun get (Ljava/lang/Class;)Lnet/samyn/kapper/Mapper;
+	public final fun register (Ljava/lang/Class;Lnet/samyn/kapper/Mapper;)V
+	public final fun registerIfAbsent (Ljava/lang/Class;Lnet/samyn/kapper/Mapper;)V
+}
+
+public abstract interface class net/samyn/kapper/Mapper {
+	public abstract fun createInstance (Ljava/sql/ResultSet;Ljava/util/Map;)Ljava/lang/Object;
+}
+
+public final class net/samyn/kapper/Field {
+	public fun <init> (ILjava/sql/JDBCType;Ljava/lang/String;Lnet/samyn/kapper/DbFlavour;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/sql/JDBCType;
+	public final fun getColumnIndex ()I
+	public final fun getDbFlavour ()Lnet/samyn/kapper/DbFlavour;
+	public final fun getType ()Ljava/sql/JDBCType;
+	public final fun getTypeName ()Ljava/lang/String;
+}
+
+public final class net/samyn/kapper/DbFlavour : java/lang/Enum {
+	public static final field DUCKDB Lnet/samyn/kapper/DbFlavour;
+	public static final field FIREBIRD Lnet/samyn/kapper/DbFlavour;
+	public static final field MSSQLSERVER Lnet/samyn/kapper/DbFlavour;
+	public static final field MYSQL Lnet/samyn/kapper/DbFlavour;
+	public static final field ORACLE Lnet/samyn/kapper/DbFlavour;
+	public static final field POSTGRESQL Lnet/samyn/kapper/DbFlavour;
+	public static final field SQLITE Lnet/samyn/kapper/DbFlavour;
+	public static final field UNKNOWN Lnet/samyn/kapper/DbFlavour;
+	public static fun valueOf (Ljava/lang/String;)Lnet/samyn/kapper/DbFlavour;
+	public static fun values ()[Lnet/samyn/kapper/DbFlavour;
+}
+
+public final class net/samyn/kapper/KapperMappingException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class net/samyn/kapper/KapperParseException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class net/samyn/kapper/coroutines/DatasourceWithConnectionKt {
+	public static final fun withConnection (Ljavax/sql/DataSource;Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class net/samyn/kapper/coroutines/KapperKotlinFlowQueryFunKt {
+	public static final fun queryAsFlow (Ljava/sql/Connection;Ljava/lang/String;[Lkotlin/Pair;)Lkotlinx/coroutines/flow/Flow;
+}
