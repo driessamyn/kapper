@@ -15,6 +15,8 @@ This is the philosophy behind Kapper...</p>
 
 Kapper is a lightweight, Dapper-inspired ORM (Object-Relational Mapping) library written in Kotlin, targeting the JVM ecosystem. It embraces SQL rather than abstracting it away, providing a simple, intuitive API for executing queries and mapping results.
 
+Kapper is built for the era when most SQL is written by an agent — and to be delightful for humans and agents alike. When the SQL is already written, a heavyweight framework like Hibernate or Spring Data adds complexity, not value. Kapper keeps SQL front and centre, hides nothing, and tells you how to fix it when something goes wrong.
+
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
@@ -55,7 +57,7 @@ Instead of adding another abstraction layer, Kapper embraces three core principl
 - **📊 Bulk Operations**: Efficient batch inserts, updates, and deletes with `executeAll`
 - **↩️ DML with Results**: Execute DML statements that return records with `executeReturning` (where supported by the database)
 - **🗄️ Database Support**: PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server, DuckDB, and many others
-- **📏 Minimal Dependencies**: Lightweight library with zero external dependencies
+- **📏 Minimal Dependencies**: No framework — just Kotlin's stdlib and reflect, plus SLF4J for logging
 - **🔌 JDBC Extension**: Extends `java.sql.Connection` - works alongside existing JDBC code
 
 [📖 Explore all features in detail](https://driessamyn.github.io/kapper/guide/)
@@ -89,7 +91,7 @@ Kapper consistently outperforms other ORMs while maintaining the simplicity and 
 
 Discover everything Kapper can do for your project! Visit our comprehensive documentation site:
 
-**📖 [kapper.samyn.net](https://driessamyn.github.io/kapper)**
+**📖 [driessamyn.github.io/kapper](https://driessamyn.github.io/kapper)**
 
 ### What you'll find:
 
