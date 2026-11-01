@@ -24,6 +24,24 @@ publishing {
             from(components["kotlin"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["dokkaJavadocJar"])
+
+            // The deployer applies its `projectInfo` once per deploy spec (local, Central Portal,
+            // GitHub), so declaring the licence and developer there duplicates them in the POM.
+            // Declare them on the publication instead, which is configured exactly once.
+            pom {
+                licenses {
+                    license {
+                        name.set("Apache-2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        name.set(info.ghUser)
+                        email.set("dries@samyn.net")
+                    }
+                }
+            }
         }
     }
 }
@@ -42,8 +60,6 @@ deployer {
         scm {
             fromGithub(info.ghUser, info.ghProject)
         }
-        license(apache2)
-        developer(info.ghUser, "dries@samyn.net")
     }
     content {
         component {

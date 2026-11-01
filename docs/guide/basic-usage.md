@@ -193,7 +193,32 @@ try {
 }
 ```
 
+## Resource Ownership and Threading
+
+Kapper is a thin layer over JDBC, so it follows JDBC's ownership rules rather than hiding them.
+
+### Who closes what
+
+- **The connection is yours.** Kapper never closes a `Connection` you pass to `query()`, `querySingle()`, `execute()`, `executeAll()`, `executeReturning()` or `withTransaction()`. Close it yourself, ideally with `use`:
+
+  ```kotlin
+  dataSource.connection.use { connection ->
+      val users = connection.query<User>("SELECT * FROM users")
+  }
+  ```
+
+- **Kapper closes the statements and result sets it creates.** Every `query()`, `querySingle()`, `execute()`, `executeAll()` and `executeReturning()` call prepares its own statement, consumes the result set and closes both before returning. You never need to close them yourself.
+
+- **The `DataSource` helpers own the connection they create.** `DataSource.withTransaction { }` opens a connection and closes it when the block finishes.
+
+When you supply a custom mapper lambda, the `ResultSet` it receives is only valid for the duration of the call. Do not retain it or use it after the mapper returns.
+
+### Threading
+
+A JDBC `Connection` is not thread-safe. Do not share one connection across threads, and do not run concurrent queries on the same connection. Give each thread its own connection — a connection pool such as HikariCP makes this cheap.
+
 ## Next Steps
 
 - Explore [Transactions](./transactions.md) for multi-operation consistency
 - See [Database Support](./database-support.md) for database-specific features
+- Read [Coroutines Support](./coroutines.md) for the coroutine threading model

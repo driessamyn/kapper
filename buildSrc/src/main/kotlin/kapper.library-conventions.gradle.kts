@@ -60,12 +60,17 @@ sourceSets {
     }
 }
 
+// Derive a stable JPMS module name from the Gradle project name, e.g.
+// `kapper` -> `net.samyn.kapper`, `kapper-coroutines` -> `net.samyn.kapper.coroutines`.
+val automaticModuleName = "net.samyn." + project.name.replace('-', '.')
+
 tasks.jar {
     manifest {
         attributes(
             mapOf(
                 "Implementation-Title" to project.name,
                 "Implementation-Version" to project.version,
+                "Automatic-Module-Name" to automaticModuleName,
             ),
         )
     }

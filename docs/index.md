@@ -30,15 +30,20 @@ features:
     title: Minimal Abstraction
     details: Extension functions on java.sql.Connection. Works alongside existing JDBC code without intrusion or lock-in.
   - icon: 📦
-    title: Zero Dependencies
-    details: Lightweight with minimal external dependencies. No heavyweight framework overhead or complex configuration.
+    title: Minimal Dependencies
+    details: No framework — just Kotlin's stdlib and reflect, plus SLF4J for logging. No heavyweight framework overhead or complex configuration.
   - icon: 🚀
     title: Modern Kotlin
     details: Idiomatic Kotlin with coroutines support, data class mapping, and Java record compatibility.
   - icon: 🗄️
     title: Database Agnostic
     details: Support for PostgreSQL, MySQL, SQLite, Oracle, MS SQL Server and probably many others.
+  - icon: 🤝
+    title: Delightful for humans and agents
+    details: SQL-first and free of magic, with errors that explain themselves. An agent gets it right first time as often as you do.
 ---
+
+Kapper is a lightweight, Dapper-inspired ORM for Kotlin and the JVM. It embraces SQL rather than abstracting it away, and is built for the era when most SQL is written by an agent — delightful for humans and agents alike. When the SQL is already written, a heavyweight framework adds complexity, not value.
 
 ## Quick Example
 
