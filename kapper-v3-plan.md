@@ -195,7 +195,30 @@ churn + migration + maintenance + review risk), then bucketed by ratio.
 
 **0.17 AGENT-6 — snippets pipeline.** Build the module, manifest, extractor and CI drift gate; land the snippets that compile against the current API. The post-v3 snippets (scalar, enum, `Row`, streaming, transaction-with-value) are deferred to Wave 1, because they depend on Wave 1 correctness. See the retrieval-chain breakdown and the spike.
 
-**0.18 STRAT-3 — positioning.** **Risk:** None.
+**0.18 STRAT-3 — positioning.** Keep the existing identity and **add** the era framing; do not
+replace the framing. The argument is that the abstraction layer's value drops as the SQL becomes
+free: heavyweight frameworks like Hibernate and Spring Data exist to spare you from writing SQL, so
+when the SQL is already written they add complexity, not value.
+
+Wording (README intro, after the existing identity sentence):
+
+> Kapper is built for the era when most SQL is written by an agent — and to be delightful for humans
+> and agents alike. When the SQL is already written, a heavyweight framework like Hibernate or Spring
+> Data adds complexity, not value. Kapper keeps SQL front and centre, hides nothing, and tells you how
+> to fix it when something goes wrong.
+
+Decisions taken:
+
+- **Keep the original identity sentence verbatim** ("lightweight, Dapper-inspired ORM … embraces SQL
+  rather than abstracting it away"). The era is a second dimension, not a pivot.
+- **Use "agent-written SQL"** consistently (not "model-written").
+- **Name Hibernate and Spring Data** — the contrast is the point, and vagueness weakens it.
+- **Keep the hero text** as the original ("A Fresh Look at ORMs for Kotlin and the JVM"). The era
+  belongs in the intro as the argument, not the headline.
+- **"Delightful for humans and agents alike"** is the quality bar, and it is what Wave 0
+  (self-describing errors) and the retrieval chain (`llms.txt`, snippets, skill) exist to earn.
+
+**Risk:** None.
 
 ### Wave 1 — Quick wins (additive API, small diff, no break)
 
