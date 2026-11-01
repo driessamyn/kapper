@@ -2,6 +2,7 @@ package net.samyn.kapper
 
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.getDbFlavour
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.sql.Connection
@@ -20,40 +21,82 @@ class TypesTest : AbstractDbTests() {
         dbKey: String,
     ) {
         val dbFlavour = connection.getDbFlavour()
+        // StarRocks reports as MYSQL (and its JDBC product name is "MySQL"), but it has
+        // different type support: no BLOB/VARBINARY/DOUBLE PRECISION/FLOAT(n)/TIME.
+        // Use the dbKey to detect it reliably.
+        val starRocks = dbKey == "STARROCKS"
+        val clobType = if (starRocks) "STRING" else convertDbColumnType("CLOB", dbFlavour)
+        val varbinaryType = if (starRocks) "BINARY(128)" else convertDbColumnType("VARBINARY", dbFlavour, "(128)")
+        val blobType = if (starRocks) "STRING" else convertDbColumnType("BLOB", dbFlavour)
+        val floatType = if (starRocks) "FLOAT" else convertDbColumnType("FLOAT", dbFlavour, "(8)")
+        val doubleType = if (starRocks) "DOUBLE" else convertDbColumnType("DOUBLE PRECISION", dbFlavour)
+        val timeType = if (starRocks) "DATETIME" else convertDbColumnType("TIME", dbFlavour)
+        val timestampType = if (starRocks) "DATETIME" else convertDbColumnType("TIMESTAMP", dbFlavour)
+        // StarRocks requires a distribution clause and a replication_num that fits the
+        // (single-node) test container.
+        val tableTail =
+            if (starRocks) {
+                """
+                )
+                DISTRIBUTED BY HASH(t_uuid) BUCKETS 1
+                PROPERTIES ("replication_num" = "1")
+                """.trimIndent()
+            } else {
+                ")"
+            }
         connection.createStatement().use { statement ->
-            statement.execute(
+            val ddl =
                 """
                 CREATE TABLE types_test_$testId (
                     t_uuid ${convertDbColumnType("UUID", dbFlavour)},
                     t_char CHAR,
                     t_varchar ${convertDbColumnType("VARCHAR", dbFlavour, "(120)")},
-                    t_clob ${convertDbColumnType("CLOB", dbFlavour)},
+                    t_clob $clobType,
                     t_binary ${convertDbColumnType("BINARY", dbFlavour, "(16)")},
-                    t_varbinary ${convertDbColumnType("VARBINARY", dbFlavour, "(128)")},
-                    t_large_binary ${convertDbColumnType("BLOB", dbFlavour)},
+                    t_varbinary $varbinaryType,
+                    t_large_binary $blobType,
                     t_numeric NUMERIC(12,6),
                     t_decimal DECIMAL(12,6),
                     t_smallint ${convertDbColumnType("SMALLINT", dbFlavour)},
                     t_int ${convertDbColumnType("INT", dbFlavour)},
                     t_bigint ${convertDbColumnType("BIGINT", dbFlavour)},
-                    t_float ${convertDbColumnType("FLOAT", dbFlavour, "(8)")},
+                    t_float $floatType,
                     t_real ${convertDbColumnType("REAL", dbFlavour)},
-                    t_double ${convertDbColumnType("DOUBLE PRECISION", dbFlavour)},
+                    t_double $doubleType,
                     t_date DATE,
                     t_local_date DATE,
-                    t_local_time ${convertDbColumnType("TIME", dbFlavour)},
-                    t_timestamp ${convertDbColumnType("TIMESTAMP", dbFlavour)},
+                    t_local_time $timeType,
+                    t_timestamp $timestampType,
                     t_boolean ${convertDbColumnType("BOOLEAN", dbFlavour)}
-                )
+                $tableTail
                 """.trimIndent().also {
                     println(it)
-                },
-            )
+                }
+            // StarRocks' single-node container intermittently reports "backends without enough
+            // disk space" on table creation; retry a few times to ride out the flakiness.
+            if (starRocks) {
+                var attempts = 0
+                while (true) {
+                    try {
+                        statement.execute(ddl)
+                        break
+                    } catch (e: java.sql.SQLException) {
+                        attempts++
+                        if (attempts >= 5) throw e
+                        Thread.sleep(2000)
+                    }
+                }
+            } else {
+                statement.execute(ddl)
+            }
         }
     }
 
     @Test
     fun `can insert and retreive the same types`() {
+        // StarRocks represents binary columns as strings (no ByteArray round-trip), so the
+        // full type round-trip cannot be exercised there.
+        assumeTrue(!isStarRocks, "StarRocks cannot round-trip binary types")
         val testData = createTestObject()
         val result =
             connection.execute(

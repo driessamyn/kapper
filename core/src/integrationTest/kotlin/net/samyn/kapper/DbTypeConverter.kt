@@ -9,6 +9,7 @@ private val specialTypes =
                 DbFlavour.MYSQL to "VARCHAR(36)",
                 DbFlavour.MSSQLSERVER to "UNIQUEIDENTIFIER",
                 DbFlavour.ORACLE to "RAW(16)",
+                DbFlavour.FIREBIRD to "CHAR(36)",
             ),
         "CLOB" to
             mapOf(
@@ -16,33 +17,38 @@ private val specialTypes =
                 DbFlavour.POSTGRESQL to "TEXT",
                 DbFlavour.MSSQLSERVER to "NVARCHAR(MAX)",
                 DbFlavour.DUCKDB to "VARCHAR",
+                DbFlavour.FIREBIRD to "BLOB SUB_TYPE TEXT",
             ),
         "BINARY" to
             mapOf(
                 DbFlavour.POSTGRESQL to "BYTEA",
                 DbFlavour.ORACLE to "RAW(128)",
                 DbFlavour.DUCKDB to "BLOB",
+                DbFlavour.FIREBIRD to "CHAR(16) CHARACTER SET OCTETS",
             ),
         "VARBINARY" to
             mapOf(
                 DbFlavour.POSTGRESQL to "BYTEA",
                 DbFlavour.ORACLE to "RAW(128)",
                 DbFlavour.DUCKDB to "BLOB",
+                DbFlavour.FIREBIRD to "VARCHAR(128) CHARACTER SET OCTETS",
             ),
         "BLOB" to
             mapOf(
                 DbFlavour.POSTGRESQL to "BYTEA",
                 DbFlavour.MSSQLSERVER to "VARBINARY(MAX)",
-            ),
-        "FLOAT" to
-            mapOf(
-                DbFlavour.POSTGRESQL to "NUMERIC",
-                DbFlavour.ORACLE to "FLOAT",
+                DbFlavour.FIREBIRD to "BLOB",
             ),
         "REAL" to
             mapOf(
                 DbFlavour.MYSQL to "FLOAT",
                 DbFlavour.ORACLE to "BINARY_FLOAT",
+                DbFlavour.FIREBIRD to "FLOAT",
+            ),
+        "FLOAT" to
+            mapOf(
+                DbFlavour.POSTGRESQL to "NUMERIC",
+                DbFlavour.ORACLE to "FLOAT",
             ),
         "BOOLEAN" to
             mapOf(
