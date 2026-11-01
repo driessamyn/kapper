@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import net.samyn.kapper.internal.getDbFlavour
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
 import java.util.UUID
@@ -148,6 +149,9 @@ class ExecuteDtoTests : AbstractDbTests() {
 
     @Test
     fun `with TX and DTO rolls back`() {
+        // StarRocks is a unique-key OLAP store: re-inserting an existing key upserts
+        // instead of throwing, so the constraint-violation rollback cannot be exercised.
+        assumeTrue(!isStarRocks, "StarRocks does not throw on duplicate key insert")
         val id = UUID.randomUUID()
         shouldThrow<SQLException> {
             connection.withTransaction {
