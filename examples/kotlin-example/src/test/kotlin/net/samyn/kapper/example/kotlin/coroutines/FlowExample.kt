@@ -35,8 +35,8 @@ class FlowExample : DbBase() {
         insertHeroes(10)
         runBlocking {
             val query =
-                datasource.withConnection {
-                    async {
+                async {
+                    datasource.withConnection {
                         it
                             .queryAsFlow<SuperHero>("SELECT * FROM super_heroes")
                             .map { it.name }
