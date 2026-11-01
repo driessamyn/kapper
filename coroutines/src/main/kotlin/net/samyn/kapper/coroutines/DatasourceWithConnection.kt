@@ -31,11 +31,18 @@ suspend inline fun <T> DataSource.withConnection(
     context: CoroutineContext,
     crossinline block: suspend (Connection) -> T,
 ): T {
-    val connection = withContext(context) { this@withConnection.connection }
+    var connection: Connection? = null
     return try {
-        withContext(context) { block(connection) }
+        // Acquire inside the same scope as the block: if the caller is cancelled as this
+        // `withContext` resumes, the connection is already recorded and the `finally` still
+        // closes it. Acquiring in a separate `withContext` would let the result be discarded.
+        withContext(context) {
+            val conn = this@withConnection.connection
+            connection = conn
+            block(conn)
+        }
     } finally {
         // Close on the dispatcher too, and even if the block was cancelled.
-        withContext(context + NonCancellable) { connection.close() }
+        connection?.let { withContext(context + NonCancellable) { it.close() } }
     }
 }

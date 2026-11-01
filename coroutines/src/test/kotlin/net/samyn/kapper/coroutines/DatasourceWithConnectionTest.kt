@@ -8,7 +8,10 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -21,6 +24,7 @@ import java.sql.Connection
 import java.util.concurrent.Executors
 import javax.sql.DataSource
 import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 class DatasourceWithConnectionTest {
@@ -131,6 +135,47 @@ class DatasourceWithConnectionTest {
             query.join()
             actualDispatcher shouldBe Dispatchers.IO
         }
+
+    @Test
+    fun `close connection when cancelled between acquisition and resume`() {
+        val connection = mockk<Connection>(relaxed = true)
+        var closed = false
+        every { connection.close() } answers { closed = true }
+        var acquired = false
+        val dataSource = mockk<DataSource>(relaxed = true)
+        every { dataSource.connection } answers {
+            acquired = true
+            connection
+        }
+
+        val ioExecutor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "io-thread") }
+        val ioDispatcher = ioExecutor.asCoroutineDispatcher()
+        try {
+            // Cancels the job at the moment the acquisition's `withContext` tries to resume the
+            // caller: the prompt-cancellation window in which the acquired connection would
+            // otherwise be discarded without ever being closed.
+            val callerDispatcher =
+                object : CoroutineDispatcher() {
+                    override fun dispatch(
+                        context: CoroutineContext,
+                        block: Runnable,
+                    ) {
+                        if (acquired) context[Job]?.cancel()
+                        block.run()
+                    }
+                }
+
+            val job =
+                CoroutineScope(callerDispatcher).launch {
+                    dataSource.withConnection(ioDispatcher) { }
+                }
+            runBlocking { job.join() }
+
+            closed shouldBe true
+        } finally {
+            ioExecutor.shutdownNow()
+        }
+    }
 
     @Test
     fun `can continue while block executes`() =
