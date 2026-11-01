@@ -37,6 +37,8 @@ tasks.check {
 // Resolve every lockable configuration across all projects so that
 // `--write-locks` regenerates each project's lock file in one invocation.
 tasks.register("resolveAndLockAll") {
+    group = "build"
+    description = "Resolve every lockable configuration across all projects so that `--write-locks` regenerates each project's lock file in one invocation"
     notCompatibleWithConfigurationCache("Filters configurations at execution time")
     doFirst {
         require(gradle.startParameter.isWriteDependencyLocks) {
