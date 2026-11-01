@@ -23,8 +23,14 @@ Read these first, in order:
 Do **not** re-plan. The plan is settled. If you believe an item is wrong, implement the rest and flag
 it in your summary.
 
-**Branch:** you are on `v3-planning`, the v3 planning branch. All work for this handover is reported
-back as pull requests **targeting `v3-planning`** (see §10). Do not target or merge to `main`.
+**Where these files live.** This brief and the planning docs it references (`kapper-v3-plan.md`,
+`kapper-v3-retrieval-chain.md`, `docs/scripts/SPIKE-api-manifest.md`) live on the `v3-planning`
+branch. If you are working in a worktree branched off `main`, read them from the `v3-planning`
+worktree — the absolute path is in your task prompt. `README.md` and `docs/guide/philosophy.md` exist
+in every worktree.
+
+**Branch.** Report your work back as pull requests **targeting `v3-planning`** (see §10). Do not
+target or merge to `main`.
 
 ## 2. The philosophy (hard constraint)
 
