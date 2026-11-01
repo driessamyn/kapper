@@ -3,7 +3,7 @@ package net.samyn.kapper.coroutines
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import net.samyn.kapper.DbFlavour
+import net.samyn.kapper.Args
 import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperQueryException
@@ -83,36 +83,38 @@ inline fun <reified T : Any> Connection.queryAsFlow(
     fetchSize: Int = 1000,
 ): Flow<T> {
     require(sql.isNotBlank()) { "SQL query cannot be empty or blank" }
-    this.executeQuery(Query(sql), args.toMap(), fetchSize).let { rs ->
-        return queryFlow(rs, mapper, sql, this.getDbFlavour())
-    }
+    return queryFlow(this, Query(sql), args.toMap(), fetchSize, mapper, sql)
 }
 
 // extracted to get around to bug in Kover:
 //  https://github.com/Kotlin/kotlinx-kover/issues/734
 //  refactor when issue fixed.
 fun <T : Any> queryFlow(
-    rs: ResultSet,
+    connection: Connection,
+    query: Query,
+    args: Args,
+    fetchSize: Int,
     mapper: (ResultSet, Map<String, Field>) -> T,
     sql: String,
-    dbFlavour: DbFlavour,
-): Flow<T> {
-    val fields = rs.extractFields(dbFlavour)
-    return flow {
-        try {
-            while (rs.next()) {
-                emit(mapper(rs, fields))
+): Flow<T> =
+    flow {
+        // The query is executed lazily, when the flow is collected. If the flow is never
+        // collected, no statement or result set is opened. Closing the result set also cancels
+        // and closes the underlying statement (see `Connection.executeQuery`).
+        connection.executeQuery(query, args, fetchSize).use { rs ->
+            val fields = rs.extractFields(connection.getDbFlavour())
+            try {
+                while (rs.next()) {
+                    emit(mapper(rs, fields))
+                }
+            } catch (e: CancellationException) {
+                logger.info("Query results processing cancelled: ${e.message}")
+                throw e
+            } catch (e: SQLException) {
+                "Error executing query: $sql".also {
+                    logger.warn(it, e)
+                    throw KapperQueryException(it, e)
+                }
             }
-        } catch (e: CancellationException) {
-            logger.info("Query results processing cancelled: ${e.message}")
-            throw e
-        } catch (e: SQLException) {
-            "Error executing query: $sql".also {
-                logger.warn(it, e)
-                throw KapperQueryException(it, e)
-            }
-        } finally {
-            rs.close()
         }
     }
-}

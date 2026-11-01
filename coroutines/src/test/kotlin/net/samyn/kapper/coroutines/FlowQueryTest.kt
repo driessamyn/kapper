@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
@@ -17,11 +18,14 @@ import net.samyn.kapper.KapperQueryException
 import net.samyn.kapper.Mapper
 import net.samyn.kapper.internal.executeQuery
 import net.samyn.kapper.internal.extractFields
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Isolated
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
 
+@Isolated // uses static mocks for Connection::executeQuery and ResultSet::extractFields
 class FlowQueryTest {
     private val fields =
         mapOf(
@@ -47,6 +51,26 @@ class FlowQueryTest {
     }
 
     data class Hero(val id: Int, val name: String)
+
+    companion object {
+        @AfterAll
+        @JvmStatic
+        fun tearDown() {
+            unmockkAll()
+        }
+    }
+
+    @Test
+    fun `when flow is never collected nothing is executed`() {
+        // creating the flow must not touch the database: no statement, no result set
+        connection.queryAsFlow<Hero>(
+            queryTemplate,
+            mapper,
+            "id" to 1,
+        )
+        verify(exactly = 0) { connection.executeQuery(any(), any(), any()) }
+        verify(exactly = 0) { resultSet.close() }
+    }
 
     @Test
     fun `when query emit each row as a flow item`() {

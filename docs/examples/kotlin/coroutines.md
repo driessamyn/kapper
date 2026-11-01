@@ -140,38 +140,71 @@ fun `select heroes`() {
 
 ## Flow Integration
 
-### Flow Example
+### Basic Flow Query
+
+`Connection.queryAsFlow()` returns a cold `Flow` of query results. Collect it while the connection is still open, because `withConnection` closes the connection when the block returns.
 
 ```kotlin
 // From FlowExample.kt
-class FlowExample : DbBase() {
-    
-    @Test
-    fun `flow example`() {
-        // Insert test data
-        runBlocking {
-            (0..10).map {
-                SuperHero(UUID.randomUUID(), "Batman - $it", "bat-$it@dc.com", 83)
-            }.let { heroes ->
-                NonBlockingSuperHeroService(getDataSource(postgresql)).insertSlowly(heroes)
+@Test
+fun `simple example`() {
+    val datasource = getDataSource(postgresql)
+    insertHeroes(10)
+    runBlocking {
+        val query =
+            async {
+                datasource.withConnection {
+                    it
+                        .queryAsFlow<SuperHero>("SELECT * FROM super_heroes")
+                        .map { it.name }
+                        .toList()
+                }
             }
-        }
+        println("Starting query")
+        val heroes = query.await()
+        heroes.size shouldBe 10
+        heroes.forEach(::println)
+    }
+}
+```
 
-        // Process with Flow
-        runBlocking {
-            flowOf(*Array(10) { "Batman - $it" })
-                .map { name ->
-                    getDataSource(postgresql).withConnection { connection ->
-                        connection.querySingle<SuperHero>(
-                            "SELECT * FROM super_heroes WHERE name = :name",
-                            "name" to name
-                        )
-                    }
+### Cancelling a Flow Query
+
+Cancelling the flow abandons the query early: Kapper closes the underlying `ResultSet` and cancels the statement. The example below uses `takeWhile` to stop once the cumulative gross reaches 10 billion.
+
+```kotlin
+// From FlowExample.kt
+@Test
+fun `cancel query automatically`() {
+    runBlocking {
+        val job =
+            async {
+                getDataSource(postgresql).withConnection { connection ->
+                    connection
+                        .queryAsFlow<PopularMovie>(
+                            """
+                            SELECT
+                             title,
+                             release_date as releasedate,
+                             gross_worldwide as grossed
+                            FROM movies
+                            ORDER BY gross_worldwide DESC
+                            """.trimIndent(),
+                        ).runningFold(0L to emptyList<PopularMovie>()) { (totalGross, movieList), movie ->
+                            val newTotal = totalGross + movie.grossed
+                            newTotal to (movieList + movie)
+                        }.takeWhile { (totalGross, _) ->
+                            // query will be cancelled here
+                            totalGross <= 10_000_000_000
+                        }.last()
                 }
-                .collect { hero ->
-                    hero?.let { println("Found hero: ${it.name}") }
-                }
-        }
+            }
+        println("Query started")
+        val popularMovies = job.await()
+        println(
+            "Popular movies are: ${popularMovies.second.map { it.title }}, " +
+                "grossing a total of ${String.format("%,d", popularMovies.first)}",
+        )
     }
 }
 ```
