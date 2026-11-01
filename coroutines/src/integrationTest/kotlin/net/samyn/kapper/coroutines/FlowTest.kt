@@ -84,6 +84,8 @@ class FlowTest {
                                 .map {
                                     it.age
                                 }
+                                // queryAsFlow is cold: it must be collected while the connection is open.
+                                .toList()
                         }
                     val two =
                         async {
@@ -98,6 +100,7 @@ class FlowTest {
                                 .map {
                                     it.age
                                 }
+                                .toList()
                         }
                     println("[${Thread.currentThread().name}] Waiting for results")
                     awaitAll(one, two)
