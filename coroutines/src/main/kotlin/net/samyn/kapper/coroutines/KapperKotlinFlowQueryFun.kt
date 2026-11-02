@@ -3,7 +3,6 @@ package net.samyn.kapper.coroutines
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import net.samyn.kapper.Args
 import net.samyn.kapper.Field
 import net.samyn.kapper.Kapper
 import net.samyn.kapper.KapperQueryException
@@ -92,7 +91,7 @@ inline fun <reified T : Any> Connection.queryAsFlow(
 fun <T : Any> queryFlow(
     connection: Connection,
     query: Query,
-    args: Args,
+    args: Map<String, Any?>,
     fetchSize: Int,
     mapper: (ResultSet, Map<String, Field>) -> T,
     sql: String,
