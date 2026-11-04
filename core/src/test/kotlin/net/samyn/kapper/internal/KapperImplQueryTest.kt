@@ -2,6 +2,7 @@ package net.samyn.kapper.internal
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -51,7 +52,7 @@ class KapperImplQueryTest {
         mockkStatic(Connection::executeQuery)
         mockkStatic(Connection::getDbFlavour)
         mockkStatic(ResultSet::extractFields)
-        every { mockConnection.executeQuery(any(), any()) } returns mockResultSet
+        every { mockConnection.executeQuery(any(), any(), any(), any()) } returns mockResultSet
         every { mockConnection.getDbFlavour() } returns DbFlavour.UNKNOWN
         every { mockResultSet.extractFields(any()) } returns testFieldMeta
         every { mockMapper.invoke(any(), any()) } returns TestEntity(1, "test")
@@ -74,7 +75,7 @@ class KapperImplQueryTest {
                 mockMapper,
                 args,
             )
-        verify { mockConnection.executeQuery(mockQuery, args) }
+        verify { mockConnection.executeQuery(mockQuery, args, any(), DbFlavour.UNKNOWN) }
     }
 
     @Test
@@ -147,7 +148,7 @@ class KapperImplQueryTest {
                 mockMapper,
                 args,
             )
-        verify { mockConnection.executeQuery(mockQuery, args) }
+        verify { mockConnection.executeQuery(mockQuery, args, any(), DbFlavour.UNKNOWN) }
     }
 
     @Test
@@ -205,6 +206,46 @@ class KapperImplQueryTest {
                     mockMapper,
                     mapOf("id" to 3),
                 )
+        }.message.shouldContain("more than one")
+    }
+
+    @Test
+    fun `querySingle stops reading after two rows`() {
+        every { mockResultSet.next() } returns true
+        shouldThrow<KapperResultException> {
+            kapper
+                .querySingle(
+                    TestEntity::class.java,
+                    mockConnection,
+                    "SELECT * FROM test_entity WHERE id = :id",
+                    mockMapper,
+                    mapOf("id" to 3),
+                )
         }
+        verify(exactly = 2) { mockResultSet.next() }
+        verify(exactly = 1) { mockMapper(mockResultSet, testFieldMeta) }
+    }
+
+    @Test
+    fun `repeated query parses the template once`() {
+        var parseCount = 0
+        val cachingKapper =
+            KapperImpl(
+                QueryCache(parser = {
+                    parseCount++
+                    Query(it)
+                }),
+            )
+        every { mockResultSet.next() } returns false
+        repeat(3) {
+            cachingKapper.query(
+                TestEntity::class.java,
+                mockConnection,
+                mockSqlTemplate,
+                mockMapper,
+                mapOf("id" to 1),
+            )
+        }
+        parseCount shouldBe 1
     }
 }

@@ -3,6 +3,7 @@ package net.samyn.kapper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.mockk.every
@@ -62,6 +63,8 @@ class KapperInstanceTest {
                 k.query(Foo::class.java, mockk<Connection>(relaxed = true), "FOO", emptyMap())
             } should {
                 it.cause shouldBe ex
+                it.message shouldContain Foo::class.java.name
+                it.message shouldContain "test"
             }
         }
     }
@@ -91,6 +94,8 @@ class KapperInstanceTest {
                 k.querySingle(Foo::class.java, mockk<Connection>(relaxed = true), "FOO", emptyMap())
             } should {
                 it.cause shouldBe ex
+                it.message shouldContain Foo::class.java.name
+                it.message shouldContain "test"
             }
         }
     }

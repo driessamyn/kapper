@@ -14,7 +14,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 
 internal class KapperImpl(
-    private val queryFactory: (String) -> Query = { Query(it) },
+    private val queryFactory: (String) -> Query = QueryCache(),
 ) : Kapper {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -30,10 +30,11 @@ internal class KapperImpl(
         args: Args,
     ): List<T> {
         require(sql.isNotBlank()) { SQL_BLANK_ERROR }
+        val dbFlavour = connection.getDbFlavour()
         return buildList {
-            connection.executeQuery(queryFactory(sql), args).use { rs ->
+            connection.executeQuery(queryFactory(sql), args, dbFlavour = dbFlavour).use { rs ->
                 try {
-                    val fields = rs.extractFields(connection.getDbFlavour())
+                    val fields = rs.extractFields(dbFlavour)
                     while (rs.next()) {
                         add(mapper(rs, fields))
                     }
@@ -54,11 +55,25 @@ internal class KapperImpl(
         mapper: (ResultSet, Map<String, Field>) -> T,
         args: Args,
     ): T? {
-        val results = query(clazz, connection, sql, mapper, args)
-        if (results.size > 1) {
-            throw KapperResultException("Expected a single result but found ${results.size}")
+        require(sql.isNotBlank()) { SQL_BLANK_ERROR }
+        val dbFlavour = connection.getDbFlavour()
+        // Stop at two rows: a single result is expected, so there is no need to materialise the rest.
+        connection.executeQuery(queryFactory(sql), args, dbFlavour = dbFlavour).use { rs ->
+            try {
+                val fields = rs.extractFields(dbFlavour)
+                if (!rs.next()) return null
+                val result = mapper(rs, fields)
+                if (rs.next()) {
+                    throw KapperResultException("Expected a single result but found more than one")
+                }
+                return result
+            } catch (e: SQLException) {
+                "Failed to execute query: $sql".also {
+                    logger.warn(it, e)
+                    throw KapperQueryException(it, e)
+                }
+            }
         }
-        return results.firstOrNull()
     }
 
     override fun execute(
@@ -105,10 +120,11 @@ internal class KapperImpl(
         args: Args,
     ): List<T> {
         require(sql.isNotBlank()) { SQL_BLANK_ERROR }
+        val dbFlavour = connection.getDbFlavour()
         return buildList {
-            connection.executeQuery(queryFactory(sql), args).use { rs ->
+            connection.executeQuery(queryFactory(sql), args, dbFlavour = dbFlavour).use { rs ->
                 try {
-                    val fields = rs.extractFields(connection.getDbFlavour())
+                    val fields = rs.extractFields(dbFlavour)
                     while (rs.next()) {
                         add(mapper(rs, fields))
                     }
@@ -132,14 +148,15 @@ internal class KapperImpl(
     ): List<R> {
         require(sql.isNotBlank()) { SQL_BLANK_ERROR }
         val query = queryFactory(sql)
+        val dbFlavour = connection.getDbFlavour()
         connection.prepareStatement(query.sql).use { stmt ->
-            val cleanup = args.setParameters(query.tokens, stmt, obj, connection.getDbFlavour())
+            val cleanup = args.setParameters(query.tokens, stmt, obj, dbFlavour)
             try {
                 logger.debug(EXECUTING_STMT_LOG, stmt)
                 return buildList {
                     stmt.executeQuery().use { rs ->
                         try {
-                            val fields = rs.extractFields(connection.getDbFlavour())
+                            val fields = rs.extractFields(dbFlavour)
                             while (rs.next()) {
                                 add(mapper(rs, fields))
                             }

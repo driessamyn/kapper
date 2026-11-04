@@ -59,7 +59,7 @@ class KapperImplExecuteReturningTest {
         mockkStatic(Connection::executeQuery)
         mockkStatic(Connection::getDbFlavour)
         mockkStatic(ResultSet::extractFields)
-        every { mockConnection.executeQuery(any(), any()) } returns mockResultSet
+        every { mockConnection.executeQuery(any(), any(), any(), any()) } returns mockResultSet
         every { mockConnection.getDbFlavour() } returns DbFlavour.UNKNOWN
         every { mockResultSet.extractFields(any()) } returns testFieldMeta
         every { mockMapper.invoke(any(), any()) } returns TestEntity(1, "test")
@@ -83,7 +83,7 @@ class KapperImplExecuteReturningTest {
             mockMapper,
             args,
         )
-        verify { mockConnection.executeQuery(mockQuery, args) }
+        verify { mockConnection.executeQuery(mockQuery, args, any(), DbFlavour.UNKNOWN) }
     }
 
     @Test

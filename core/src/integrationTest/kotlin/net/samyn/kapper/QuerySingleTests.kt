@@ -61,7 +61,9 @@ class QuerySingleTests : AbstractDbTests() {
                     "SELECT * FROM super_heroes_$testId",
                 )
             }
-        ex.message.shouldContain("4")
+        // querySingle stops reading after the second row, so the total count is unknown;
+        // the message reports that more than one result was found.
+        ex.message.shouldContain("more than one")
     }
 
     @Test

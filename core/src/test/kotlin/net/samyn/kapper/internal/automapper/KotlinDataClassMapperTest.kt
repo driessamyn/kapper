@@ -10,6 +10,7 @@ import io.mockk.verify
 import net.samyn.kapper.DbFlavour
 import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
+import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.internal.AutoConverter
 import net.samyn.kapper.internal.autoConverter
 import org.junit.jupiter.api.Test
@@ -85,6 +86,52 @@ class KotlinDataClassMapperTest {
                 kotlinDataClassMapper.createInstance(resultSet, fields)
             }
         ex.message.shouldContain("id")
+    }
+
+    @Test
+    fun `mapping failure message names class, columns, parameters and mismatch`() {
+        val fields =
+            mapOf(
+                "name" to Field(1, JDBCType.VARCHAR, "VARCHAR", DbFlavour.UNKNOWN),
+                "email" to Field(2, JDBCType.VARCHAR, "VARCHAR", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("name", "Batman"),
+                ColumnValue("email", "batman@dc.com"),
+            )
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoTypesConverterMock, fieldsConverterMock)
+        val ex =
+            shouldThrow<KapperMappingException> {
+                kotlinDataClassMapper.createInstance(resultSet, fields)
+            }
+        ex.message.shouldContain(SuperHero::class.java.name)
+        ex.message.shouldContain("id")
+        ex.message.shouldContain("name (VARCHAR)")
+        ex.message.shouldContain("email (VARCHAR)")
+        ex.message.shouldContain("Expected constructor parameters")
+        ex.message.shouldContain("register a custom mapper")
+    }
+
+    @Test
+    fun `conversion failure names the column`() {
+        val fields =
+            mapOf(
+                "id" to Field(1, JDBCType.VARCHAR, "VARCHAR", DbFlavour.UNKNOWN),
+                "name" to Field(2, JDBCType.VARCHAR, "VARCHAR", DbFlavour.UNKNOWN),
+            )
+        every { fieldsConverterMock.convert(resultSet, fields) } returns
+            listOf(
+                ColumnValue("id", "not-a-uuid"),
+                ColumnValue("name", "Batman"),
+            )
+        val kotlinDataClassMapper = KotlinDataClassMapper(SuperHero::class.java, autoConverter, fieldsConverterMock)
+        val ex =
+            shouldThrow<KapperParseException> {
+                kotlinDataClassMapper.createInstance(resultSet, fields)
+            }
+        ex.message.shouldContain("id")
+        ex.message.shouldContain("custom converter")
     }
 
     @Test

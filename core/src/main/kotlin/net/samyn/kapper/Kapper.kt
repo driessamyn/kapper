@@ -58,7 +58,7 @@ interface Kapper {
                 mapperRegistry.get(clazz)
             } catch (e: Exception) {
                 logger.error("Error creating instance of $clazz", e)
-                throw KapperMappingException("Error creating mapper for $clazz", e)
+                throw KapperMappingException("Error creating mapper for $clazz: ${e.message ?: e.toString()}", e)
             }
         return query(clazz, connection, sql, mapper::createInstance, args.toMap())
     }
@@ -101,7 +101,7 @@ interface Kapper {
                 mapperRegistry.get(clazz)
             } catch (e: Exception) {
                 logger.error("Error creating instance of $clazz", e)
-                throw KapperMappingException("Error creating auto-mapper for $clazz", e)
+                throw KapperMappingException("Error creating auto-mapper for $clazz: ${e.message ?: e.toString()}", e)
             }
         return querySingle(clazz, connection, sql, mapper::createInstance, args.toMap())
     }
@@ -194,7 +194,7 @@ interface Kapper {
                 mapperRegistry.get(clazz)
             } catch (e: Exception) {
                 logger.error("Error creating instance of $clazz", e)
-                throw KapperMappingException("Error creating mapper for $clazz", e)
+                throw KapperMappingException("Error creating mapper for $clazz: ${e.message ?: e.toString()}", e)
             }
         return executeReturning(clazz, connection, sql, mapper::createInstance, args)
     }
@@ -245,7 +245,7 @@ interface Kapper {
                 mapperRegistry.get(clazz)
             } catch (e: Exception) {
                 logger.error("Error creating instance of $clazz", e)
-                throw KapperMappingException("Error creating auto-mapper for $clazz", e)
+                throw KapperMappingException("Error creating auto-mapper for $clazz: ${e.message ?: e.toString()}", e)
             }
         return executeReturning(clazz, connection, sql, mapper::createInstance, obj, args)
     }

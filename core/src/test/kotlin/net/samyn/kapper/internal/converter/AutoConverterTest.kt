@@ -3,14 +3,20 @@ package net.samyn.kapper.internal.converter
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import net.samyn.kapper.DbFlavour
+import net.samyn.kapper.Field
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperUnsupportedOperationException
+import net.samyn.kapper.internal.ColumnContext
 import net.samyn.kapper.internal.autoConverter
+import net.samyn.kapper.internal.convert
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+import java.sql.JDBCType
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -157,5 +163,45 @@ class AutoConverterTest {
         shouldThrow<KapperParseException> { autoConverter.convert(Int.MAX_VALUE.toLong() + 1, Int::class.java) }
         shouldThrow<KapperParseException> { autoConverter.convert(300L, Byte::class.java) }
         shouldThrow<KapperParseException> { autoConverter.convert(32768L, Short::class.java) }
+    }
+
+    @Nested
+    inner class ColumnContextMessages {
+        private val field = Field(2, JDBCType.INTEGER, "INT4", DbFlavour.POSTGRESQL)
+
+        @Test
+        fun `conversion failure names the column, index, driver type and flavour`() {
+            val ex =
+                shouldThrow<KapperUnsupportedOperationException> {
+                    autoConverter.convert("not-a-number", NewType::class.java, ColumnContext("age", field))
+                }
+            ex.message.shouldContain("java.lang.String")
+            ex.message.shouldContain("NewType")
+            ex.message.shouldContain("age")
+            ex.message.shouldContain("index 2")
+            ex.message.shouldContain("INT4")
+            ex.message.shouldContain("POSTGRESQL")
+            ex.message.shouldContain("custom converter")
+        }
+
+        @Test
+        fun `parse failure names the column`() {
+            val ex =
+                shouldThrow<KapperParseException> {
+                    autoConverter.convert("not-a-uuid", UUID::class.java, ColumnContext("id", field))
+                }
+            ex.message.shouldContain("id")
+            ex.message.shouldContain("custom converter")
+        }
+
+        @Test
+        fun `without context the original message is preserved`() {
+            val ex =
+                shouldThrow<KapperUnsupportedOperationException> {
+                    autoConverter.convert("123", NewType::class.java, null)
+                }
+            ex.message shouldBe
+                "Cannot auto-convert from class java.lang.String to ${NewType::class.java.canonicalName}"
+        }
     }
 }
