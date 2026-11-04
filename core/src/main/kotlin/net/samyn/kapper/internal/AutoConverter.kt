@@ -2,6 +2,7 @@
 
 package net.samyn.kapper.internal
 
+import net.samyn.kapper.Field
 import net.samyn.kapper.KapperParseException
 import net.samyn.kapper.KapperUnsupportedOperationException
 import java.math.BigDecimal
@@ -17,6 +18,47 @@ fun interface AutoConverter {
         value: Any,
         target: Class<*>,
     ): Any
+}
+
+/**
+ * Identifies the column a value was read from, so conversion failures can point at it.
+ *
+ * @param label the column label as returned by the driver.
+ * @param field the JDBC metadata for the column, when available.
+ */
+internal data class ColumnContext(val label: String, val field: Field?)
+
+/**
+ * Converts [value] to [target], enriching any failure with the [context] of the column it came from.
+ *
+ * This is an overload of [AutoConverter.convert] rather than a change to the interface itself, so that
+ * existing callers (including Java callers, which cannot use default arguments) keep compiling.
+ */
+internal fun AutoConverter.convert(
+    value: Any,
+    target: Class<*>,
+    context: ColumnContext?,
+): Any =
+    try {
+        convert(value, target)
+    } catch (e: KapperUnsupportedOperationException) {
+        throw KapperUnsupportedOperationException(e.message.withColumnContext(context), e)
+    } catch (e: KapperParseException) {
+        throw KapperParseException(e.message.withColumnContext(context), e)
+    }
+
+private fun String?.withColumnContext(context: ColumnContext?): String {
+    if (context == null) return this ?: "Conversion failed"
+    val field = context.field
+    val suffix =
+        buildString {
+            append(" (column '${context.label}'")
+            if (field != null) {
+                append(", index ${field.columnIndex}, driver type '${field.typeName}', flavour ${field.dbFlavour}")
+            }
+            append("). Register a custom converter or alias the column.")
+        }
+    return (this ?: "Conversion failed") + suffix
 }
 
 // register converters

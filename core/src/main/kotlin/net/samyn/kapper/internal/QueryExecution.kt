@@ -3,6 +3,7 @@
 package net.samyn.kapper.internal
 
 import net.samyn.kapper.Args
+import net.samyn.kapper.DbFlavour
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
@@ -16,11 +17,14 @@ fun Connection.executeQuery(
     args: Args,
     // [fetch size 0 means batching is disabled](https://docs.oracle.com/en/java/javase/17/docs/api/java.sql/java/sql/Statement.html#setFetchSize(int)).
     fetchSize: Int = 0,
+    // Resolved by the caller so a single query reads the connection metadata at most once.
+    dbFlavour: DbFlavour? = null,
 ): ResultSet {
+    val flavour = dbFlavour ?: this.getDbFlavour()
     this.prepareStatement(query.sql).let { stmt ->
         var cleanup: () -> Unit = {}
         try {
-            cleanup = args.setParameters(query, stmt, this.getDbFlavour())
+            cleanup = args.setParameters(query, stmt, flavour)
             logger.debug("Executing prepared statement for query: {}", stmt)
             stmt.fetchSize = fetchSize
             val rs = stmt.executeQuery()

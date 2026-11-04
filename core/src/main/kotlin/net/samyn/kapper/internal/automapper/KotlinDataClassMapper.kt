@@ -6,7 +6,9 @@ import net.samyn.kapper.Field
 import net.samyn.kapper.KapperMappingException
 import net.samyn.kapper.Mapper
 import net.samyn.kapper.internal.AutoConverter
+import net.samyn.kapper.internal.ColumnContext
 import net.samyn.kapper.internal.autoConverter
+import net.samyn.kapper.internal.convert
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -53,7 +55,7 @@ private val reflectionCache = ConcurrentHashMap<Class<*>, ReflectionData<Any>>()
  * Automatically map database records to Kotlin data classes.
  */
 class KotlinDataClassMapper<T : Any>(
-    clazz: Class<T>,
+    private val clazz: Class<T>,
     private val typesConverter: AutoConverter = autoConverter,
     private val fieldsConverter: FieldsConverter = FieldsConverter(),
 ) : Mapper<T> {
@@ -77,30 +79,33 @@ class KotlinDataClassMapper<T : Any>(
             ReflectionData(constructor, properties)
         } as ReflectionData<T>
 
-    private fun createInstance(columns: List<ColumnValue>): T {
+    private fun createInstance(
+        columns: List<ColumnValue>,
+        fields: Map<String, Field>,
+    ): T {
         val args = mutableMapOf<KParameter, Any?>()
         val missing = mutableListOf<String>()
         val normalisedColumns = columns.associateBy { it.name.normalisedColumnName() }
         for ((name, prop) in reflectionData.properties) {
-            if (!normalisedColumns.containsKey(name)) {
+            val column = normalisedColumns[name]
+            if (column == null) {
                 if (!prop.isOptional) missing.add(name)
                 continue
             }
-            val value = normalisedColumns[name]?.value
+            val value = column.value
             args[prop.kProp] =
                 when {
                     value == null -> null
                     // List<Long> from an INT8[] column must be coerced to List<Int> when the
                     // target property is List<Int> (erasure means List.isInstance() passes).
                     prop.listElementType != null && value is List<*> -> coerceListElements(value, prop.listElementType)
-                    !prop.javaType.isInstance(value) -> {
-                        typesConverter.convert(value, prop.type.java)
-                    }
+                    !prop.javaType.isInstance(value) ->
+                        typesConverter.convert(value, prop.type.java, ColumnContext(column.name, fields[column.name]))
                     else -> value
                 }
         }
         if (missing.isNotEmpty()) {
-            throw KapperMappingException("The following properties are non-optional and missing: $missing")
+            throw KapperMappingException(mappingFailureMessage(missing, fields))
         }
         return reflectionData.constructor.callBy(args)
     }
@@ -122,12 +127,25 @@ class KotlinDataClassMapper<T : Any>(
         }
     }
 
+    private fun mappingFailureMessage(
+        missing: List<String>,
+        fields: Map<String, Field>,
+    ): String =
+        buildString {
+            append("Cannot map to ${clazz.name}: ")
+            append("the following non-optional constructor parameters are missing: $missing. ")
+            append("Columns returned: ${describeColumns(fields)}. ")
+            append("Expected constructor parameters: ${reflectionData.constructor.parameters.mapNotNull { it.name }}. ")
+            append("Hint: alias the columns (e.g. SELECT full_name AS name), or register a custom mapper.")
+        }
+
     override fun createInstance(
         resultSet: ResultSet,
         fields: Map<String, Field>,
     ): T {
         return createInstance(
             fieldsConverter.convert(resultSet, fields),
+            fields,
         )
     }
 }

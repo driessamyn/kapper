@@ -47,6 +47,13 @@ class MetadataTest {
     }
 
     @Test
+    fun `jdbcType maps every known vendor type number`() {
+        JDBCType.entries.forEach { type ->
+            type.vendorTypeNumber.jdbcType() shouldBe type
+        }
+    }
+
+    @Test
     fun `when jdbcType not known returns OTHER`() {
         val jdbcType = 999
         val result = jdbcType.jdbcType()

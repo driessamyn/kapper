@@ -4,6 +4,7 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import net.samyn.kapper.KapperParseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -67,6 +68,55 @@ class QueryParserTest {
         val (sql, tokens) = parseQuery(largeTemplate)
         sql.shouldBe("SELECT * FROM table WHERE " + (1..1000).joinToString(" AND ") { "column$it = ?" })
         tokens.size.shouldBe(1000)
+    }
+
+    @Test
+    fun `when invalid token character is used the message points at the character`() {
+        val template = "SELECT * FROM foo WHERE id = :id!"
+        val ex = assertThrows<KapperParseException> { parseQuery(template) }
+        val message = ex.message!!
+        message.shouldContain(template)
+        val lines = message.lines()
+        val caretLine = lines[lines.indexOf(template) + 1]
+        caretLine.indexOf('^') shouldBe template.indexOf('!')
+    }
+
+    @Test
+    fun `caret is positioned relative to the trimmed template`() {
+        val template = "   SELECT * FROM foo WHERE id = :id!"
+        val trimmed = template.trim()
+        val ex = assertThrows<KapperParseException> { parseQuery(template) }
+        val lines = ex.message!!.lines()
+        val caretLine = lines[lines.indexOf(trimmed) + 1]
+        caretLine.indexOf('^') shouldBe trimmed.indexOf('!')
+    }
+
+    @Test
+    fun `caret points at the offending character on a multiline query`() {
+        val offendingLine = "WHERE id = :id!"
+        val template = "SELECT 1\n$offendingLine"
+        val ex = assertThrows<KapperParseException> { parseQuery(template) }
+        val lines = ex.message!!.lines()
+        val caretLine = lines[lines.indexOf(offendingLine) + 1]
+        caretLine.indexOf('^') shouldBe offendingLine.indexOf('!')
+    }
+
+    @Test
+    fun `caret preserves tabs in the offending line`() {
+        val template = "SELECT 1\n\tWHERE id = :id!"
+        val ex = assertThrows<KapperParseException> { parseQuery(template) }
+        val caretLine = ex.message!!.lines().last()
+        caretLine shouldBe "\t" + " ".repeat("WHERE id = :id".length) + "^"
+    }
+
+    @Test
+    fun `caret treats a carriage return as a line break`() {
+        val offendingLine = "WHERE id = :id!"
+        val template = "SELECT 1\r$offendingLine"
+        val ex = assertThrows<KapperParseException> { parseQuery(template) }
+        val lines = ex.message!!.lines()
+        val caretLine = lines[lines.indexOf(offendingLine) + 1]
+        caretLine.indexOf('^') shouldBe offendingLine.indexOf('!')
     }
 
     @ParameterizedTest
