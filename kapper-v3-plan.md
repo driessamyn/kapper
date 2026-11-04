@@ -1,11 +1,40 @@
 # Kapper v3 Plan
 
-**Status:** draft for review
+**Status:** Wave 0 complete; 2.1 release planned; Wave 1 not started.
 **Basis:** `kapper-review-2026-07.md` (28 July 2026, commit `c77a3c0`), verified against the working tree at HEAD `db83912`.
 **Scope:** `core`, `coroutines`, build/publishing, docs site, and agent-facing surface.
 
 This document is the plan. It is grounded in the source, not only the review. Where the review is
 wrong or vague, that is stated rather than smoothed over (see "Review-quality notes").
+
+---
+
+## Status
+
+**Wave 0 — complete (16 of 17 items), merged to `main` on 2026-11-04.**
+
+| PR | Workstream | Items |
+|---|---|---|
+| #393 | WS1 — Core | DIAG-1, DIAG-2, DIAG-3, PARSE-2, PERF-2, PERF-5, PERF-6, API-9 |
+| #395 | WS2 — Coroutines | CORO-1, CORO-2 |
+| #394 | WS3 — Packaging & docs | PKG-1, PKG-2, PKG-3, DOCS-2, DOCS-4, AGENT-1, STRAT-3 |
+
+Deviations from the handover:
+
+- The PRs targeted `main`, not `v3-planning`. **Decision:** `main` is the integration branch for all
+  non-breaking work (2.x). A `v3` branch starts when the first breaking change lands (Wave 2).
+- AGENT-6 (snippets pipeline) was omitted from the handover's WS3 table. It is now a separate
+  handover: `kapper-agent6-handover.md`.
+
+**Next: 2.1 release.** Wave 0 is non-breaking, so it ships as 2.1 before v3 work starts. Call out in
+ the release notes:
+
+- `queryAsFlow` is now cold (it was eager, and leaked the result set if never collected).
+- `withConnection` acquires and closes the connection on the dispatcher.
+- `querySingle`'s "more than one result" message no longer includes the total row count.
+
+**Wave 1** (additive, non-breaking) is the natural 2.2. **Wave 2** is where the first breaking changes
+land, so that is where the `v3` branch begins.
 
 ---
 
