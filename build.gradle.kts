@@ -83,8 +83,8 @@ sonar {
         property("sonar.organization", "driessamyn")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/kover/report.xml")
-        property("sonar.coverage.exclusions", "benchmark/**,examples/**")
-        property("sonar.exclusions", "benchmark/**,examples/**,docs/**,build-logic/**,buildSrc/**")
+        property("sonar.coverage.exclusions", "benchmark/**,examples/**,docs-snippets/**")
+        property("sonar.exclusions", "benchmark/**,examples/**,docs/**,docs-snippets/**,build-logic/**,buildSrc/**")
         property("sonar.junit.reportPaths", "**/build/test-results/*/")
     }
 }

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
-    "preview": "vitepress preview"
+    "preview": "vitepress preview",
+    "generate:snippets": "node scripts/generate-snippets.mjs"
   },
   "devDependencies": {
     "vitepress": "^1.5.0",
