@@ -79,7 +79,8 @@ export default defineConfig({
             { text: 'Basic Usage', link: '/guide/basic-usage' },
             { text: 'Queries', link: '/guide/queries' },
             { text: 'Mapping', link: '/guide/mapping' },
-            { text: 'Transactions', link: '/guide/transactions' }
+            { text: 'Transactions', link: '/guide/transactions' },
+            { text: 'Snippets', link: '/guide/snippets' }
           ]
         },
         {

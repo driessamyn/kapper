@@ -7,6 +7,7 @@ on:
       - 'docs/**'
       - 'core/src/**'
       - 'coroutines/src/**'
+      - 'docs-snippets/**'
   release:
     types: [published]
   workflow_dispatch:
@@ -57,6 +58,15 @@ jobs:
           git diff --exit-code -- package-lock.json
           git ls-files --others --exclude-standard -- package-lock.json | grep -q . && { echo "Untracked package-lock.json present"; exit 1; } || true
         working-directory: docs
+
+      - name: Generate snippets
+        run: npm run generate:snippets
+        working-directory: docs
+
+      - name: Verify generated snippets are up to date
+        run: |
+          git diff --exit-code -- docs/_generated docs/guide/snippets.md
+          git ls-files --others --exclude-standard -- docs/_generated docs/guide/snippets.md | grep -q . && { echo "Untracked generated snippet file(s) present:"; git ls-files --others --exclude-standard -- docs/_generated docs/guide/snippets.md; exit 1; } || true
 
       - name: Build documentation
         run: npm run build
