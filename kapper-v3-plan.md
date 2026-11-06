@@ -11,20 +11,22 @@ wrong or vague, that is stated rather than smoothed over (see "Review-quality no
 
 ## Status
 
-**Wave 0 — complete (16 of 17 items), merged to `main` on 2026-11-04.**
+**Wave 0 — complete (17 of 17 items), merged to `main`.**
 
 | PR | Workstream | Items |
 |---|---|---|
 | #393 | WS1 — Core | DIAG-1, DIAG-2, DIAG-3, PARSE-2, PERF-2, PERF-5, PERF-6, API-9 |
 | #395 | WS2 — Coroutines | CORO-1, CORO-2 |
 | #394 | WS3 — Packaging & docs | PKG-1, PKG-2, PKG-3, DOCS-2, DOCS-4, AGENT-1, STRAT-3 |
+| #407 | AGENT-6 — Snippets pipeline | AGENT-6 |
 
 Deviations from the handover:
 
 - The PRs targeted `main`, not `v3-planning`. **Decision:** `main` is the integration branch for all
   non-breaking work (2.x). A `v3` branch starts when the first breaking change lands (Wave 2).
-- AGENT-6 (snippets pipeline) was omitted from the handover's WS3 table. It is now a separate
-  handover: `kapper-agent6-handover.md`.
+- AGENT-6 (snippets pipeline) was omitted from the handover's WS3 table, so it was delivered
+  separately (`kapper-agent6-handover.md`, PR #407). It ships 13 compiled snippets and defers 9 to
+  Wave 1/2.
 
 **Next: 2.1 release.** Wave 0 is non-breaking, so it ships as 2.1 before v3 work starts. Call out in
  the release notes:
