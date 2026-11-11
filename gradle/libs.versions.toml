@@ -59,7 +59,7 @@ test-containers-cockroachdb = { module = "org.testcontainers:cockroachdb", versi
 test-containers-yugabytedb = { module = "org.testcontainers:yugabytedb", version.ref = "test-containers" }
 
 # Example dependencies
-hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.3.0.Final" }
+hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.4.15.Final" }
 hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.4.15.Final" }
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator-version" }
 glassfish-jakarta = { module = "org.glassfish:jakarta.el", version = "4.0.2" }
