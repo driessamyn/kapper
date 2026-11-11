@@ -25,7 +25,7 @@ jobs:
     - uses: webiny/action-conventional-commits@7f91b1595ca1951cdb671ddc9f07a49081ec5b69
 
     - name: Set up JDK 17
-      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
+      uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
       with:
         java-version: '17'
         distribution: 'zulu'
@@ -59,7 +59,7 @@ jobs:
         retention-days: 1
 
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d
+      uses: EnricoMi/publish-unit-test-result-action@da5b7be67623cd59bbbd1a0ce4f022050a55605f
       if: always()
       with:
         check_name: Unit Tests
@@ -82,7 +82,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
         with:
           java-version: '17'
           distribution: 'zulu'
@@ -100,7 +100,7 @@ jobs:
           retention-days: 1
 
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d
+        uses: EnricoMi/publish-unit-test-result-action@da5b7be67623cd59bbbd1a0ce4f022050a55605f
         if: always()
         with:
           check_name: ${{ matrix.db }} Integration Tests
@@ -121,7 +121,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up JDK 17
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
         with:
           java-version: '17'
           distribution: 'zulu'
@@ -136,7 +136,7 @@ jobs:
           path: '**/build/test-results/integrationTest/TEST-*.xml'
           retention-days: 1
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d
+        uses: EnricoMi/publish-unit-test-result-action@da5b7be67623cd59bbbd1a0ce4f022050a55605f
         if: always()
         with:
           check_name: ${{ matrix.db }} Compatibility Tests
