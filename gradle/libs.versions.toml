@@ -60,7 +60,7 @@ test-containers-yugabytedb = { module = "org.testcontainers:yugabytedb", version
 
 # Example dependencies
 hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version = "7.3.0.Final" }
-hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.3.0.Final" }
+hibernate-core = { module = "org.hibernate.orm:hibernate-core", version = "7.4.15.Final" }
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator-version" }
 glassfish-jakarta = { module = "org.glassfish:jakarta.el", version = "4.0.2" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
