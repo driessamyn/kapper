@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 6am on monday"],
+  "minimumReleaseAge": "5 days",
+  "semanticCommitType": "build",
+  "labels": ["dependencies"],
+  "platformAutomerge": true,
+  "postUpgradeTasks": {
+    "commands": ["./gradlew resolveAndLockAll --write-locks"],
+    "fileFilters": ["**/*.lockfile"],
+    "executionMode": "update"
+  },
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": null
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "semanticCommitScope": "ci"
+    }
+  ]
+}
