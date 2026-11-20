@@ -41,6 +41,12 @@ jobs:
           configurationFile: renovate.json
         env:
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
+          # Self-hosted Renovate has no repository list of its own, and the
+          # action has no `repositories` input, so tell it which repo to process.
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # Attribute Renovate's commits to a real account rather than the
+          # Mend-owned default, which GitHub flags as unverified.
+          RENOVATE_GIT_AUTHOR: 'Dries Samyn <5557551+driessamyn@users.noreply.github.com>'
           # Let Renovate run ./gradlew so it can regenerate the committed Gradle
           # lock files; without this they go stale and the lock-file check fails.
           RENOVATE_ALLOWED_UNSAFE_EXECUTIONS: '["gradleWrapper"]'
