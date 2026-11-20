@@ -47,6 +47,11 @@ jobs:
           # Attribute Renovate's commits to a real account rather than the
           # Mend-owned default, which GitHub flags as unverified.
           RENOVATE_GIT_AUTHOR: 'Dries Samyn <5557551+driessamyn@users.noreply.github.com>'
+          # Sign Renovate's commits so they satisfy the `required_signatures`
+          # rule on `main`. The value is a base64-encoded, passphrase-free,
+          # ASCII-armored GPG private key whose public half is registered on
+          # the account above.
+          RENOVATE_GIT_PRIVATE_KEY: ${{ secrets.RENOVATE_GPG_PRIVATE_KEY }}
           # Let Renovate run ./gradlew so it can regenerate the committed Gradle
           # lock files; without this they go stale and the lock-file check fails.
           RENOVATE_ALLOWED_UNSAFE_EXECUTIONS: '["gradleWrapper"]'
