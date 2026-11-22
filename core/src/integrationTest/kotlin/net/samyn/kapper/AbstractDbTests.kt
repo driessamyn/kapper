@@ -44,6 +44,14 @@ abstract class AbstractDbTests {
     protected val isStarRocks: Boolean
         get() = connections.entries.firstOrNull { it.value === connection }?.key == "STARROCKS"
 
+    /**
+     * The setup dbKey (e.g. "POSTGRESQL", "COCKROACHDB") for the current [connection].
+     * Needed because some databases report a flavour that collides with another (e.g.
+     * CockroachDB reports as [DbFlavour.POSTGRESQL]), so the flavour alone cannot tell them apart.
+     */
+    protected val dbKey: String
+        get() = connections.entries.firstOrNull { it.value === connection }?.key ?: ""
+
     companion object {
         init {
             Class.forName("org.sqlite.JDBC")

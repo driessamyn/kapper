@@ -8,15 +8,17 @@ import java.sql.Connection
 import java.util.UUID
 
 class ArrayTypesTest : AbstractDbTests() {
-    private val arrayDbs = setOf(DbFlavour.POSTGRESQL, DbFlavour.DUCKDB)
+    // Gate on the setup dbKey, not the resolved flavour: CockroachDB reports as
+    // DbFlavour.POSTGRESQL but does not support INTEGER[]/TEXT[] arrays.
+    private val arrayDbKeys = setOf("POSTGRESQL", "DUCKDB")
 
     override fun setupDatabase(
         connection: Connection,
         dbKey: String,
     ) {
         super.setupDatabase(connection, dbKey)
+        if (dbKey !in arrayDbKeys) return
         val dbFlavour = connection.getDbFlavour()
-        if (dbFlavour !in arrayDbs) return
         connection.createStatement().use { statement ->
             statement.execute(
                 """
@@ -32,7 +34,7 @@ class ArrayTypesTest : AbstractDbTests() {
 
     @Test
     fun `can insert and retrieve integer arrays`() {
-        assumeTrue(connection.getDbFlavour() in arrayDbs, "Array types not supported")
+        assumeTrue(dbKey in arrayDbKeys, "Array types not supported")
         val id = UUID.randomUUID()
         val tags = listOf(10, 20, 30)
 
@@ -52,7 +54,7 @@ class ArrayTypesTest : AbstractDbTests() {
 
     @Test
     fun `can insert and retrieve text arrays`() {
-        assumeTrue(connection.getDbFlavour() in arrayDbs, "Array types not supported")
+        assumeTrue(dbKey in arrayDbKeys, "Array types not supported")
         val id = UUID.randomUUID()
         val names = listOf("alpha", "beta", "gamma")
 
@@ -72,7 +74,7 @@ class ArrayTypesTest : AbstractDbTests() {
 
     @Test
     fun `can handle null arrays`() {
-        assumeTrue(connection.getDbFlavour() in arrayDbs, "Array types not supported")
+        assumeTrue(dbKey in arrayDbKeys, "Array types not supported")
         val id = UUID.randomUUID()
 
         connection.execute(
@@ -90,7 +92,7 @@ class ArrayTypesTest : AbstractDbTests() {
 
     @Test
     fun `can handle empty arrays`() {
-        assumeTrue(connection.getDbFlavour() in arrayDbs, "Array types not supported")
+        assumeTrue(dbKey in arrayDbKeys, "Array types not supported")
         val id = UUID.randomUUID()
         val empty = emptyList<String>()
         val dbFlavour = connection.getDbFlavour()
@@ -119,7 +121,7 @@ class ArrayTypesTest : AbstractDbTests() {
     @Test
     fun `can handle arrays with null elements`() {
         val dbFlavour = connection.getDbFlavour()
-        assumeTrue(dbFlavour in arrayDbs, "Array types not supported")
+        assumeTrue(dbKey in arrayDbKeys, "Array types not supported")
         val id = UUID.randomUUID()
 
         val insertSql =
