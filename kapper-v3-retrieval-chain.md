@@ -2,8 +2,11 @@
 
 **Scope:** AGENT-6 → AGENT-2 → AGENT-3, plus the single-source-of-truth design they depend on.
 **Companion:** `kapper-v3-plan.md`.
-**Gate:** this chain must not start until Wave 0 and the Wave 1 correctness items (PARSE-1, DIAG-1,
-TYPE-2, TYPE-6) are done. Discoverability is a multiplier on correctness.
+**Gate:** build the chain after the Wave 1 correctness items (DIAG-1, TYPE-2, TYPE-6); promote it
+(AGENT-3) only after PARSE-1 lands in Wave 2. Discoverability is a multiplier on correctness.
+
+**Status:** AGENT-6 is done (PR #407 — 13 compiled snippets, 9 deferred with `"status": "todo"`).
+AGENT-2 and AGENT-3 are Wave 1; AGENT-3 is promotion, so it waits for PARSE-1.
 
 ---
 
@@ -160,10 +163,11 @@ files in `.github/workflows/build-and-test.yml`.
 
 **Steps**
 
-1. **API manifest.** Generate `api-manifest.json` from the public API. Prefer parsing the
-   binary-compatibility-validator `.api` dump (PKG-6) — it is already checked in and CI-gated.
-   Fall back to Dokka JSON output if the dump is too lossy. Fields per declaration: package, type,
-   name, signature, params, return, KDoc summary, since-version.
+1. **API manifest.** Generate `api-manifest.json` from the public API. PKG-6's
+   binary-compatibility-validator `.api` dump is **Wave 2**, so it does not exist yet — use the Dokka
+   JSON output (the `generateApiDocs` task already produces it). Switch to the `.api` dump later if it
+   proves less lossy. Fields per declaration: package, type, name, signature, params, return, KDoc
+   summary, since-version.
 2. **Matrices.** Have the DOCS-1/DOCS-3 parameterised tests emit `matrices.json` as a test artefact;
    copy it into `docs/public/` during the docs build.
 3. **`llms-full.txt`.** Concatenate: manifest (signatures), one snippet per feature (from AGENT-6),

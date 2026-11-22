@@ -1,7 +1,7 @@
 # Kapper v3 Plan
 
-**Status:** Wave 0 complete; 2.1 release planned; Wave 1 not started.
-**Basis:** `kapper-review-2026-07.md` (28 July 2026, commit `c77a3c0`), verified against the working tree at HEAD `db83912`.
+**Status:** Wave 0 complete and released as 2.1.0; Wave 1 not started.
+**Basis:** `kapper-review-2026-07.md` (28 July 2026, commit `c77a3c0`), verified against the working tree at HEAD `db83912`; status re-verified against `main` at `8c9f60f`.
 **Scope:** `core`, `coroutines`, build/publishing, docs site, and agent-facing surface.
 
 This document is the plan. It is grounded in the source, not only the review. Where the review is
@@ -11,7 +11,7 @@ wrong or vague, that is stated rather than smoothed over (see "Review-quality no
 
 ## Status
 
-**Wave 0 — complete (17 of 17 items), merged to `main`.**
+**Wave 0 — complete (18 of 18 items), merged to `main` and released as 2.1.0.**
 
 | PR | Workstream | Items |
 |---|---|---|
@@ -28,15 +28,18 @@ Deviations from the handover:
   separately (`kapper-agent6-handover.md`, PR #407). It ships 13 compiled snippets and defers 9 to
   Wave 1/2.
 
-**Next: 2.1 release.** Wave 0 is non-breaking, so it ships as 2.1 before v3 work starts. Call out in
- the release notes:
+**2.1.0 — released.** Wave 0 was non-breaking, so it shipped as 2.1.0 (tag `2.1.0`, PR #413, merged
+2026-11-06). The release notes called out three behavioural changes:
 
 - `queryAsFlow` is now cold (it was eager, and leaked the result set if never collected).
 - `withConnection` acquires and closes the connection on the dispatcher.
 - `querySingle`'s "more than one result" message no longer includes the total row count.
 
-**Wave 1** (additive, non-breaking) is the natural 2.2. **Wave 2** is where the first breaking changes
-land, so that is where the `v3` branch begins.
+**Next: Wave 1 → 2.2.0.** Wave 1 is additive and non-breaking, so it ships as 2.2.0. Since the `2.1.0`
+tag, `main` has only `build:` commits, so the derived version is still `2.1.0-SNAPSHOT`; the first
+Wave 1 `feat:` commit moves it to `2.2.0-SNAPSHOT`. See `kapper-v3-wave1-handover.md`.
+
+**Wave 2** is where the first breaking changes land, so that is where the `v3` branch begins.
 
 ---
 
@@ -253,6 +256,14 @@ Decisions taken:
 
 ### Wave 1 — Quick wins (additive API, small diff, no break)
 
+Ships as **2.2.0**. Every item is additive or non-breaking. See `kapper-v3-wave1-handover.md`.
+
+One follow-up is not a numbered item: **re-enable the 9 snippets AGENT-6 deferred**
+(`docs/snippets.json`, `"status": "todo"`) once their dependencies land — `select-scalar` (TYPE-6),
+`enum-property` (TYPE-2), `custom-mapper` and `jsonb` (API-10 / TYPE-4), `streaming` (API-8),
+`transaction-with-value` (API-1, Wave 2), `nested-transaction` (API-3, Wave 2), `in-list` (PARSE-3,
+Wave 2), `testing` (AGENT-7).
+
 | # | Item | Effort |
 |---|---|---|
 | 1.1 | TYPE-2 enum support | S |
@@ -397,10 +408,14 @@ The review is emphatic and correct:
 > Do not start this before Milestone 1, because driving traffic to a library that fails on a time
 > literal is worse than not driving traffic at all.
 
-Discoverability is a **multiplier on correctness**. If PARSE-1, DIAG-1, TYPE-2 and TYPE-6 are not
-done, every agent attracted writes code that fails on the first attempt, and the failure is
-attributed to Kapper. The retrieval tasks (AGENT-2, AGENT-3) therefore belong *after* Wave 0 and the
-Wave 1 correctness items, even though they are individually cheap.
+Discoverability is a **multiplier on correctness**. If DIAG-1, TYPE-2 and TYPE-6 are not done, every
+agent attracted writes code that fails on the first attempt, and the failure is attributed to Kapper.
+PARSE-1 (the tokeniser rewrite) matters for the same reason — a time literal, an email, or a `:param`
+inside a comment still misparses — but it is a **breaking change**, so it cannot ship in a 2.x.
+
+Resolution: **build** the retrieval artefacts (AGENT-6, AGENT-2) after the Wave 1 correctness items,
+but do not **promote** them (AGENT-3 Context7 submission, and any traffic-driving) until PARSE-1 lands
+in Wave 2. Building early is cheap and reversible; promoting early is not.
 
 Exception: **AGENT-1 and STRAT-3 are safe to do immediately** — they do not drive consumer traffic.
 
@@ -411,10 +426,10 @@ Exception: **AGENT-1 and STRAT-3 are safe to do immediately** — they do not dr
 | AGENT-1 | `AGENTS.md` | Comprehension (contributors) | 0 | S | — |
 | STRAT-3 | Positioning | Retrieval (training data) | 0 | S | — |
 | AGENT-6 | Canonical snippets | Comprehension | 0 | S | CI compile step |
-| AGENT-3 | Context7 submission | Retrieval | 1 | S | AGENT-2 |
-| AGENT-2 | `llms.txt` / `llms-full.txt` | Retrieval + comprehension | 1 | M | docs build |
+| AGENT-2 | `llms.txt` / `llms-full.txt` | Retrieval + comprehension | 1 | M | AGENT-6, DOCS-1/3, Dokka JSON |
 | AGENT-4 | Distributable skill | Comprehension | 1 | M | — |
 | AGENT-7 | `kapper-test` module | Verification | 1 | M | — |
+| AGENT-3 | Context7 submission | Retrieval | 2 (promote) | S | AGENT-2, PARSE-1, root path |
 | AGENT-5 | Schema-aware MCP server | Retrieval + verification | 3 | L | PARSE-1, TYPE-1 |
 
 AGENT-2 is the keystone of retrieval (AGENT-3 depends on it). AGENT-5 is the keystone of
@@ -450,11 +465,12 @@ verification but is gated on the parser and converter registry. AGENT-4 and AGEN
 
 ### Recommended sequencing for this cluster
 
-1. **Now (Wave 0):** AGENT-1, STRAT-3.
-2. **After Wave 0 + Wave 1 correctness (PARSE-1, DIAG-1, TYPE-2, TYPE-6):** AGENT-6 (with the CI
-   compile step), then AGENT-2, then AGENT-3.
-3. **In parallel:** AGENT-4 and AGENT-7.
-4. **Last (Wave 3):** AGENT-5, gated on PARSE-1 + TYPE-1, ideally a separate repo.
+1. **Done (Wave 0):** AGENT-1, STRAT-3, AGENT-6 (with the CI compile step).
+2. **Wave 1, after the correctness items (DIAG-1, TYPE-2, TYPE-6):** AGENT-2. Build it, but do not
+   promote it yet (see "The gate").
+3. **Wave 1, in parallel:** AGENT-4 and AGENT-7.
+4. **Wave 2, after PARSE-1:** AGENT-3 (Context7 submission) — promotion, not building.
+5. **Last (Wave 3):** AGENT-5, gated on PARSE-1 + TYPE-1, ideally a separate repo.
 
 Add to the review's list, in Wave 1 alongside AGENT-2: **a single machine-readable source of truth**
 (signature index + compiled snippets) that AGENT-2, AGENT-4, AGENT-6 and the docs all generate from.
