@@ -97,6 +97,8 @@ export default defineConfig({
           text: 'Blog Posts',
           items: [
             { text: 'All Posts', link: '/blog/' },
+            { text: 'Kapper 2.1: Rocket Fuel for Agents', link: '/blog/07_kapper_2-1_agent_ready' },
+            { text: 'Tying up some loose ends', link: '/blog/06_tying_up_loose_ends' },
             { text: 'Kapper 1.5: Record Support', link: '/blog/05_kapper_1-5_records_support' },
             { text: 'Kapper Benchmarks', link: '/blog/04_kapper_benchmarks' },
             { text: 'Kapper 1.3: Flow Support', link: '/blog/03_kapper_1-3_supports_flows' },

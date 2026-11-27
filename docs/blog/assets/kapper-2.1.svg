@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 840" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#e879f9"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#d946ef" stop-opacity="0.28"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="840" fill="#14142b"/>
+
+  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+    <line x1="400" y1="0" x2="400" y2="840"/>
+    <line x1="800" y1="0" x2="800" y2="840"/>
+    <line x1="1200" y1="0" x2="1200" y2="840"/>
+    <line x1="0" y1="280" x2="1600" y2="280"/>
+    <line x1="0" y1="560" x2="1600" y2="560"/>
+  </g>
+
+  <g fill="none" stroke="#a855f7" stroke-width="5" opacity="0.85" filter="url(#glow)">
+    <ellipse cx="200" cy="300" rx="72" ry="28"/>
+    <path d="M128 300 v118 c0 16 32 29 72 29 s72 -13 72 -29 v-118"/>
+    <path d="M128 339 c0 16 32 29 72 29 s72 -13 72 -29"/>
+    <path d="M128 378 c0 16 32 29 72 29 s72 -13 72 -29"/>
+  </g>
+
+  <text x="800" y="235" text-anchor="middle" font-size="120" font-weight="bold" fill="url(#titleGrad)">Kapper 2.1</text>
+  <text x="800" y="320" text-anchor="middle" font-size="42" fill="#e5e7eb">Delightful for humans, rocket fuel for agents</text>
+
+  <g font-size="30" text-anchor="middle">
+    <g>
+      <rect x="360" y="420" width="280" height="112" rx="16" fill="url(#cardGrad)" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="500" y="472" fill="#c4b5fd" font-weight="bold">Self-describing</text>
+      <text x="500" y="510" fill="#e5e7eb">errors</text>
+    </g>
+    <g>
+      <rect x="660" y="420" width="280" height="112" rx="16" fill="url(#cardGrad)" stroke="#e879f9" stroke-width="2"/>
+      <text x="800" y="472" fill="#f0abfc" font-weight="bold">executeReturning()</text>
+      <text x="800" y="510" fill="#e5e7eb">DML + RETURNING</text>
+    </g>
+    <g>
+      <rect x="960" y="420" width="280" height="112" rx="16" fill="url(#cardGrad)" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="1100" y="472" fill="#c4b5fd" font-weight="bold">Compiled docs</text>
+      <text x="1100" y="510" fill="#e5e7eb">that can't rot</text>
+    </g>
+  </g>
+
+  <text x="800" y="700" text-anchor="middle" font-size="34" fill="#9ca3af">Your favorite micro-ORM for Kotlin &amp; JVM</text>
+</svg>
